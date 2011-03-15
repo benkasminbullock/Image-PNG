@@ -1,0 +1,26 @@
+File::PNG
+
+my $nice_png = File::PNG->new ({file => 'nice.png'});
+
+my $png = File::PNG->new ();
+$png->read ('another.png');
+$png->add_text ('This is my text');
+
+# Get all the text segments from a PNG
+
+my @text = $png->get_text ();
+
+# Undefined if the PNG doesn't have a modification time.
+
+my $mod_time = $png->mod_time ();
+
+# Set the modification time
+
+$png->mod_time ({year => 2010});
+
+$png->interlacing ('adam7');
+$png->interlacing ('none');
+
+my $width = $png->width ();
+
+$png->write ('now-that-is-what-i-call-a-png-file.png');
