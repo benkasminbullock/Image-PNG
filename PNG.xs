@@ -67,26 +67,16 @@ void perl_png_read_info (Png, Info)
         png_read_info (Png, Info);
         OUTPUT:
 
-int perl_png_get_IHDR (Png, Info, width_ref, height_ref)
+int perl_png_get_IHDR (Png, Info, IHDR_ref)
         File::PNG::Png Png
         File::PNG::Info Info
-        SV * width_ref
-        SV * height_ref
+        HV * IHDR_ref
         CODE:
         int w, h, bit_depth, color_type;
-        RETVAL = png_get_IHDR (Png, Info, & w, & h, & bit_depth, & color_type, 0, 0, 0);
-        if (SvROK (width_ref)) {
-           SV * width = SvRV (width_ref);
-           sv_setnv (width, w);
-        }
-        if (SvROK (height_ref)) {
-           SV * height = SvRV (height_ref);
-           sv_setnv (height, w);
-        }
+        RETVAL = perl_png_get_IHDR (Png, Info, IHDR_ref);
         OUTPUT:
         RETVAL
-        width_ref
-        height_ref
+        IHDR_ref
 
 int perl_png_get_tIME (Png, Info, time_ref)
         File::PNG::Png Png

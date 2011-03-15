@@ -1,0 +1,15 @@
+const-c.inc
+const-xs.inc
+design.txt
+lib/File/PNG.pm
+Makefile.PL
+MANIFEST			This list of files
+perl-libpng.c
+perl-libpng.h
+PNG.xs
+t/File-PNG.t
+t/test-write.png
+t/test.png
+t/with-text.png
+t/with-time.png
+typemap

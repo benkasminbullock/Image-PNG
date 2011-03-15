@@ -29,13 +29,12 @@ open my $file, "<", $file_name or die "Can't open '$file_name': $!";
 File::PNG::init_io ($png, $file);
 File::PNG::read_info ($png, $info);
 
-my $width;
-my $height;
+my %IHDR;
 
-my $status = File::PNG::get_IHDR ($png, $info, \$width, \$height);
+my $status = File::PNG::get_IHDR ($png, $info, \%IHDR);
 ok ($status == 1, "successfully called get_IHDR");
-ok ($width == 100, "width");
-ok ($height == 100, "height");
+ok ($IHDR{width} == 100, "width");
+ok ($IHDR{height} == 100, "height");
 File::PNG::destroy_read_struct ($png, $info);
 close $file or die $!;
 

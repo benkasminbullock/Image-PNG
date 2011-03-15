@@ -32,4 +32,7 @@ int perl_png_sig_cmp (SV * png_header , int start , int num_to_check );
 #line 309 "perl-libpng.c"
 void perl_png_scalar_as_image (png_structp png_ptr , SV * image_data );
 
+#line 326 "perl-libpng.c"
+int perl_png_get_IHDR (png_structp png_ptr , png_infop info_ptr , HV * IHDR_ref );
+
 #endif /* CFH_PERL_LIBPNG_H */

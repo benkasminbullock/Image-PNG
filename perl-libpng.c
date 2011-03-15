@@ -260,7 +260,7 @@ perl_png_get_time (png_structp png_ptr, png_infop info_ptr, SV * time_ref)
 int
 perl_png_sig_cmp (SV * png_header, int start, int num_to_check)
 {
-    const char * header;
+    char * header;
     int length;
     int ret_val;
     header = SvPV (png_header, length);
@@ -285,7 +285,7 @@ perl_png_scalar_read (png_structp png_ptr, png_bytep out_bytes,
     scalar_as_image_t * si;
     const char * read_point;
 
-    si = png_ptr->io_ptr;
+    si = png_get_io_ptr (png_ptr);
 #if 0
     fprintf (stderr, "Reading %d bytes from image at position %d.\n",
              byte_count_to_read, si->read_position);
@@ -321,3 +321,31 @@ perl_png_scalar_as_image (png_structp png_ptr,
     png_set_read_fn (png_ptr, si, perl_png_scalar_read);
 }
 
+int
+perl_png_get_IHDR (png_structp png_ptr, png_infop info_ptr, HV * IHDR_ref)
+{
+    png_uint_32 width;
+    png_uint_32 height;
+    int bit_depth;
+    int color_type;
+    int interlace_method;
+    int compression_method;
+    int filter_method;
+    /* The return value. */
+    int status;
+
+    status = png_get_IHDR (png_ptr, info_ptr, & width, & height,
+                           & bit_depth, & color_type, & interlace_method,
+                           & compression_method, & filter_method);
+#define STORE(x) hv_store (IHDR_ref, #x, strlen (#x), newSViv (x), 0);
+    STORE (width);
+    STORE (height);
+    STORE (bit_depth);
+    STORE (color_type);
+    STORE (interlace_method);
+    STORE (compression_method);
+    STORE (filter_method);
+#undef STORE
+
+    return status;
+}
