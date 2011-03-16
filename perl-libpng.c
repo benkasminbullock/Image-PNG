@@ -44,7 +44,10 @@ void perl_png_timep_to_hash (const png_timep mod_time, HV * time_hash)
     f[4] = newSViv (mod_time->minute);
     f[5] = newSViv (mod_time->second);
     for (i = 0; i < N_TIME_FIELDS; i++) {
-        hv_store (time_hash, time_fields[i], strlen (time_fields[i]), f[i], 0);
+        if (!hv_store (time_hash, time_fields[i],
+                       strlen (time_fields[i]), f[i], 0)) {
+            fprintf (stderr, "hv_store failed.\n");
+        }
     }
 }
 
@@ -93,7 +96,7 @@ static SV * make_text_sv (const png_textp text_ptr)
 
             is_itxt = 1;
 
-            if (! is_utf8_string (text, length)) {
+            if (! is_utf8_string ((unsigned char *) text, length)) {
                 perl_png_warn ("According to its compression type, a text chunk in the current PNG file claims to be ITXT but Perl's 'is_utf8_string' says that its encoding is invalid.");
                 is_itxt = 0;
             }
@@ -121,7 +124,7 @@ static SV * lang_key_to_sv (const char * lang_key)
 
         length = strlen (lang_key);
         sv = newSVpv (lang_key, length);
-        if (! is_utf8_string (lang_key, length)) {
+        if (! is_utf8_string ((unsigned char *) lang_key, length)) {
             perl_png_warn ("A language key 'lang_key' member of a 'png_text' structure in the file failed Perl's 'is_utf8_string' test, which says that its encoding is invalid.");
             is_itxt = 0;
         }
@@ -145,6 +148,8 @@ static const char * text_fields[] = {
     "text",
     "lang",
     "lang_key",
+    "text_length",
+    "itxt_length",
 };
 
 /* "N_TEXT_FIELDS" is the number of text fields in a "png_text"
@@ -184,10 +189,15 @@ perl_png_textp_to_hash (const png_textp text_ptr)
         f[3] = newSV (0);
     }
     f[4] = lang_key_to_sv (text_ptr->lang_key);
+    f[5] = newSViv (text_ptr->text_length);
+    f[6] = newSViv (text_ptr->itxt_length);
 
     for (i = 0; i < N_TEXT_FIELDS; i++) {
         //printf ("%d:%s\n", i, text_fields[i]);
-        hv_store (text_hash, text_fields[i], strlen (text_fields[i]), f[i], 0);
+        if (!hv_store (text_hash, text_fields[i],
+                       strlen (text_fields[i]), f[i], 0)) {
+            fprintf (stderr, "hv_store failed.\n");
+        }
     }
 
     return text_hash;
@@ -260,10 +270,10 @@ perl_png_get_time (png_structp png_ptr, png_infop info_ptr, SV * time_ref)
 int
 perl_png_sig_cmp (SV * png_header, int start, int num_to_check)
 {
-    char * header;
-    int length;
+    unsigned char * header;
+    unsigned int length;
     int ret_val;
-    header = SvPV (png_header, length);
+    header = (unsigned char *) SvPV (png_header, length);
     ret_val = png_sig_cmp (header, start, num_to_check);
     return ret_val;
 }
@@ -272,7 +282,7 @@ typedef struct {
     SV * png_image;
     const char * data; 
     int read_position;
-    int length;
+    unsigned int length;
 }
 scalar_as_image_t;
 
@@ -337,7 +347,11 @@ perl_png_get_IHDR (png_structp png_ptr, png_infop info_ptr, HV * IHDR_ref)
     status = png_get_IHDR (png_ptr, info_ptr, & width, & height,
                            & bit_depth, & color_type, & interlace_method,
                            & compression_method, & filter_method);
-#define STORE(x) hv_store (IHDR_ref, #x, strlen (#x), newSViv (x), 0);
+#define STORE(x) {                                                      \
+        if (!hv_store (IHDR_ref, #x, strlen (#x), newSViv (x), 0)) {    \
+            fprintf (stderr, "hv_store failed.\n");                     \
+        }                                                               \
+    }
     STORE (width);
     STORE (height);
     STORE (bit_depth);
@@ -349,3 +363,51 @@ perl_png_get_IHDR (png_structp png_ptr, png_infop info_ptr, HV * IHDR_ref)
 
     return status;
 }
+
+#define PERL_PNG_COLOR_TYPE(x)                  \
+ case PNG_COLOR_TYPE_ ## x:                     \
+     name = #x;                                 \
+     break
+
+/* Convert a PNG colour type number into its name. */
+
+const char * perl_png_color_type_name (int color_type)
+{
+    const char * name;
+
+    switch (color_type) {
+        PERL_PNG_COLOR_TYPE (GRAY);
+        PERL_PNG_COLOR_TYPE (PALETTE);
+        PERL_PNG_COLOR_TYPE (RGB);
+        PERL_PNG_COLOR_TYPE (RGB_ALPHA);
+        PERL_PNG_COLOR_TYPE (GRAY_ALPHA);
+    default:
+        /* Moan about not knowing this colour type. */
+        name = "";
+    }
+    return name;
+}
+
+#define PERL_PNG_TEXT_COMP(x,y)                  \
+    case PNG_ ## x ## _COMPRESSION_ ## y:        \
+    name = #x "_" #y;                            \
+    break
+
+/* Convert a libpng text compression number into its name. */
+
+const char * perl_png_text_compression_name (int text_compression)
+{
+    const char * name;
+    switch (text_compression) {
+        PERL_PNG_TEXT_COMP(TEXT,NONE);
+        PERL_PNG_TEXT_COMP(TEXT,zTXt);
+        PERL_PNG_TEXT_COMP(ITXT,NONE);
+        PERL_PNG_TEXT_COMP(ITXT,zTXt);
+    default:
+        /* Moan about not knowing this text compression type. */
+        name = "";
+    }
+    return name;
+}
+
+#undef PERL_PNG_COLOR_TYPE

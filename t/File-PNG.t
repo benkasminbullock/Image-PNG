@@ -1,6 +1,6 @@
 use warnings;
 use strict;
-use Test::More tests => 20;
+use Test::More tests => 22;
 use FindBin;
 use File::Compare;
 BEGIN { use_ok('File::PNG') };
@@ -92,6 +92,15 @@ ok ($chunk3->{text} eq '工藤俊作', "text text in UTF-8");
 File::PNG::destroy_read_struct ($png3, $info3);
 close $file3 or die $!;
 
+my $number_version = File::PNG::access_version_number ();
+#print $number_version;
+#print "\n";
+ok ($number_version =~ /^\d+$/, "Numerical version number OK");
+my $version = File::PNG::get_libpng_ver ();
+#print $version;
+#print "\n";
+$version =~ s/\./0/g;
+ok ($number_version == $version, "Library version OK");
 
 # for my $text_chunk (@text_chunks) {
 # for my $k (keys %$text_chunk) {

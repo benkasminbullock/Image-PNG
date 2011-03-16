@@ -24,12 +24,19 @@ File::PNG::Png perl_png_create_write_struct ()
         OUTPUT:
         RETVAL
 
-void perl_png_read_png (Png, Info, transforms)
+void perl_png_destroy_read_struct (Png, Info = 0, EndInfo = 0)
         File::PNG::Png Png
         File::PNG::Info Info
-        int transforms
+        File::PNG::Info EndInfo
         CODE:
-        png_read_png (Png, Info, transforms, 0);
+        png_destroy_read_struct (& Png, & Info, & EndInfo);
+        OUTPUT:
+
+void perl_png_destroy_write_struct (Png, Info = 0)
+        File::PNG::Png Png
+        File::PNG::Info Info
+        CODE:
+        png_destroy_write_struct (& Png, & Info);
         OUTPUT:
 
 void perl_png_write_png (Png, Info, transforms)
@@ -47,12 +54,6 @@ File::PNG::Info perl_png_create_info_struct (Png)
         OUTPUT:
         RETVAL
 
-=head2 perl_png_init_io
-
-Send a pointer to a "FILE", "fp", to the "png_read_struct" in Png.
-
-=cut
-
 void perl_png_init_io (Png, fp)
         File::PNG::Png Png
         FILE * fp
@@ -65,6 +66,14 @@ void perl_png_read_info (Png, Info)
         File::PNG::Info Info
         CODE:
         png_read_info (Png, Info);
+        OUTPUT:
+
+void perl_png_read_png (Png, Info, transforms = PNG_TRANSFORM_IDENTITY)
+        File::PNG::Png Png
+        File::PNG::Info Info
+        int transforms
+        CODE:
+        png_read_png (Png, Info, transforms, 0);
         OUTPUT:
 
 int perl_png_get_IHDR (Png, Info, IHDR_ref)
@@ -98,13 +107,6 @@ int perl_png_get_text (Png, Info, text_ref)
         RETVAL
         text_ref
 
-void perl_png_destroy_read_struct (Png, Info)
-        File::PNG::Png Png
-        File::PNG::Info Info
-        CODE:
-        png_destroy_read_struct (& Png, & Info, 0);
-        OUTPUT:
-
 int perl_png_sig_cmp (sig, start = 0, num_to_check = 8)
         SV * sig
         int start
@@ -120,3 +122,29 @@ void perl_png_scalar_as_image (Png, scalar)
         CODE:
         perl_png_scalar_as_image (Png, scalar);
         OUTPUT:
+
+const char * perl_png_color_type_name (color_type)
+        int color_type
+        CODE:
+        RETVAL = perl_png_color_type_name (color_type);
+        OUTPUT:
+        RETVAL
+
+const char * perl_png_text_compression_name (text_compression)
+        int text_compression
+        CODE:
+        RETVAL = perl_png_text_compression_name (text_compression);
+        OUTPUT:
+        RETVAL
+
+const char * perl_png_get_libpng_ver ()
+        CODE:
+        RETVAL = png_get_libpng_ver (0);
+        OUTPUT:
+        RETVAL
+
+int perl_png_access_version_number ()
+        CODE:
+        RETVAL = png_access_version_number ();
+        OUTPUT:
+        RETVAL

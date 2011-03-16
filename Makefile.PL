@@ -3,8 +3,9 @@ use warnings;
 use ExtUtils::MakeMaker;
 use ExtUtils::Constant;
 
-# This Makefile.PL uses $Config{ldflags} and $Config{ccflags} in the
-# test compilation of a program which links against libpng.
+
+# This Makefile.PL uses $Config{ldflags} and $Config{ccflags} when it
+# tries to compile a small program which links against libpng.
 
 use Config qw/%Config/;
 
@@ -15,14 +16,50 @@ use Config qw/%Config/;
 my $png_lib_dir;
 my $png_include_dir;
 
+# The following variable switches on printing of non-error messages as
+# Makefile.PL works.
+
+my $verbose;# = 1;
+
+# $inc is a flag for the C compiler to tell it where to find header
+# files.
+
 my $inc = '';
 if ($png_include_dir) {
     $inc = "-I $png_include_dir";
 }
 
-my $libs = '-lpng';
+# $libs is a flag for the C compiler to tell it where to find library
+# files.
+
+my $libs = '-lpng -lz -lm';
 if ($png_lib_dir) {
     $libs = "-L $png_lib_dir $libs";
+}
+my $has_pkg_config = find_program ('pkg-config', $verbose);
+if ($has_pkg_config) {
+    print <<EOF;
+
+I found "pkg-config" in your PATH so I am going to use that to help
+with the compilation of the C part of this module.
+
+EOF
+    my $pkg_config_cflags = `pkg-config --cflags libpng`;
+    $pkg_config_cflags =~ s/\s+$//;
+    my $pkg_config_ldflags = `pkg-config --libs libpng`;
+    $pkg_config_ldflags =~ s/\s+$//;
+    if ($pkg_config_cflags) {
+        if ($verbose) {
+            print "Adding '$pkg_config_cflags' to C compiler flags from pkg-config.\n";
+        }
+        $inc = "$inc $pkg_config_cflags";
+    }
+    if ($pkg_config_ldflags) {
+        if ($verbose) {
+            print "Adding '$pkg_config_ldflags' to linker flags from pkg-config.\n";
+        }
+        $libs = "$pkg_config_ldflags $libs";
+    }
 }
 
 # A minimal C program to test compilation and running.
@@ -48,6 +85,9 @@ my $compile_ok;
 my $run_ok;
 
 if (! -f $c_file_name && ! -f $exe_file_name) {
+    if ($verbose) {
+        print "\nI am going to compile and run a test program called '$c_file_name'.\n";
+    }
     # Get $ldflags and $ccflags from Config.pm.
     my $ldflags = $Config{ldflags};
 #    my $ccflags;
@@ -57,8 +97,12 @@ if (! -f $c_file_name && ! -f $exe_file_name) {
     print $output $test_c;
     close $output
         or die "Error closing file '$c_file_name': $!";
+    my $compile = "cc $ccflags $inc -o $exe_file_name $c_file_name $ldflags $libs";
+    if ($verbose) {
+        print "The compile command is '$compile'.\n";
+    }
     $compile_ok =
-        (system ("cc $ccflags $inc -o $exe_file_name $c_file_name $ldflags $libs") == 0);
+        (system ($compile) == 0);
     if ($compile_ok) {
         $run_ok = 
             (system ("./$exe_file_name") == 0);
@@ -66,12 +110,15 @@ if (! -f $c_file_name && ! -f $exe_file_name) {
     for my $file ($exe_file_name, $c_file_name) {
         if (-f $file) {
             unlink $file
-                or warn "Sorry I could not delete a temporary file '$file' which I made. Please delete it yourself.\n";
+                or print STDERR <<EOF;
+Sorry, but I could not delete a temporary file '$file' 
+which I made. Please delete it yourself.
+EOF
         }
     }
 }
 else {
-    print <<'EOF';
+    print STDERR <<'EOF';
  _____ _ _                                   
 |  ___(_) | ___   _ __   __ _ _ __ ___   ___ 
 | |_  | | |/ _ \ | '_ \ / _` | '_ ` _ \ / _ \
@@ -85,7 +132,7 @@ else {
  \___\___/|_|_|_|___/_|\___/|_| |_|
                                    
 EOF
-    print <<"EOF";
+    print STDERR <<"EOF";
 My compilation test failed due to existing files called one or the
 other of '$c_file_name' or '$exe_file_name'. I want to use these
 names. Please edit Makefile.PL to make me use different names, or
@@ -95,7 +142,7 @@ EOF
 }
 
 if (! $compile_ok || ! $run_ok) {
-    print <<'EOF';
+    print STDERR <<'EOF';
  _ _ _                                     _      __                       _ 
 | (_) |__  _ __  _ __   __ _   _ __   ___ | |_   / _| ___  _   _ _ __   __| |
 | | | '_ \| '_ \| '_ \ / _` | | '_ \ / _ \| __| | |_ / _ \| | | | '_ \ / _` |
@@ -106,9 +153,9 @@ if (! $compile_ok || ! $run_ok) {
 I tried to compile and run a small test program in C to see if I could
 #include the libpng header file "png.h" and link to the library
 "libpng". Somehow or other this didn't work out. If you don't have
-libpng on your system, sorry but you need to install it to use this
-module. If you think you have libpng on your system, please edit the
-file "Makefile.PL" and run "perl Makefile.PL" again. The relevant
+libpng on your system, sorry but you need to install it to use
+File::PNG. If you think you have libpng on your system, please edit
+the file "Makefile.PL" and run "perl Makefile.PL" again. The relevant
 lines are right at the top of the file,
 
 my $png_lib_dir;
@@ -125,6 +172,16 @@ are alright.
 EOF
     exit;
 }
+else {
+    if ($verbose) {
+        print <<EOF;
+The program compiled and ran successfully, so it looks like you have
+libpng installed in a place where I can find it. I am now going to
+write out the file "Makefile" using these parameters.
+
+EOF
+    }
+}
 
 WriteMakefile (
     NAME         => 'File::PNG',
@@ -132,6 +189,7 @@ WriteMakefile (
     OBJECT       => 'PNG.o perl-libpng.o',
     LIBS         => $libs,
     INC          => $inc,
+#    CCFLAGS      => '-Wall',
 );
 
 my @names = (qw());
@@ -144,17 +202,74 @@ ExtUtils::Constant::WriteConstants(
     XS_FILE      => 'const-xs.inc',
 );
 
+if ($verbose) {
+    print "I have successfully completed my job.\n";
+}
+
 # The following subroutine adds extra necessary rules to the end of
 # "Makefile". See
 # http://search.cpan.org/dist/ExtUtils-MakeMaker/lib/ExtUtils/MakeMaker.pm#Overriding_MakeMaker_Methods
 
 sub MY::postamble
 {
+    if ($verbose) {
+        print <<EOF;
+A utility called "cfunctions" is used in the building of the source
+code.  You don't need this unless you have edited the source code of
+the file called "perl-libpng.c" to change the C function definitions
+so that new prototypes need to be made for them.
+
+EOF
+    }
     my $cfunctions_build = <<EOF;
 PNG.o: perl-libpng.h
+EOF
+    my $has_cfunctions = find_program ('cfunctions', $verbose);
 
+    if ($has_cfunctions) {
+        $cfunctions_build .= <<EOF;
 perl-libpng.h:  perl-libpng.c
 	cfunctions -in perl-libpng.c
 EOF
+    }
+    else {
+        if ($verbose) {
+            print "You don't have 'cfunctions'. Never mind!\n";
+        }
+    }
     return $cfunctions_build;
+}
+
+sub find_program
+{
+    my ($program, $verbose) = @_;
+    if ($verbose) {
+        print "I am going to look for $program in the list of directories in your PATH.\n";
+    }
+    my $found;
+    if ($ENV{PATH}) {
+        my @path = split /:/, $ENV{PATH};
+        for my $dir (@path) {
+            if ($verbose) {
+                print "Looking in '$dir' for '$program': ";
+            }
+            my $dprogram = "$dir/$program";
+            if (-f $dprogram && -x $dprogram) {
+                if ($verbose) {
+                    print "Found.\n";
+                    $found = $dprogram;
+                    last;
+                }
+            }
+            if ($verbose) {
+                print "Not found.\n";
+            }
+        }
+    }
+    else {
+        if ($verbose) {
+            print "There is no PATH environment variable.\n";
+        }
+    }
+    return $found;
 }
