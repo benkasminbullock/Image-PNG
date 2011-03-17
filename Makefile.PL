@@ -186,7 +186,7 @@ EOF
 WriteMakefile (
     NAME         => 'File::PNG',
     VERSION_FROM => 'lib/File/PNG.pm',
-    OBJECT       => 'PNG.o perl-libpng.o',
+    OBJECT       => 'Libpng.o perl-libpng.o',
     LIBS         => $libs,
     INC          => $inc,
 #    CCFLAGS      => '-Wall',
@@ -195,7 +195,7 @@ WriteMakefile (
 my @names = (qw());
 
 ExtUtils::Constant::WriteConstants(
-    NAME         => 'File::PNG',
+    NAME         => 'File::PNG::Libpng',
     NAMES        => \@names,
     DEFAULT_TYPE => 'IV',
     C_FILE       => 'const-c.inc',

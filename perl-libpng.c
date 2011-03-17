@@ -9,8 +9,8 @@
 
 #ifdef HEADER
 
-typedef png_structp File__PNG__Png;
-typedef png_infop File__PNG__Info;
+typedef png_structp File__PNG__Libpng__Png;
+typedef png_infop File__PNG__Libpng__Info;
 
 #endif
 
