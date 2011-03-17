@@ -21,12 +21,12 @@ constant(sv)
         switch (type) {
         case PERL_constant_NOTFOUND:
           sv =
-	    sv_2mortal(newSVpvf("%s is not a valid File::PNG::Libpng macro", s));
+	    sv_2mortal(newSVpvf("%s is not a valid Image::PNG::Libpng macro", s));
           PUSHs(sv);
           break;
         case PERL_constant_NOTDEF:
           sv = sv_2mortal(newSVpvf(
-	    "Your vendor has not defined File::PNG::Libpng macro %s, used",
+	    "Your vendor has not defined Image::PNG::Libpng macro %s, used",
 				   s));
           PUSHs(sv);
           break;
@@ -83,7 +83,7 @@ constant(sv)
           break; */
         default:
           sv = sv_2mortal(newSVpvf(
-	    "Unexpected return type %d while processing File::PNG::Libpng macro %s, used",
+	    "Unexpected return type %d while processing Image::PNG::Libpng macro %s, used",
                type, s));
           PUSHs(sv);
         }

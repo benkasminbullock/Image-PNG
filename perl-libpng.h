@@ -12,10 +12,10 @@
 #line 10 "perl-libpng.c"
 
 #line 12 "perl-libpng.c"
-typedef png_structp File__PNG__Libpng__Png;
+typedef png_structp Image__PNG__Libpng__Png;
 
 #line 13 "perl-libpng.c"
-typedef png_infop File__PNG__Libpng__Info;
+typedef png_infop Image__PNG__Libpng__Info;
 
 #line 37 "perl-libpng.c"
 void perl_png_timep_to_hash (const png_timep mod_time , HV * time_hash );

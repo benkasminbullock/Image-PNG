@@ -9,8 +9,8 @@
 
 #ifdef HEADER
 
-typedef png_structp Image__PNG__Libpng__Png;
-typedef png_infop Image__PNG__Libpng__Info;
+typedef png_structp [% config.base_underscore %]__Libpng__Png;
+typedef png_infop [% config.base_underscore %]__Libpng__Info;
 
 #endif
 
@@ -204,7 +204,7 @@ perl_png_textp_to_hash (const png_textp text_ptr)
 }
 
 /*
-  This is the C part of Image::PNG::get_text.
+  This is the C part of [% config.base %]::get_text.
  */
 
 int

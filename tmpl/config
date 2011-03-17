@@ -1,0 +1,5 @@
+version: 0.01
+base: Image::PNG
+author: Ben Bullock
+email: bkb@cpan.org
+year: 2011

@@ -1,0 +1,12 @@
+=head1 AUTHOR
+
+[% config.author %], <[% config.email %]>
+
+=head1 COPYRIGHT & LICENCE
+
+The File::PNG module and associated files are copyright (C) 
+[% config.year %] [% config.author %].
+
+You can use, copy, modify and redistribute [% config.base %] and
+associated files under the Artistic Licence or the GNU General Public
+Licence.

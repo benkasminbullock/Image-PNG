@@ -154,7 +154,7 @@ I tried to compile and run a small test program in C to see if I could
 #include the libpng header file "png.h" and link to the library
 "libpng". Somehow or other this didn't work out. If you don't have
 libpng on your system, sorry but you need to install it to use
-Image::PNG. If you think you have libpng on your system, please edit
+[% config.base %]. If you think you have libpng on your system, please edit
 the file "Makefile.PL" and run "perl Makefile.PL" again. The relevant
 lines are right at the top of the file,
 
@@ -184,8 +184,8 @@ EOF
 }
 
 WriteMakefile (
-    NAME         => 'Image::PNG',
-    VERSION      => '0.01',
+    NAME         => '[% config.base %]',
+    VERSION      => '[% config.version %]',
     OBJECT       => 'Libpng.o perl-libpng.o',
     LIBS         => $libs,
     INC          => $inc,
@@ -194,7 +194,7 @@ WriteMakefile (
 my @names = (qw());
 
 ExtUtils::Constant::WriteConstants(
-    NAME         => 'Image::PNG::Libpng',
+    NAME         => '[% config.base %]::Libpng',
     NAMES        => \@names,
     DEFAULT_TYPE => 'IV',
     C_FILE       => 'const-c.inc',
@@ -238,10 +238,10 @@ EOF
     }
     if ( -d ".git") {
 	$cfunctions_build .= <<EOF;
-lib/Image/PNG.pm:	tmpl/PNG.pm.tmpl build/make-files.pl
+lib/[% config.base_slash %]:	tmpl/[% config.main_module %].tmpl build/make-files.pl
 	build/make-files.pl
 
-lib/Image/PNG/Libpng.pm:	tmpl/Libpng.pm.tmpl build/make-files.pl
+lib/[% config.out_dir %]/Libpng.pm:	tmpl/Libpng.pm.tmpl build/make-files.pl
 	build/make-files.pl
 
 Libpng.xs:   tmpl/Libpng.xs.tmpl tmpl/config build/make-files.pl

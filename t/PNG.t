@@ -1,13 +1,12 @@
-
 use warnings;
 use strict;
 use FindBin;
 use Test::More tests => 5;
-use_ok ("File::PNG");
+use_ok ("Image::PNG");
 
-use File::PNG;
+use Image::PNG;
 
-my $png = File::PNG->new ();
+my $png = Image::PNG->new ();
 my $file = "$FindBin::Bin/test.png";
 $png->read_file ($file);
 ok ($png->width () == 100, "oo-width");

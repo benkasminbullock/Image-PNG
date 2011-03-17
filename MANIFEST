@@ -1,17 +1,17 @@
 const-c.inc
 const-xs.inc
-lib/File/PNG.pm
-lib/File/PNG/Libpng.pm
-lib/File/PNG/Const.pm
+lib/Image/PNG.pm
+lib/Image/PNG/Libpng.pm
+lib/Image/PNG/Const.pm
 Makefile.PL
 MANIFEST			This list of files
 perl-libpng.c
 perl-libpng.h
 Libpng.xs
-t/File-PNG-Libpng.t
-t/File-PNG.t
-t/File-PNG-Const.t
-t/File-PNG-PLTE.t
+t/Image-PNG-Libpng.t
+t/Image-PNG.t
+t/Image-PNG-Const.t
+t/Image-PNG-PLTE.t
 t/test-write.png
 t/test.png
 t/with-text.png

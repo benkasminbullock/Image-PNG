@@ -1,4 +1,4 @@
-package File::PNG::Const;
+package [% config.base %]::Const;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw/
@@ -51,3 +51,4 @@ environment.
 The template for creating Const.pm is in directory C<tmpl> in the
 File::PNG distribution. Its name is C<Const.pm.tmpl>.
 
+[% INCLUDE author %]
