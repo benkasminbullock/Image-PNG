@@ -6,7 +6,7 @@
 #include "perl-libpng.h"
 #include "const-c.inc"
 
-MODULE = File::PNG::Libpng	PACKAGE = File::PNG  PREFIX = perl_png_
+MODULE = File::PNG	PACKAGE = File::PNG::Libpng  PREFIX = perl_png_
 
 PROTOTYPES: ENABLE
 

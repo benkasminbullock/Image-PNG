@@ -12,10 +12,10 @@
 #line 10 "perl-libpng.c"
 
 #line 12 "perl-libpng.c"
-typedef png_structp File__PNG__Png;
+typedef png_structp File__PNG__Libpng__Png;
 
 #line 13 "perl-libpng.c"
-typedef png_infop File__PNG__Info;
+typedef png_infop File__PNG__Libpng__Info;
 
 #line 37 "perl-libpng.c"
 void perl_png_timep_to_hash (const png_timep mod_time , HV * time_hash );
@@ -43,5 +43,8 @@ const char * perl_png_text_compression_name (int text_compression );
 
 #line 417 "perl-libpng.c"
 AV * perl_png_get_rows (png_structp png_ptr , png_infop info_ptr );
+
+#line 477 "perl-libpng.c"
+int perl_png_get_PLTE (png_structp png_ptr , png_infop info_ptr , AV * perl_colors );
 
 #endif /* CFH_PERL_LIBPNG_H */

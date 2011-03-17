@@ -222,7 +222,7 @@ so that new prototypes need to be made for them.
 EOF
     }
     my $cfunctions_build = <<EOF;
-PNG.o: perl-libpng.h
+Libpng.o: perl-libpng.h
 EOF
     my $has_cfunctions = find_program ('cfunctions', $verbose);
 
