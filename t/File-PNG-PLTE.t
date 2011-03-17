@@ -2,23 +2,24 @@ use warnings;
 use strict;
 use FindBin;
 use autodie;
-use lib '../blib/arch';
-use lib '../blib/lib';
-use File::PNG;
+use File::PNG::Libpng;
+use Test::More tests => 3;
 
-#my $file_name = "$FindBin::Bin/guffin-downloaded.png";
 my $file_name = "$FindBin::Bin/tantei-san.png";
-my $png = File::PNG::create_read_struct ();
+my $png = File::PNG::Libpng::create_read_struct ();
 open my $file, "<:raw", $file_name;
-File::PNG::init_io ($png, $file);
-my $info = File::PNG::create_info_struct ($png);
+File::PNG::Libpng::init_io ($png, $file);
+my $info = File::PNG::Libpng::create_info_struct ($png);
 #print "Reading PNG.\n";
-File::PNG::read_png ($png, $info);
+File::PNG::Libpng::read_png ($png, $info);
 #print "Getting rows.\n";
 my @colors;
-File::PNG::get_PLTE ($png, $info, \@colors);
+File::PNG::Libpng::get_PLTE ($png, $info, \@colors);
 #exit;
-for my $color (@colors) {
-    print "Red: $color->{red} green: $color->{green} blue: $color->{blue}\n";
-}
+#for my $color (@colors) {
+#    print "Red: $color->{red} green: $color->{green} blue: $color->{blue}\n";
+#}
+ok ($colors[10]->{red} == 10);
+ok ($colors[20]->{green} == 20);
+ok ($colors[200]->{blue} == 200);
 close $file;

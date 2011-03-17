@@ -15,6 +15,8 @@ Makefile
 PNG.bs
 PNG.c
 
+Libpng.c
+
 # A file generated from a template
 
 lib/File/PNG/Const.pm
