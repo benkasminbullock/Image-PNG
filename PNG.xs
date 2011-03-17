@@ -148,3 +148,28 @@ int perl_png_access_version_number ()
         RETVAL = png_access_version_number ();
         OUTPUT:
         RETVAL
+
+AV * perl_png_get_rows (Png, Info)
+        File::PNG::Png Png
+        File::PNG::Info Info
+        CODE:
+        RETVAL = perl_png_get_rows (Png, Info);
+        OUTPUT:
+        RETVAL
+
+int perl_png_get_rowbytes (Png, Info)
+        File::PNG::Png Png
+        File::PNG::Info Info
+        CODE:
+        RETVAL = png_get_rowbytes (Png, Info);
+        OUTPUT:
+        RETVAL
+
+int perl_png_get_PLTE (Png, Info, colors)
+        File::PNG::Png Png
+        File::PNG::Info Info
+        AV * colors
+        CODE:
+        RETVAL = perl_png_get_PLTE (Png, Info, colors);
+        OUTPUT:
+        RETVAL

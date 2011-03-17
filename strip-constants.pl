@@ -16,7 +16,8 @@ my %macros;
     while ($text =~ /^\#define\s+
                      (PNG_\w+)\s+
                      (
-                         (?:0[xX])?[0-9a-fA-F]+|
+                         (?:0[xX]|-)?
+                         [0-9a-fA-F]+|
                          \w+|
                          \((?:\(png_.*?\))?[^\)]+\)
                      )

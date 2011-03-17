@@ -411,3 +411,91 @@ const char * perl_png_text_compression_name (int text_compression)
 }
 
 #undef PERL_PNG_COLOR_TYPE
+
+AV *
+perl_png_get_rows (png_structp png_ptr, png_infop info_ptr)
+{
+    png_bytepp rows;
+    int rowbytes;
+    int height;
+    SV ** row_svs;
+    int r;
+    AV * perl_rows;
+
+    /* Get the information from the PNG. */
+
+    height = png_get_image_height (png_ptr, info_ptr);
+    if (height == 0) {
+        fprintf (stderr, "Image has no height.\n");
+        return 0;
+        /* We are shafted. */
+    }
+    else {
+        //        printf ("Image has height %d\n", height);
+    }
+    rows = png_get_rows (png_ptr, info_ptr);
+    if (rows == 0) {
+        fprintf (stderr, "Image has no rows.\n");
+        return 0;
+        /* We are shafted. */
+    }
+    else {
+        //        printf ("Image has some rows\n");
+    }
+    rowbytes = png_get_rowbytes (png_ptr, info_ptr);
+    if (rowbytes == 0) {
+        fprintf (stderr, "Image rows have zero length.\n");
+        return 0;
+        /* We are shafted. */
+    }
+    else {
+        //        printf ("Image rows are length %d\n", rowbytes);
+    }
+
+    /* Create Perl stuff to put the row info into. */
+
+    row_svs = calloc (height, sizeof (SV *));
+    if (! row_svs) {
+        /* We are shafted. */
+        return 0;
+    }
+    //    printf ("Making %d scalars.\n", height);
+    for (r = 0; r < height; r++) {
+        row_svs[r] = newSVpvn (rows[r], rowbytes);
+    }
+    perl_rows = av_make (height, row_svs);
+    //    printf ("There are %d elements in the array.\n", av_len (perl_rows));
+    free (row_svs);
+    return perl_rows;
+}
+
+/* Return an array of hashes containing the colour values of the palette. */
+
+int
+perl_png_get_PLTE (png_structp png_ptr, png_infop info_ptr,
+                   AV * perl_colors)
+{
+    png_colorp colors;
+    int n_colors;
+    png_uint_32 status;
+    int i;
+
+    status = png_get_PLTE (png_ptr, info_ptr, & colors, & n_colors);
+    if (status != PNG_INFO_PLTE) {
+        return status;
+    }
+    av_clear (perl_colors);
+    for (i = 0; i < n_colors; i++) {
+        HV * palette_entry;
+
+        //        printf ("Palette entry %d\n", i);
+        palette_entry = newHV ();
+#define PERL_PNG_STORE_COLOR(x) hv_store (palette_entry, #x, strlen (#x), \
+                           newSViv (colors[i].x), 0)
+        PERL_PNG_STORE_COLOR (red);
+        PERL_PNG_STORE_COLOR (green);
+        PERL_PNG_STORE_COLOR (blue);
+#undef PERL_PNG_STORE_COLOR
+        av_push (perl_colors, newRV ((SV *) palette_entry));
+    }
+}

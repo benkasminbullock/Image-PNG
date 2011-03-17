@@ -20,22 +20,28 @@ typedef png_infop File__PNG__Info;
 #line 37 "perl-libpng.c"
 void perl_png_timep_to_hash (const png_timep mod_time , HV * time_hash );
 
-#line 202 "perl-libpng.c"
+#line 212 "perl-libpng.c"
 int perl_png_get_text (png_structp png_ptr , png_infop info_ptr , SV * text_ref );
 
-#line 236 "perl-libpng.c"
+#line 246 "perl-libpng.c"
 int perl_png_get_time (png_structp png_ptr , png_infop info_ptr , SV * time_ref );
 
-#line 262 "perl-libpng.c"
+#line 272 "perl-libpng.c"
 int perl_png_sig_cmp (SV * png_header , int start , int num_to_check );
 
-#line 309 "perl-libpng.c"
+#line 319 "perl-libpng.c"
 void perl_png_scalar_as_image (png_structp png_ptr , SV * image_data );
 
-#line 326 "perl-libpng.c"
+#line 336 "perl-libpng.c"
 int perl_png_get_IHDR (png_structp png_ptr , png_infop info_ptr , HV * IHDR_ref );
 
-#line 361 "perl-libpng.c"
+#line 375 "perl-libpng.c"
 const char * perl_png_color_type_name (int color_type );
+
+#line 399 "perl-libpng.c"
+const char * perl_png_text_compression_name (int text_compression );
+
+#line 417 "perl-libpng.c"
+AV * perl_png_get_rows (png_structp png_ptr , png_infop info_ptr );
 
 #endif /* CFH_PERL_LIBPNG_H */
