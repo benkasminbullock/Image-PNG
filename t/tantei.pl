@@ -3,8 +3,8 @@ use warnings;
 use strict;
 use lib '../blib/arch';
 use lib '../blib/lib';
-use File::PNG;
-my $png = File::PNG->new ();
+use Image::PNG;
+my $png = Image::PNG->new ();
 $png->read_file ('tantei-san-2.png');
 printf "%d x %d %s %d\n", $png->width, $png->height, $png->color_type, $png->bit_depth;
 my $rows = $png->rows;
@@ -15,7 +15,7 @@ for my $i (0..$png->height - 1) {
         $pixels[$i][$j] = ord substr ($rows->[$i], $j, 1);
     }
 }
-my $x_size = 60;
+my $x_size = 70;
 my $y_size = 20;
 my $x_scale = $x_size / $png->width;
 my $y_scale = $y_size / $png->height;
@@ -45,7 +45,7 @@ for my $i (0..$png->width - 1) {
     }
 }
 print "Max is $max\n";
-my @shades = (' ', ' ', qw/. : - | + = % * & % X @/);
+my @shades = (' ', ' ', qw/. : - | + = % * & % X @ @/);
     for my $j (0..$y_size - 1) {
 for my $i (0..$x_size - 1) {
         my $offset = (1 - $ascii_pixels[$j][$i]/$max) * $#shades;

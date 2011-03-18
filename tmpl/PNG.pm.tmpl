@@ -2,6 +2,7 @@ package [% config.base %];
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw/display_text/;
+use [% config.base %]::Const ':all';
 use [% config.base %]::Libpng;
 use warnings;
 use strict;
@@ -13,6 +14,40 @@ sub error
 {
     my ($png) = @_;
     return $png->{error_string};
+}
+
+sub fatal_error
+{
+    my ($png) = @_;
+    return $png->{error_string};
+}
+
+my %IHDR_fields = (
+    width => {
+    },
+    height => {
+    },
+    bit_depth => {
+        default => 8,
+    },
+    color_type => {
+    },
+    interlace_type => {
+        default => PNG_INTERLACE_NONE,
+    },
+);
+
+
+sub write_info_error
+{
+    my ($png) = @_;
+    my @unset;
+    for my $field (sort keys %IHDR_fields) {
+        if (!$IHDR_fields{$field}{default}) {
+            push @unset, $field;
+        }
+        print "Set the following fields: ", join ", ", @unset;
+    }
 }
 
 sub new
@@ -55,21 +90,64 @@ sub read_file
         return;
     }
     $png->{read_png} = [% config.base %]::Libpng::create_read_struct ();
-    $png->{read_info} = [% config.base %]::Libpng::create_info_struct ($png->{read_png});
     if (! open $png->{read_fh}, "<:raw", $png->{read_file_name}) {
         carp __PACKAGE__,
             ": I tried to open $png->{read_file_name} but encountered the following error: $!";
         return;
     }
     [% config.base %]::Libpng::init_io ($png->{read_png}, $png->{read_fh});
-    [% config.base %]::Libpng::read_png ($png->{read_png}, $png->{read_info});
+    [% config.base %]::Libpng::read_png ($png->{read_png});
     $png->{read_ok} = 1;
     return 1;
 }
 
 sub write_file
 {
-    my ($png, $file_name);
+    my ($png, $file_name) = @_;
+    if (! $png->{write_ok}) {
+        if (! $png->{read_ok}) {
+            $png->write_info_error ();
+        }
+        $png->init_write ();
+    }
+#    if (! $png->{write}->{
+}
+
+sub write_set
+{
+    my ($png, $key, $value) = @_;
+    if (! $png->{write_ok}) {
+        $png->init_write ();
+    }
+    $png->{write}->{$key} = $value;
+}
+
+# Initialize the object $png for writing (get the stupid libpng things
+# we need to write an image, set a flag "write_ok" in the image.).
+
+sub init_write
+{
+    my ($png) = @_;
+    if ($png->{write_ok}) {
+        $png->error ("Writing already initialized");
+        return;
+    }
+    $png->{write} = {};
+    $png->{write}->{png} =
+        [% config.base %]::Libpng::create_write_struct ();
+    $png->{write}->{info} =
+        [% config.base %]::Libpng::create_info_struct ($png->{write_png});
+    $png->{write_ok} = 1;
+}
+
+sub raise_error
+{
+    my ($png, $error_level) = @_;
+}
+
+sub print_error
+{
+    my ($png, $error_level) = @_;
 }
 
 sub data
@@ -96,61 +174,97 @@ sub get_IHDR
         return;
     }
     $png->{IHDR} = {};
-    [% config.base %]::Libpng::get_IHDR ($png->{read_png}, $png->{read_info}, $png->{IHDR});
+    [% config.base %]::Libpng::get_IHDR ($png->{read_png}, $png->{IHDR});
+}
+
+sub get
+{
+    my ($png, $key) = @_;
+    if (! $png->{IHDR}) {
+        $png->get_IHDR ();
+    }
+    return $png->{IHDR}->{$key};
 }
 
 sub width
 {
-    my ($png) = @_;
-    if (! $png->{IHDR}) {
-        $png->get_IHDR ();
+    my ($png, $width) = @_;
+    if ($width) {
+        write_set ($png, 'width', $width);
     }
-    return $png->{IHDR}->{width};
+    else {
+        return get ($png, 'width');
+    }
 }
 
 sub height
 {
-    my ($png) = @_;
-    if (! $png->{IHDR}) {
-        $png->get_IHDR ();
+    my ($png, $height) = @_;
+    if ($height) {
+        write_set ($png, 'height', $height);
     }
-    return $png->{IHDR}->{height};
+    else {
+        return get ($png, 'height');
+    }
 }
 
 sub color_type
 {
-    my ($png) = @_;
-    if (! $png->{IHDR}) {
-        $png->get_IHDR ();
+    my ($png, $color_type) = @_;
+    if ($color_type) {
+        write_set ($png, 'color_type', $color_type);
     }
-    return [% config.base %]::Libpng::color_type_name ($png->{IHDR}->{color_type});
+    else {
+        return 
+            [% config.base %]::Libpng::color_type_name (
+                get ($png, 'color_type')
+            );
+    }
 }
 
 sub bit_depth
 {
-    my ($png) = @_;
-    if (! $png->{IHDR}) {
-        $png->get_IHDR ();
+    my ($png, $bit_depth) = @_;
+    if ($bit_depth) {
+        write_set ($png, 'bit_depth', $bit_depth);
     }
-    return $png->{IHDR}->{bit_depth};
+    else {
+        return get ($png, 'bit_depth')
+    }
 }
 
 sub rows
+{
+    my ($png, $rows) = @_;
+    if ($rows) {
+        # Set the rows
+    }
+    else {
+        # Read the rows
+    if (! $png->{read_ok}) {
+#        $png->handle_error ("");
+        return;
+    }
+    return [% config.base %]::Libpng::get_rows ($png->{read_png});
+}
+}
+
+sub rowbytes
 {
     my ($png) = @_;
     if (! $png->{read_ok}) {
 #        $png->handle_error ("");
         return;
     }
-    return [% config.base %]::Libpng::get_rows ($png->{read_png}, $png->{read_info});
+    return [% config.base %]::Libpng::get_rowbytes ($png->{read_png});
 }
 
 sub text
 {
-    my ($png) = @_;
+    my ($png, $text) = @_;
     if (! $png->{text}) {
         my $text_ref = [];
-        [% config.base %]::Libpng::get_text ($png->{read_png}, $png->{read_info}, $text_ref);
+        [% config.base %]::Libpng::get_text ($png->{read_png}, $text_ref);
         $png->{text} = $text_ref;
         # Change the text compression field to words rather than numbers.
         for my $text (@{$png->{text}}) {
@@ -166,9 +280,9 @@ sub text
 
 sub time
 {
-    my ($png) = @_;
+    my ($png, $time) = @_;
     my %time;
-    [% config.base %]::Libpng::get_tIME ($png->{read_png}, $png->{read_info}, \%time);
+    [% config.base %]::Libpng::get_tIME ($png->{read_png}, \%time);
     return \%time;
 }
 
@@ -182,7 +296,7 @@ sub DESTROY
         print "Freeing the memory of a PNG object.\n";
     }
     if ($png->{read_png}) {
-        [% config.base %]::Libpng::destroy_read_struct ($png->{read_png}, $png->{read_info});
+        [% config.base %]::Libpng::destroy_read_struct ($png->{read_png});
     }
 }
 
@@ -447,3 +561,6 @@ software such as Netscape Navigator and BeOS.
 
 =cut
 
+# Local Variables:
+# mode: perl
+# End:

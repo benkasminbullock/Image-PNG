@@ -1,4 +1,7 @@
 #!/home/ben/software/install/bin/perl
+
+# This turns the template files into their distribution-ready forms.
+
 use warnings;
 use strict;
 use Template;
@@ -32,6 +35,9 @@ my @files = qw/
 
 my %vars;
 $vars{config} = \%config;
+$vars{functions} = Build::get_functions (\%config);
+$vars{self} = $0;
+$vars{date} = scalar gmtime ();
 
 for my $file (@files) {
     my $template = "$file.tmpl";
@@ -49,7 +55,9 @@ for my $file (@files) {
     else {
         $output = "$config{submodule_dir}/$file";
     }
-    print "Processing $template into $output.\n";
+#    print "Processing $template into $output.\n";
+    $vars{input} = $template;
+    $vars{output} = $output;
     if (-f $output) {
         chmod 0644, $output;
     }

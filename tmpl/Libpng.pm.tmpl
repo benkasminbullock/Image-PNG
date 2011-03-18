@@ -5,8 +5,11 @@ package [% config.base %]::Libpng;
 require Exporter;
 require DynaLoader;
 @ISA = qw(Exporter);
-@EXPORT_OK = qw/sig_cmp create_read_struct create_write_struct
-                init_io scalar_as_image get_IHDR color_type_name/;
+@EXPORT_OK = qw/
+[% FOR function IN functions -%]
+	[% function %]
+[% END -%]
+/;
 
 require XSLoader;
 [% INCLUDE version %]
@@ -421,9 +424,9 @@ functions from libpng to [% config.base %]::Libpng.
 
 =over
 
-=item png_set_write_function
+=item png_set_write_fn
 
-=item png_set_read_function
+=item png_set_read_fn
 
 =back
 
@@ -458,23 +461,21 @@ consider adding that facility to the module.
 
 =head2 About libpng
 
-Since [% config.base %]::Libpng is closely based on libpng, please be warned
-that the libpng library is partially undocumented and highly
-inconsistent, and in some cases the function interfaces of libpng are
-absolutely crazy.
+Since [% config.base %]::Libpng is closely based on libpng, please be
+warned that the libpng library is partially undocumented and highly
+inconsistent.
 
-The first thing you will notice is that the main convention libpng
-uses, having two structures, "png" and "info", for each call, doesn't
-make any sense; you can't do anything with only a "png" structure or
-an "info" structure by itself, so it's just plain ridiculous to make
-every use of the library rely on creating and passing around two
-structures instead of one.
+The first odd thing you might notice is that the main convention
+libpng uses, having two structures, "png" and "info", for each call,
+isn't necessary; there is very little you can do with only a "png"
+structure or only an "info" structure, so there is no logical reason
+to make every use of the library rely on creating and passing around
+two structures instead of one.
 
 Next, some of the things it asks for, for example requiring the user
 to allocate a C<png_struct> before calling the library to ask for its
-version number, are just pointless and completely stupid (see
-L</get_libpng_ver>); the library ignores the allocated structure
-anyway.
+version number (see L</get_libpng_ver>), don't seem to have any basis
+in rationality; the library ignores the allocated structure anyway.
 
 There is also little consistency between different functions, with
 some returning their results using references, and some using the
@@ -483,37 +484,41 @@ uses the return value of the function to return an array of pointers,
 and yet C<png_get_PLTE> (see L</get_PLTE>) uses a pointer reference to
 return an array of pointers, and the return value to indicate errors.
 
-But we have only begun to scratch the surface of libpng's weirdness;
-some of the functions use the return value to indicate errors, and
-some of the functions don't bother indicating errors at all but simply
-fail silently on what should be fatal error conditions. And it gets
-worse. Some of the functions which use the return value to indicate an
-error use a non-zero value to indicate an error, and some of them use
-a zero value to indicate an error.
+The error handling is also very odd; some functions use the return
+value to indicate errors, and some of the functions don't bother
+indicating errors at all but simply fail silently on what should be
+fatal error conditions. Compounding this, some of the functions which
+use the return value to indicate an error use a non-zero value to
+indicate an error, and some of them use a zero value to indicate an
+error.
 
-Adding to this confusion, many parts of the interface aren't properly
-documented.  For example, for many of the functions in the library
-there is no information anywhere in the documentation about the return
-values of the functions, and one simply has to examine the source
-code.
+The libpng documentation suggests using setjmp/longjmp to handle
+errors, which is not a sensible way to deal with errors in library
+code, and is not something I would want to introduce into a Perl
+extension module.
 
-So, the main interface of this package is in L<[% config.base %]>, and this
-module is just a bridge between L<[% config.base %]> and libpng. I made
-[% config.base %]::Libpng a mirror of the libpng functions not because I think
-that the libpng functions are worth duplicating in Perl, but because I
-don't want to have to design a consistent procedural interface to
-libpng in Perl.  If you find [% config.base %]::Libpng inconsistent and
-confusing, please use L<[% config.base %]> instead. If you don't find
-[% config.base %]::Libpng inconsistent and confusing, you are hallucinating;
-seek medical assistance. [% config.base %]::Libpng is a representation of
-libpng's insane interface in Perl, whereas L<[% config.base %]> is an attempt
-to make a simple Perl interface to the PNG file format.
+Finally, many parts of the interface aren't properly documented.  For
+example, for many of the functions in the library there is no
+information anywhere in the documentation about the return values of
+the functions, and one simply has to examine the source code.
+
+So, the main interface of this package is in L<[% config.base %]>, and
+this module is just a bridge between L<[% config.base %]> and
+libpng. I made [% config.base %]::Libpng a mirror of the libpng
+functions not because I think that the libpng functions are worth
+duplicating in Perl, but because I don't want to have to design a
+consistent procedural interface to libpng in Perl.  If you find [%
+config.base %]::Libpng inconsistent and confusing, please use L<[%
+config.base %]> instead. [% config.base %]::Libpng is a representation
+of libpng's fairly eccentric interface in Perl, whereas L<[%
+config.base %]> is an attempt to make a simple Perl interface to the
+PNG file format.
 
 =head3 "Official" documentation
 
-The starting point is the plain text L<libpng
-manual|http://libpng.org/pub/png/libpng-manual.txt> and the manual
-page libpng.3, which you can read using "man 3 libpng". 
+The starting point is the plain text libpng manual at
+L<http://libpng.org/pub/png/libpng-manual.txt> and the manual page
+libpng.3, which you can read using "man 3 libpng".
 
 Be warned that the documentation which comes with libpng is rather
 sketchy. See L</About libpng>. It doesn't contain full specifications
@@ -567,3 +572,7 @@ how to make a PNG file with text segments in C.
 [% INCLUDE "author" %]
 
 =cut
+
+# Local Variables:
+# mode: perl
+# End:

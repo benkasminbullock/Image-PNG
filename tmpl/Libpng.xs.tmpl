@@ -12,97 +12,81 @@ PROTOTYPES: ENABLE
 
 INCLUDE: const-xs.inc
 
-[% config.base %]::Libpng::Png perl_png_create_read_struct ()
+[% config.base %]::Libpng::t * perl_png_create_read_struct ()
         CODE:
-        RETVAL = png_create_read_struct (PNG_LIBPNG_VER_STRING, 0, 0, 0);
+        RETVAL = perl_png_create_read_struct ();
         OUTPUT:
         RETVAL
 
-[% config.base %]::Libpng::Png perl_png_create_write_struct ()
+[% config.base %]::Libpng::t * perl_png_create_write_struct ()
         CODE:
-        RETVAL = png_create_write_struct (PNG_LIBPNG_VER_STRING, 0, 0, 0);
+        RETVAL = perl_png_create_write_struct ();
         OUTPUT:
         RETVAL
 
-void perl_png_destroy_read_struct (Png, Info = 0, EndInfo = 0)
-        [% config.base %]::Libpng::Png Png
-        [% config.base %]::Libpng::Info Info
-        [% config.base %]::Libpng::Info EndInfo
+void perl_png_destroy_read_struct (Png)
+        [% config.base %]::Libpng::t *  Png
         CODE:
-        png_destroy_read_struct (& Png, & Info, & EndInfo);
+        perl_png_destroy_read_struct (Png);
         OUTPUT:
 
-void perl_png_destroy_write_struct (Png, Info = 0)
-        [% config.base %]::Libpng::Png Png
-        [% config.base %]::Libpng::Info Info
+void perl_png_destroy_write_struct (Png)
+        [% config.base %]::Libpng::t *  Png
         CODE:
-        png_destroy_write_struct (& Png, & Info);
+        perl_png_destroy_write_struct (Png);
         OUTPUT:
 
-void perl_png_write_png (Png, Info, transforms)
-        [% config.base %]::Libpng::Png Png
-        [% config.base %]::Libpng::Info Info
+void perl_png_write_png (Png, transforms)
+        [% config.base %]::Libpng::t *  Png
         int transforms
         CODE:
-        png_write_png (Png, Info, transforms, 0);
+        png_write_png (Png->png, Png->info, transforms, 0);
         OUTPUT:
-
-[% config.base %]::Libpng::Info perl_png_create_info_struct (Png)
-        [% config.base %]::Libpng::Png Png
-        CODE:
-        RETVAL = png_create_info_struct (Png);
-        OUTPUT:
-        RETVAL
 
 void perl_png_init_io (Png, fp)
-        [% config.base %]::Libpng::Png Png
+        [% config.base %]::Libpng::t *  Png
         FILE * fp
         CODE:
-        png_init_io (Png, fp);
+        png_init_io (Png->png, fp);
         OUTPUT:
 
-void perl_png_read_info (Png, Info)
-        [% config.base %]::Libpng::Png Png
-        [% config.base %]::Libpng::Info Info
+void perl_png_read_info (Png)
+        [% config.base %]::Libpng::t *  Png
         CODE:
-        png_read_info (Png, Info);
+        png_read_info (Png->png, Png->info);
         OUTPUT:
 
-void perl_png_read_png (Png, Info, transforms = PNG_TRANSFORM_IDENTITY)
-        [% config.base %]::Libpng::Png Png
-        [% config.base %]::Libpng::Info Info
+void perl_png_read_png (Png, transforms = PNG_TRANSFORM_IDENTITY)
+        [% config.base %]::Libpng::t *  Png
         int transforms
         CODE:
-        png_read_png (Png, Info, transforms, 0);
+        png_read_png (Png->png, Png->info, transforms, 0);
         OUTPUT:
 
-int perl_png_get_IHDR (Png, Info, IHDR_ref)
-        [% config.base %]::Libpng::Png Png
-        [% config.base %]::Libpng::Info Info
+int perl_png_get_IHDR (Png, IHDR_ref)
+        [% config.base %]::Libpng::t *  Png
         HV * IHDR_ref
         CODE:
         int w, h, bit_depth, color_type;
-        RETVAL = perl_png_get_IHDR (Png, Info, IHDR_ref);
+        RETVAL = perl_png_get_IHDR (Png, IHDR_ref);
         OUTPUT:
         RETVAL
         IHDR_ref
 
-int perl_png_get_tIME (Png, Info, time_ref)
-        [% config.base %]::Libpng::Png Png
-        [% config.base %]::Libpng::Info Info
+int perl_png_get_tIME (Png, time_ref)
+        [% config.base %]::Libpng::t *  Png
         SV * time_ref
         CODE:
-        RETVAL = perl_png_get_time (Png, Info, time_ref);
+        RETVAL = perl_png_get_time (Png, time_ref);
         OUTPUT:
         RETVAL
         time_ref
 
-int perl_png_get_text (Png, Info, text_ref)
-        [% config.base %]::Libpng::Png Png
-        [% config.base %]::Libpng::Info Info
+int perl_png_get_text (Png, text_ref)
+        [% config.base %]::Libpng::t *  Png
         SV * text_ref
         CODE:
-        RETVAL = perl_png_get_text (Png, Info, text_ref);
+        RETVAL = perl_png_get_text (Png, text_ref);
         OUTPUT:
         RETVAL
         text_ref
@@ -117,7 +101,7 @@ int perl_png_sig_cmp (sig, start = 0, num_to_check = 8)
         RETVAL
 
 void perl_png_scalar_as_image (Png, scalar)
-        [% config.base %]::Libpng::Png Png
+        [% config.base %]::Libpng::t *  Png
         SV * scalar
         CODE:
         perl_png_scalar_as_image (Png, scalar);
@@ -149,27 +133,48 @@ int perl_png_access_version_number ()
         OUTPUT:
         RETVAL
 
-AV * perl_png_get_rows (Png, Info)
-        [% config.base %]::Libpng::Png Png
-        [% config.base %]::Libpng::Info Info
+AV * perl_png_get_rows (Png)
+        [% config.base %]::Libpng::t *  Png
         CODE:
-        RETVAL = perl_png_get_rows (Png, Info);
+        RETVAL = perl_png_get_rows (Png);
         OUTPUT:
         RETVAL
 
-int perl_png_get_rowbytes (Png, Info)
-        [% config.base %]::Libpng::Png Png
-        [% config.base %]::Libpng::Info Info
+int perl_png_get_rowbytes (Png)
+        [% config.base %]::Libpng::t *  Png
         CODE:
-        RETVAL = png_get_rowbytes (Png, Info);
+        RETVAL = png_get_rowbytes (Png->png, Png->info);
         OUTPUT:
         RETVAL
 
-int perl_png_get_PLTE (Png, Info, colors)
-        [% config.base %]::Libpng::Png Png
-        [% config.base %]::Libpng::Info Info
+int perl_png_get_PLTE (Png, colors)
+        [% config.base %]::Libpng::t *  Png
         AV * colors
         CODE:
-        RETVAL = perl_png_get_PLTE (Png, Info, colors);
+        RETVAL = perl_png_get_PLTE (Png, colors);
+        OUTPUT:
+        RETVAL
+
+int perl_png_get_bKGD (Png, background)
+        [% config.base %]::Libpng::t *  Png
+        HV * background
+        CODE:
+        RETVAL = perl_png_get_bKGD (Png, background);
+        OUTPUT:
+        RETVAL
+
+int perl_png_get_cHRM (Png, cie_chromacities)
+        [% config.base %]::Libpng::t *  Png
+        HV * cie_chromacities
+        CODE:
+        RETVAL = perl_png_get_cHRM (Png, cie_chromacities);
+        OUTPUT:
+        RETVAL
+        cie_chromacities
+
+int perl_png_get_channels (Png);
+        [% config.base %]::Libpng::t * Png
+        CODE:
+        RETVAL = png_get_channels (Png->png, Png->info);
         OUTPUT:
         RETVAL

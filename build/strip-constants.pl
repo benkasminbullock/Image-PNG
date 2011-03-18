@@ -1,4 +1,8 @@
 #!/home/ben/software/install/bin/perl
+
+# This strips out the constants of png.h and puts them into a Perl
+# module.
+
 use warnings;
 use strict;
 use autodie;
@@ -25,10 +29,12 @@ my %macros;
                          (?:0[xX]|-)?
                          [0-9a-fA-F]+|
                          \w+|
-                         \((?:\(png_.*?\))?[^\)]+\)
+                         \(
+                         (?:\(png_.*?\))?[^\)]+
+                         \)
                      )
                     /gxsm) {
-        my ($macro, $value) = ($1, $2, $3);
+        my ($macro, $value) = ($1, $2);
         $value =~ s/\(png.*\)//;
 
         # Now we reject constants which aren't necessary for Perl.

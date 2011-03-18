@@ -8,10 +8,10 @@ MANIFEST			This list of files
 perl-libpng.c
 perl-libpng.h
 Libpng.xs
-t/Image-PNG-Libpng.t
-t/Image-PNG.t
-t/Image-PNG-Const.t
-t/Image-PNG-PLTE.t
+t/Libpng.t
+t/PNG.t
+t/Const.t
+t/PLTE.t
 t/test-write.png
 t/test.png
 t/with-text.png

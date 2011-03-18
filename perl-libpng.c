@@ -9,8 +9,14 @@
 
 #ifdef HEADER
 
-typedef png_structp Image__PNG__Libpng__Png;
-typedef png_infop Image__PNG__Libpng__Info;
+typedef struct perl_libpng {
+    png_structp png;
+    png_infop info;
+    png_infop end_info;
+}
+perl_libpng_t;
+
+typedef perl_libpng_t Image__PNG__Libpng__t;
 
 #endif
 
@@ -28,6 +34,44 @@ static const char * time_fields[] = {
 };
 
 #define N_TIME_FIELDS (sizeof (time_fields) / sizeof (const char *))
+
+static perl_libpng_t *
+perl_png_allocate ()
+{
+    perl_libpng_t * png = calloc (1, sizeof (perl_libpng_t));
+
+}
+
+perl_libpng_t *
+perl_png_create_write_struct ()
+{
+    perl_libpng_t * png = perl_png_allocate ();
+    png->png = png_create_write_struct (PNG_LIBPNG_VER_STRING, 0, 0, 0);
+    png->info = png_create_info_struct (png->png);
+    return png;
+}
+
+perl_libpng_t *
+perl_png_create_read_struct ()
+{
+    perl_libpng_t * png = perl_png_allocate ();
+    png->png = png_create_read_struct (PNG_LIBPNG_VER_STRING, 0, 0, 0);
+    png->info = png_create_info_struct (png->png);
+    return png;
+}
+
+perl_png_destroy_write_struct (perl_libpng_t * png)
+{
+    png_destroy_write_struct (& png->png, & png->info);
+    free (png);
+}
+
+perl_png_destroy_read_struct (perl_libpng_t * png)
+{
+    png_destroy_read_struct (& png->png, & png->info, & png->end_info);
+    free (png);
+}
+
 
 /* "perl_png_timep_to_hash" converts a PNG time structure to a Perl
    associative array with named fields of the same name as the members
@@ -208,7 +252,7 @@ perl_png_textp_to_hash (const png_textp text_ptr)
  */
 
 int
-perl_png_get_text (png_structp png_ptr, png_infop info_ptr, SV * text_ref)
+perl_png_get_text (perl_libpng_t * png, SV * text_ref)
 {
     int num_text = 0;
     if (SvROK (text_ref)) {
@@ -217,7 +261,7 @@ perl_png_get_text (png_structp png_ptr, png_infop info_ptr, SV * text_ref)
             png_textp text_ptr;
             int i;
 
-            png_get_text (png_ptr, info_ptr, & text_ptr, & num_text);
+            png_get_text (png->png, png->info, & text_ptr, & num_text);
             for (i = 0; i < num_text; i++) {
                 HV * hash;
                 SV * hash_ref;
@@ -242,11 +286,11 @@ perl_png_get_text (png_structp png_ptr, png_infop info_ptr, SV * text_ref)
    associative array described by "time_ref". */
 
 int
-perl_png_get_time (png_structp png_ptr, png_infop info_ptr, SV * time_ref)
+perl_png_get_time (perl_libpng_t * png, SV * time_ref)
 {
     png_timep mod_time = 0;
     int status;
-    status = png_get_tIME (png_ptr, info_ptr, & mod_time);
+    status = png_get_tIME (png->png, png->info, & mod_time);
     if (status && mod_time) {
         if (SvROK (time_ref)) {
             if (SvTYPE (SvRV (time_ref)) == SVt_PVHV) {
@@ -286,16 +330,17 @@ typedef struct {
 }
 scalar_as_image_t;
 
-/* Read some bytes from a Perl scalar into a png_ptr as requested. */
+/* Read some bytes from a Perl scalar into a png->png as requested. */
 
 static void
-perl_png_scalar_read (png_structp png_ptr, png_bytep out_bytes,
+perl_png_scalar_read (png_structp png,
+                      png_bytep out_bytes,
                       png_size_t byte_count_to_read)
 {
     scalar_as_image_t * si;
     const char * read_point;
 
-    si = png_get_io_ptr (png_ptr);
+    si = png_get_io_ptr (png);
 #if 0
     fprintf (stderr, "Reading %d bytes from image at position %d.\n",
              byte_count_to_read, si->read_position);
@@ -314,7 +359,7 @@ perl_png_scalar_read (png_structp png_ptr, png_bytep out_bytes,
 /* Make the Perl scalar "image_data" into the image data to be read. */
 
 void
-perl_png_scalar_as_image (png_structp png_ptr,
+perl_png_scalar_as_image (perl_libpng_t * png,
                           SV * image_data)
 {
     scalar_as_image_t * si;
@@ -327,12 +372,12 @@ perl_png_scalar_as_image (png_structp png_ptr,
     si->data = SvPV (si->png_image, si->length);
     /* Check it is a valid PNG here using png_sig_cmp. */
 
-    /* Set the reader for png_ptr to our function. */
-    png_set_read_fn (png_ptr, si, perl_png_scalar_read);
+    /* Set the reader for png->png to our function. */
+    png_set_read_fn (png->png, si, perl_png_scalar_read);
 }
 
 int
-perl_png_get_IHDR (png_structp png_ptr, png_infop info_ptr, HV * IHDR_ref)
+perl_png_get_IHDR (perl_libpng_t * png, HV * IHDR_ref)
 {
     png_uint_32 width;
     png_uint_32 height;
@@ -344,7 +389,7 @@ perl_png_get_IHDR (png_structp png_ptr, png_infop info_ptr, HV * IHDR_ref)
     /* The return value. */
     int status;
 
-    status = png_get_IHDR (png_ptr, info_ptr, & width, & height,
+    status = png_get_IHDR (png->png, png->info, & width, & height,
                            & bit_depth, & color_type, & interlace_method,
                            & compression_method, & filter_method);
 #define STORE(x) {                                                      \
@@ -413,7 +458,7 @@ const char * perl_png_text_compression_name (int text_compression)
 #undef PERL_PNG_COLOR_TYPE
 
 AV *
-perl_png_get_rows (png_structp png_ptr, png_infop info_ptr)
+perl_png_get_rows (perl_libpng_t * png)
 {
     png_bytepp rows;
     int rowbytes;
@@ -424,7 +469,7 @@ perl_png_get_rows (png_structp png_ptr, png_infop info_ptr)
 
     /* Get the information from the PNG. */
 
-    height = png_get_image_height (png_ptr, info_ptr);
+    height = png_get_image_height (png->png, png->info);
     if (height == 0) {
         fprintf (stderr, "Image has no height.\n");
         return 0;
@@ -433,7 +478,7 @@ perl_png_get_rows (png_structp png_ptr, png_infop info_ptr)
     else {
         //        printf ("Image has height %d\n", height);
     }
-    rows = png_get_rows (png_ptr, info_ptr);
+    rows = png_get_rows (png->png, png->info);
     if (rows == 0) {
         fprintf (stderr, "Image has no rows.\n");
         return 0;
@@ -442,7 +487,7 @@ perl_png_get_rows (png_structp png_ptr, png_infop info_ptr)
     else {
         //        printf ("Image has some rows\n");
     }
-    rowbytes = png_get_rowbytes (png_ptr, info_ptr);
+    rowbytes = png_get_rowbytes (png->png, png->info);
     if (rowbytes == 0) {
         fprintf (stderr, "Image rows have zero length.\n");
         return 0;
@@ -472,7 +517,7 @@ perl_png_get_rows (png_structp png_ptr, png_infop info_ptr)
 /* Return an array of hashes containing the colour values of the palette. */
 
 int
-perl_png_get_PLTE (png_structp png_ptr, png_infop info_ptr,
+perl_png_get_PLTE (perl_libpng_t * png,
                    AV * perl_colors)
 {
     png_colorp colors;
@@ -480,7 +525,7 @@ perl_png_get_PLTE (png_structp png_ptr, png_infop info_ptr,
     png_uint_32 status;
     int i;
 
-    status = png_get_PLTE (png_ptr, info_ptr, & colors, & n_colors);
+    status = png_get_PLTE (png->png, png->info, & colors, & n_colors);
     if (status != PNG_INFO_PLTE) {
         return status;
     }
@@ -499,3 +544,21 @@ perl_png_get_PLTE (png_structp png_ptr, png_infop info_ptr,
         av_push (perl_colors, newRV ((SV *) palette_entry));
     }
 }
+
+int perl_png_get_bKGD (perl_libpng_t * png, HV * background)
+{
+
+    return 0;
+}
+
+int perl_png_get_cHRM (perl_libpng_t * png, HV * cie_chromacities)
+{
+
+    return 0;
+}
+
+/*
+   Local Variables:
+   mode: c
+   end: 
+*/

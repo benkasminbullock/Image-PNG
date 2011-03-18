@@ -10,41 +10,65 @@
 /* From `perl-libpng.c': */
 
 #line 10 "perl-libpng.c"
+typedef struct perl_libpng {
+    png_structp png;
+    png_infop info;
+    png_infop end_info;
+} 
 
-#line 12 "perl-libpng.c"
-typedef png_structp Image__PNG__Libpng__Png;
+#line 17 "perl-libpng.c"
+perl_libpng_t;
 
-#line 13 "perl-libpng.c"
-typedef png_infop Image__PNG__Libpng__Info;
+#line 19 "perl-libpng.c"
+typedef perl_libpng_t Image__PNG__Libpng__t;
 
-#line 37 "perl-libpng.c"
+#line 47 "perl-libpng.c"
+#include "c-extensions.h"
+perl_libpng_t * perl_png_create_write_struct PROTO ((void));
+
+#line 56 "perl-libpng.c"
+perl_libpng_t * perl_png_create_read_struct PROTO ((void));
+
+#line 64 "perl-libpng.c"
+int /* default */perl_png_destroy_write_struct (perl_libpng_t * png );
+
+#line 70 "perl-libpng.c"
+int /* default */perl_png_destroy_read_struct (perl_libpng_t * png );
+
+#line 81 "perl-libpng.c"
 void perl_png_timep_to_hash (const png_timep mod_time , HV * time_hash );
 
-#line 212 "perl-libpng.c"
-int perl_png_get_text (png_structp png_ptr , png_infop info_ptr , SV * text_ref );
+#line 256 "perl-libpng.c"
+int perl_png_get_text (perl_libpng_t * png , SV * text_ref );
 
-#line 246 "perl-libpng.c"
-int perl_png_get_time (png_structp png_ptr , png_infop info_ptr , SV * time_ref );
+#line 290 "perl-libpng.c"
+int perl_png_get_time (perl_libpng_t * png , SV * time_ref );
 
-#line 272 "perl-libpng.c"
+#line 316 "perl-libpng.c"
 int perl_png_sig_cmp (SV * png_header , int start , int num_to_check );
 
-#line 319 "perl-libpng.c"
-void perl_png_scalar_as_image (png_structp png_ptr , SV * image_data );
+#line 364 "perl-libpng.c"
+void perl_png_scalar_as_image (perl_libpng_t * png , SV * image_data );
 
-#line 336 "perl-libpng.c"
-int perl_png_get_IHDR (png_structp png_ptr , png_infop info_ptr , HV * IHDR_ref );
+#line 381 "perl-libpng.c"
+int perl_png_get_IHDR (perl_libpng_t * png , HV * IHDR_ref );
 
-#line 375 "perl-libpng.c"
+#line 420 "perl-libpng.c"
 const char * perl_png_color_type_name (int color_type );
 
-#line 399 "perl-libpng.c"
+#line 444 "perl-libpng.c"
 const char * perl_png_text_compression_name (int text_compression );
 
-#line 417 "perl-libpng.c"
-AV * perl_png_get_rows (png_structp png_ptr , png_infop info_ptr );
+#line 462 "perl-libpng.c"
+AV * perl_png_get_rows (perl_libpng_t * png );
 
-#line 477 "perl-libpng.c"
-int perl_png_get_PLTE (png_structp png_ptr , png_infop info_ptr , AV * perl_colors );
+#line 522 "perl-libpng.c"
+int perl_png_get_PLTE (perl_libpng_t * png , AV * perl_colors );
+
+#line 549 "perl-libpng.c"
+int perl_png_get_bKGD (perl_libpng_t * png , HV * background );
+
+#line 555 "perl-libpng.c"
+int perl_png_get_cHRM (perl_libpng_t * png , HV * cie_chromacities );
 
 #endif /* CFH_PERL_LIBPNG_H */

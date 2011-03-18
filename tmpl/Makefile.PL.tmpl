@@ -220,8 +220,11 @@ so that new prototypes need to be made for them.
 
 EOF
     }
-    my $cfunctions_build = <<EOF;
+    my $cfunctions_build;
+
+    $cfunctions_build .= <<EOF;
 Libpng.o: perl-libpng.h
+
 EOF
     my $has_cfunctions = find_program ('cfunctions', $verbose);
 
@@ -229,6 +232,7 @@ EOF
         $cfunctions_build .= <<EOF;
 perl-libpng.h:  perl-libpng.c
 	cfunctions -in perl-libpng.c
+
 EOF
     }
     else {
@@ -238,14 +242,18 @@ EOF
     }
     if ( -d ".git") {
 	$cfunctions_build .= <<EOF;
+
 lib/[% config.base_slash %]:	tmpl/[% config.main_module %].tmpl build/make-files.pl
 	build/make-files.pl
 
-lib/[% config.out_dir %]/Libpng.pm:	tmpl/Libpng.pm.tmpl build/make-files.pl
+lib/[% config.out_dir %]/Libpng.pm:	tmpl/Libpng.pm.tmpl build/make-files.pl tmpl/Libpng.xs.tmpl
 	build/make-files.pl
 
 Libpng.xs:   tmpl/Libpng.xs.tmpl tmpl/config build/make-files.pl
 	build/make-files.pl
+
+lib/[% config.out_dir %]/Const.pm:      tmpl/Const.pm.tmpl build/strip-constants.pl
+	build/strip-constants.pl
 EOF
 
 }   

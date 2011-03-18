@@ -16,7 +16,7 @@ typedef struct perl_libpng {
 }
 perl_libpng_t;
 
-typedef perl_libpng_t [% config.base_underscore %]__Libpng__t;
+typedef perl_libpng_t Image__PNG__Libpng__t;
 
 #endif
 
@@ -55,7 +55,7 @@ perl_libpng_t *
 perl_png_create_read_struct ()
 {
     perl_libpng_t * png = perl_png_allocate ();
-    png->png = png_create_read_struct (PNG_LIBPNG_VER_STRING, 0, 0, 0);
+    png->png = png_create_write_struct (PNG_LIBPNG_VER_STRING, 0, 0, 0);
     png->info = png_create_info_struct (png->png);
     return png;
 }
@@ -248,7 +248,7 @@ perl_png_textp_to_hash (const png_textp text_ptr)
 }
 
 /*
-  This is the C part of [% config.base %]::get_text.
+  This is the C part of Image::PNG::get_text.
  */
 
 int
