@@ -66,9 +66,24 @@ AV * perl_png_get_rows (perl_libpng_t * png );
 int perl_png_get_PLTE (perl_libpng_t * png , AV * perl_colors );
 
 #line 549 "perl-libpng.c"
-int perl_png_get_bKGD (perl_libpng_t * png , HV * background );
+HV * perl_png_get_bKGD (perl_libpng_t * png );
 
 #line 555 "perl-libpng.c"
-int perl_png_get_cHRM (perl_libpng_t * png , HV * cie_chromacities );
+HV * perl_png_get_cHRM (perl_libpng_t * png );
+
+#line 561 "perl-libpng.c"
+HV * perl_png_get_sBIT (perl_libpng_t * png );
+
+#line 567 "perl-libpng.c"
+HV * perl_png_get_oFFs (perl_libpng_t * png );
+
+#line 573 "perl-libpng.c"
+HV * perl_png_get_pHYs (perl_libpng_t * png );
+
+#line 579 "perl-libpng.c"
+HV * perl_png_get_sRGb (perl_libpng_t * png );
+
+#line 585 "perl-libpng.c"
+HV * perl_png_get_valid (perl_libpng_t * png );
 
 #endif /* CFH_PERL_LIBPNG_H */

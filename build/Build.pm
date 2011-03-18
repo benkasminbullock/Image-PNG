@@ -48,7 +48,7 @@ sub get_functions
     open my $input, "<", "$config_ref->{tmpl_dir}/Libpng.xs.tmpl";
     my @functions;
     while (<$input>) {
-        if (/^\w+.*?perl_png_(\w+)\s*\(/) {
+        if (/^\S+.*?perl_png_(\w+)\s*\(/) {
             push @functions, $1;
         }
     }

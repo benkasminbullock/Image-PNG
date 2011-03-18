@@ -155,22 +155,19 @@ int perl_png_get_PLTE (Png, colors)
         OUTPUT:
         RETVAL
 
-int perl_png_get_bKGD (Png, background)
+HV * perl_png_get_bKGD (Png)
         Image::PNG::Libpng::t *  Png
-        HV * background
         CODE:
-        RETVAL = perl_png_get_bKGD (Png, background);
+        RETVAL = perl_png_get_bKGD (Png);
         OUTPUT:
         RETVAL
 
-int perl_png_get_cHRM (Png, cie_chromacities)
+HV * perl_png_get_cHRM (Png)
         Image::PNG::Libpng::t *  Png
-        HV * cie_chromacities
         CODE:
-        RETVAL = perl_png_get_cHRM (Png, cie_chromacities);
+        RETVAL = perl_png_get_cHRM (Png);
         OUTPUT:
         RETVAL
-        cie_chromacities
 
 int perl_png_get_channels (Png);
         Image::PNG::Libpng::t * Png
@@ -178,3 +175,45 @@ int perl_png_get_channels (Png);
         RETVAL = png_get_channels (Png->png, Png->info);
         OUTPUT:
         RETVAL
+
+
+HV * perl_png_get_sBIT (Png, sig_bit);
+        Image::PNG::Libpng::t * Png
+        CODE:
+        RETVAL = perl_png_get_sBIT (Png);
+        OUTPUT:
+        RETVAL
+
+
+HV * perl_png_get_oFFs (Png);
+        Image::PNG::Libpng::t * Png
+        CODE:
+        RETVAL = perl_png_get_oFFs (Png);
+        OUTPUT:
+        RETVAL
+
+
+HV * perl_png_get_pHYs (Png);
+        Image::PNG::Libpng::t * Png
+        CODE:
+        RETVAL = perl_png_get_pHYs (Png);
+        OUTPUT:
+        RETVAL
+
+
+int perl_png_get_sRGB (Png);
+        Image::PNG::Libpng::t * Png
+        CODE:
+        RETVAL = perl_png_get_sRGB (Png);
+        OUTPUT:
+        RETVAL
+
+
+HV * perl_png_get_valid (Png);
+        Image::PNG::Libpng::t * Png
+        CODE:
+        RETVAL = perl_png_get_valid (Png);
+        OUTPUT:
+        RETVAL
+
+

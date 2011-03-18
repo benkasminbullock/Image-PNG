@@ -29,6 +29,8 @@ File::PNG::Const
        # Get everything:
        use File::PNG::Const ':all';
 
+This module contains no functions, only constants.
+
 =head1 CONSTANTS
 
 This file contains constants extracted from the header file of the PNG
@@ -39,6 +41,14 @@ library, C<png.h>. The constants in this file are
 =item [% macro.macro %] = [% macro.value %]
 [% END %]
 =back
+
+=head1 EXPORTS
+
+Nothing is exported by default, but all the symbols in this module can
+be exported on request. There is one export tag, 'all', which exports
+all the symbols in this module:
+
+    use [% config.base %]::Const ':all';
 
 =head1 ABOUT THIS MODULE
 

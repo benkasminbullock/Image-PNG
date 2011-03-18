@@ -4,7 +4,7 @@
 
 =head1 COPYRIGHT & LICENCE
 
-The File::PNG module and associated files are copyright (C) 
+The [% config.base %] module and associated files are copyright (C) 
 [% config.year %] [% config.author %].
 
 You can use, copy, modify and redistribute [% config.base %] and

@@ -20,6 +20,8 @@ typedef perl_libpng_t [% config.base_underscore %]__Libpng__t;
 
 #endif
 
+#define pngi png->png, png->info
+
 /* The following time fields are used in "perl_png_timep_to_hash" for
    converting the PNG modification time structure ("png_time") into a
    Perl associative array. */
@@ -261,7 +263,7 @@ perl_png_get_text (perl_libpng_t * png, SV * text_ref)
             png_textp text_ptr;
             int i;
 
-            png_get_text (png->png, png->info, & text_ptr, & num_text);
+            png_get_text (pngi, & text_ptr, & num_text);
             for (i = 0; i < num_text; i++) {
                 HV * hash;
                 SV * hash_ref;
@@ -290,7 +292,7 @@ perl_png_get_time (perl_libpng_t * png, SV * time_ref)
 {
     png_timep mod_time = 0;
     int status;
-    status = png_get_tIME (png->png, png->info, & mod_time);
+    status = png_get_tIME (pngi, & mod_time);
     if (status && mod_time) {
         if (SvROK (time_ref)) {
             if (SvTYPE (SvRV (time_ref)) == SVt_PVHV) {
@@ -389,7 +391,7 @@ perl_png_get_IHDR (perl_libpng_t * png, HV * IHDR_ref)
     /* The return value. */
     int status;
 
-    status = png_get_IHDR (png->png, png->info, & width, & height,
+    status = png_get_IHDR (pngi, & width, & height,
                            & bit_depth, & color_type, & interlace_method,
                            & compression_method, & filter_method);
 #define STORE(x) {                                                      \
@@ -469,7 +471,7 @@ perl_png_get_rows (perl_libpng_t * png)
 
     /* Get the information from the PNG. */
 
-    height = png_get_image_height (png->png, png->info);
+    height = png_get_image_height (pngi);
     if (height == 0) {
         fprintf (stderr, "Image has no height.\n");
         return 0;
@@ -478,7 +480,7 @@ perl_png_get_rows (perl_libpng_t * png)
     else {
         //        printf ("Image has height %d\n", height);
     }
-    rows = png_get_rows (png->png, png->info);
+    rows = png_get_rows (pngi);
     if (rows == 0) {
         fprintf (stderr, "Image has no rows.\n");
         return 0;
@@ -487,7 +489,7 @@ perl_png_get_rows (perl_libpng_t * png)
     else {
         //        printf ("Image has some rows\n");
     }
-    rowbytes = png_get_rowbytes (png->png, png->info);
+    rowbytes = png_get_rowbytes (pngi);
     if (rowbytes == 0) {
         fprintf (stderr, "Image rows have zero length.\n");
         return 0;
@@ -525,7 +527,7 @@ perl_png_get_PLTE (perl_libpng_t * png,
     png_uint_32 status;
     int i;
 
-    status = png_get_PLTE (png->png, png->info, & colors, & n_colors);
+    status = png_get_PLTE (pngi, & colors, & n_colors);
     if (status != PNG_INFO_PLTE) {
         return status;
     }
@@ -545,17 +547,123 @@ perl_png_get_PLTE (perl_libpng_t * png,
     }
 }
 
-int perl_png_get_bKGD (perl_libpng_t * png, HV * background)
+static HV * perl_png_color_16_to_hv (png_color_16p colour)
 {
-
-    return 0;
+    HV * perl_colour; // ni yurete
+    perl_colour = newHV ();
+#define PERL_COLOUR(x) \
+    hv_store (perl_colour, #x, strlen (#x), newSViv (colour->x), 0)
+    PERL_COLOUR(index);
+    PERL_COLOUR(red);
+    PERL_COLOUR(green);
+    PERL_COLOUR(blue);
+    PERL_COLOUR(gray);
+#undef PERL_COLOUR
+    // Machi wa koi suru mono tachi no minato
+    return perl_colour;
 }
 
-int perl_png_get_cHRM (perl_libpng_t * png, HV * cie_chromacities)
-{
+#define VALID(x) png_get_valid (pngi, PNG_INFO_ ## x)
+#define UNDEF return newHV ()
 
-    return 0;
+HV * perl_png_get_bKGD (perl_libpng_t * png)
+{
+    if (VALID(bKGD)) {
+        png_color_16p background;
+        if (png_get_bKGD (pngi, & background)) {
+            return perl_png_color_16_to_hv (background);
+        }
+    }
+    UNDEF;
 }
+
+HV * perl_png_get_cHRM (perl_libpng_t * png)
+{
+    if (VALID (cHRM)) {
+        HV * ice;
+        ice = newHV ();
+        return ice;
+    }
+    UNDEF;
+}
+
+HV * perl_png_get_sBIT (perl_libpng_t * png)
+{
+    if (VALID (sBIT)) {
+    HV * sig_bit;
+    sig_bit = newHV ();
+    return sig_bit;
+    }
+    UNDEF;
+}
+
+HV * perl_png_get_oFFs (perl_libpng_t * png)
+{
+    if (VALID (oFFs)) {
+    HV * offset;
+
+    offset = newHV ();
+    return offset;
+    }
+    UNDEF;
+}
+
+HV * perl_png_get_pHYs (perl_libpng_t * png)
+{
+    if (VALID (pHYs)) {
+    HV * phys;
+
+    phys = newHV ();
+    return phys;
+    }
+    UNDEF;
+}
+
+int perl_png_get_sRGB (perl_libpng_t * png)
+{
+    /* I'm not sure what to return if there is no valid sRGB value. */
+
+    int intent = 0;
+
+    if (VALID (sRGB)) {
+        png_get_sRGB (pngi, & intent);
+    }
+    return intent;
+}
+
+HV * perl_png_get_valid (perl_libpng_t * png)
+{
+    HV * perl_valid;
+    unsigned int valid;
+
+    perl_valid = newHV ();
+    valid = png_get_valid (pngi, 0xFFFFFFFF);
+    printf ("%X\n", valid);
+#define V(x) \
+    hv_store (perl_valid, #x, strlen (#x), newSViv (valid & PNG_INFO_ ## x), 0)
+
+    V(gAMA);
+    V(sBIT);
+    V(cHRM);
+    V(PLTE);
+    V(tRNS);
+    V(bKGD);
+    V(hIST);
+    V(pHYs);
+    V(oFFs);
+    V(tIME);
+    V(pCAL);
+    V(sRGB);
+    V(iCCP);
+    V(sPLT);
+    V(sCAL);
+    V(IDAT);
+
+#undef V
+
+    return perl_valid;
+}
+
 
 /*
    Local Variables:
