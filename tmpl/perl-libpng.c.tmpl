@@ -648,7 +648,6 @@ HV * perl_png_get_valid (perl_libpng_t * png)
 
     perl_valid = newHV ();
     valid = png_get_valid (pngi, 0xFFFFFFFF);
-    printf ("%X\n", valid);
 #define V(x) \
     hv_store (perl_valid, #x, strlen (#x), newSViv (valid & PNG_INFO_ ## x), 0)
 

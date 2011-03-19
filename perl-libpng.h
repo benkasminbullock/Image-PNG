@@ -156,10 +156,10 @@ int perl_png_get_sRGB (perl_libpng_t * png );
 #line 645 "perl-libpng.c"
 HV * perl_png_get_valid (perl_libpng_t * png );
 
-#line 678 "perl-libpng.c"
+#line 677 "perl-libpng.c"
 void perl_png_set_rows (perl_libpng_t * png , AV * rows );
 
-#line 710 "perl-libpng.c"
+#line 709 "perl-libpng.c"
 void perl_png_set_IHDR (perl_libpng_t * png , HV * IHDR );
 
 #endif /* CFH_PERL_LIBPNG_H */
