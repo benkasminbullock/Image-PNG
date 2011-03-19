@@ -173,8 +173,7 @@ sub get_IHDR
         carp __PACKAGE__, ": I was requested to read the IHDR of the PNG data, but I have already read it.";
         return;
     }
-    $png->{IHDR} = {};
-    [% config.base %]::Libpng::get_IHDR ($png->{read_png}, $png->{IHDR});
+    $png->{IHDR} = [% config.base %]::Libpng::get_IHDR ($png->{read_png});
 }
 
 sub get
@@ -238,15 +237,24 @@ sub rows
     my ($png, $rows) = @_;
     if ($rows) {
         # Set the rows
+        if (! $png->{write_ok}) {
+            $png->init_write ();
+        }
+        if (! $png->{write}->{set_IHDR}) {
+            $png->{write}->{set_IHDR} = 1;
+            [% config.base %]::Libpng::set_IHDR ($png->{write}->{png},
+                                                 $png->{write}->{IHDR});
+        }
+        [% config.base %]::Libpng::set_rows ($png->{write_png}, $rows);
     }
     else {
         # Read the rows
-    if (! $png->{read_ok}) {
-#        $png->handle_error ("");
-        return;
+        if (! $png->{read_ok}) {
+            #        $png->handle_error ("");
+            return;
+        }
+        return [% config.base %]::Libpng::get_rows ($png->{read_png});
     }
-    return [% config.base %]::Libpng::get_rows ($png->{read_png});
-}
 }
 
 sub rowbytes
@@ -335,231 +343,7 @@ sub display_text
 
 1;
 
-=head1 NAME
-
-[% config.base %]
-
-Read and write PNG (Portable Network Graphics) files
-
-=head1 SYNOPSIS
-
-    my $png = [% config.base %]->new ();
-    $png->read_file ("crazy.png");
-    printf "Your PNG is %d x %d\n", $png->width, $png->height;
-
-=head1 General methods
-
-=head2 read_file
-
-    $png->read_file ("crazy.png")
-        or die "Can't read it: " . $png->error ();
-
-=head2 write_file
-
-    $png->write_file ("crazy.png")
-        or die "Can't write it: " . $png->error ();
-
-=head2 data
-
-     my $data = $png->data ();
-
-Get the PNG binary data.
-
-=head2 error
-
-Print the most recent error message.
-
-=head1 PNG header-related methods
-
-These methods are related to the PNG header (the IHDR chunk of the PNG
-file). 
-
-=head2 width
-
-    my $height = $png->width ();
-
-Get the width of the current PNG image.
-
-=head2 height
-
-    my $height = $png->height ();
-
-Get the height of the current PNG image.
-
-=head2 color_type
-
-    my $color_type = $png->color_type ();
-
-Get the name of the colour type of the current PNG image. The possible
-return values are
-
-=over
-
-=item PALETTE
-
-=item GRAY
-
-=item GRAY_ALPHA
-
-=item RGB
-
-=item RGB_ALPHA
-
-=back
-
-=head2 bit_depth
-
-    my $bit_depth = $png->bit_depth ();
-
-Get the bit depth of the current PNG image.
-
-=head2 interlacing_method
-
-    my $interlacing_method = $png->interlacing_method
-
-Get the name of the method of interlacing of the current PNG image.
-
-There is no method for dealing with the compression method
-field of the header, since this only has one possible value.
-
-=head1 Image data-related methods
-
-=head2 rowbytes
-
-    my $rowbytes = $png->rowbytes;
-
-This method returns the number of bytes in each row of the image. If
-no image has been read yet, it returns the undefined value.
-
-=head2 rows
-
-    my $rows = $png->rows;
-
-This method returns the rows of the image as an array reference which
-contains a number of elements equal to the height of the image. Each
-element has the length of the number of bytes in one row (as given by
-L<rowbytes>) plus one final zero byte. The row data returned is binary
-data and may contain several bytes with the value zero.
-
-=head1 Non-image chunks
-
-=head2 text
-
-    my @text = $png->text;
-
-Get the text chunks of the image. Each chunk is a hash reference with
-the keys being the fields of the PNG text chunk and the values being
-the values of those fields.
-
-=head2 time
-
-    my $time_ref = $png->time;
-    print "The PNG was last modified in $time_ref->{year}.\n";
-
-Get the last modified time of the image. The return value is a hash
-reference containing six fields,
-
-=over
-
-=item year
-
-=item month
-
-=item day
-
-=item hour
-
-=item minute
-
-=item second
-
-=back
-
-These represent the last modification time of the image. The
-modification time of a PNG file is meant to be in the GMT (UCT) time
-zone so there is no time zone information in this.
-
-If there is no last modification time, a hash reference is returned
-but it doesn't contain any fields.
-
-=head1 FUNCTIONS
-
-There are some convenience functions in this module, exported on request.
-
-=head2 display_text
-
-     use [% config.base %] qw/display_text/;
-     my @text = $png->text;
-     display_text ($text[3]);
-
-Display the text chunk given as an argument on C<STDOUT>.
-
-This is meant as a minimal convenience function for when you are
-debugging or something rather than a general-purpose text chunk
-display routine.
-
-=head1 SUPPORT
-
-There is a mailing list for this Perl module at Google Groups. If you
-have a question or suggestion or bug report, please let me know via
-the mailing list. You don't have to join the mailing list to post a
-message.
-
-=head1 SEE ALSO
-
-=head2 In this distribution
-
-=head3 [% config.base %]::Const
-
-L<[% config.base %]::Const> contains the libpng constants taken from the libpng
-header file "png.h".
-
-=head3 [% config.base %]::Libpng
-
-L<[% config.base %]::Libpng> provides a Perl mirror of the interface of the C
-PNG library "libpng". [% config.base %] is built on top of this module.
-
-=head2 libpng download
-
-If you need to download libpng, see
-L<http://www.libpng.org/pub/png/libpng.html>. See also L</Alien::PNG>.
-
-=head2 Other Perl modules on CPAN
-
-=head3 Image::ExifTool
-
-L<Image::ExifTool> is a pure Perl (doesn't require a C compiler)
-solution for accessing the text segments of images. It has extensive
-support for PNG text segments.
-
-=head3 Alien::PNG
-
-L<Alien::PNG> claims to be a way of "building, finding and using PNG
-binaries". It may help in installing libpng. I didn't use it as a
-dependency for this module because it seems not to work in batch mode,
-but stop and prompt the user. I'm interested in hearing feedback from
-users whether this works or not on various platforms.
-
-=head2 About the PNG format
-
-=head3 The PNG specification
-
-L<The PNG specification|http://www.w3.org/TR/PNG/> (link to W3
-consortium) explains the details of the PNG format.
-
-=head3 PNG The Definitive Guide by Greg Roelofs
-
-The book "PNG - The Definitive Guide" by Greg Roelofs, published in
-1999 by O'Reilly is available online at
-L<http://www.faqs.org/docs/png/>. I didn't refer to this book at all
-in making [% config.base %], so I can't vouch for it, but looking at the
-contents pages it appears to contain a lot of useful information,
-although it is definitely showing its age, with chapters about
-software such as Netscape Navigator and BeOS.
-
-[% INCLUDE "author" %]
-
-=cut
+[% INCLUDE png_doc %]
 
 # Local Variables:
 # mode: perl

@@ -38,12 +38,14 @@ if ($png_lib_dir) {
 }
 my $has_pkg_config = find_program ('pkg-config', $verbose);
 if ($has_pkg_config) {
-    print <<EOF;
+    if ($verbose) {
+        print <<EOF;
 
 I found "pkg-config" in your PATH so I am going to use that to help
 with the compilation of the C part of this module.
 
 EOF
+    }
     my $pkg_config_cflags = `pkg-config --cflags libpng`;
     $pkg_config_cflags =~ s/\s+$//;
     my $pkg_config_ldflags = `pkg-config --libs libpng`;
@@ -231,7 +233,7 @@ EOF
     if ($has_cfunctions) {
         $cfunctions_build .= <<EOF;
 perl-libpng.h:  perl-libpng.c
-	cfunctions -in perl-libpng.c
+	cfunctions -i -n -c perl-libpng.c
 
 EOF
     }
@@ -277,9 +279,9 @@ sub find_program
             if (-f $dprogram && -x $dprogram) {
                 if ($verbose) {
                     print "Found.\n";
-                    $found = $dprogram;
-                    last;
                 }
+                $found = $dprogram;
+                last;
             }
             if ($verbose) {
                 print "Not found.\n";

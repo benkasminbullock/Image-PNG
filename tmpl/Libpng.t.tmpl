@@ -1,6 +1,6 @@
 use warnings;
 use strict;
-use Test::More tests => 20;
+use Test::More tests => 19;
 use FindBin;
 use File::Compare;
 BEGIN { use_ok('[% config.base %]::Libpng') };
@@ -24,12 +24,9 @@ open my $file, "<", $file_name or die "Can't open '$file_name': $!";
 [% config.base %]::Libpng::init_io ($png, $file);
 [% config.base %]::Libpng::read_info ($png);
 
-my %IHDR;
-
-my $status = [% config.base %]::Libpng::get_IHDR ($png, \%IHDR);
-ok ($status == 1, "successfully called get_IHDR");
-ok ($IHDR{width} == 100, "width");
-ok ($IHDR{height} == 100, "height");
+my $IHDR = [% config.base %]::Libpng::get_IHDR ($png);
+ok ($IHDR->{width} == 100, "width");
+ok ($IHDR->{height} == 100, "height");
 [% config.base %]::Libpng::destroy_read_struct ($png);
 close $file or die $!;
 

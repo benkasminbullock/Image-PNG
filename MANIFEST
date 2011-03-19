@@ -17,5 +17,4 @@ t/test.png
 t/with-text.png
 t/with-time.png
 typemap
-strip-constants.pl
 tmpl/Const.pm.tmpl

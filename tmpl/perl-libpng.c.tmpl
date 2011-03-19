@@ -13,6 +13,7 @@ typedef struct perl_libpng {
     png_structp png;
     png_infop info;
     png_infop end_info;
+    void * row_pointers;
 }
 perl_libpng_t;
 
@@ -41,7 +42,7 @@ static perl_libpng_t *
 perl_png_allocate ()
 {
     perl_libpng_t * png = calloc (1, sizeof (perl_libpng_t));
-
+    return png;
 }
 
 perl_libpng_t *
@@ -50,6 +51,8 @@ perl_png_create_write_struct ()
     perl_libpng_t * png = perl_png_allocate ();
     png->png = png_create_write_struct (PNG_LIBPNG_VER_STRING, 0, 0, 0);
     png->info = png_create_info_struct (png->png);
+    png->end_info = 0;
+    png->row_pointers = 0;
     return png;
 }
 
@@ -59,12 +62,16 @@ perl_png_create_read_struct ()
     perl_libpng_t * png = perl_png_allocate ();
     png->png = png_create_read_struct (PNG_LIBPNG_VER_STRING, 0, 0, 0);
     png->info = png_create_info_struct (png->png);
+    png->row_pointers = 0;
     return png;
 }
 
 perl_png_destroy_write_struct (perl_libpng_t * png)
 {
     png_destroy_write_struct (& png->png, & png->info);
+    if (png->row_pointers) {
+        free (png->row_pointers);
+    }
     free (png);
 }
 
@@ -378,8 +385,8 @@ perl_png_scalar_as_image (perl_libpng_t * png,
     png_set_read_fn (png->png, si, perl_png_scalar_read);
 }
 
-int
-perl_png_get_IHDR (perl_libpng_t * png, HV * IHDR_ref)
+HV *
+perl_png_get_IHDR (perl_libpng_t * png)
 {
     png_uint_32 width;
     png_uint_32 height;
@@ -388,14 +395,17 @@ perl_png_get_IHDR (perl_libpng_t * png, HV * IHDR_ref)
     int interlace_method;
     int compression_method;
     int filter_method;
-    /* The return value. */
+    /* libpng return value */
     int status;
+    /* The return value. */
+    HV * IHDR;
 
+    IHDR = newHV ();
     status = png_get_IHDR (pngi, & width, & height,
                            & bit_depth, & color_type, & interlace_method,
                            & compression_method, & filter_method);
 #define STORE(x) {                                                      \
-        if (!hv_store (IHDR_ref, #x, strlen (#x), newSViv (x), 0)) {    \
+        if (!hv_store (IHDR, #x, strlen (#x), newSViv (x), 0)) {    \
             fprintf (stderr, "hv_store failed.\n");                     \
         }                                                               \
     }
@@ -408,7 +418,7 @@ perl_png_get_IHDR (perl_libpng_t * png, HV * IHDR_ref)
     STORE (filter_method);
 #undef STORE
 
-    return status;
+    return IHDR;
 }
 
 #define PERL_PNG_COLOR_TYPE(x)                  \
@@ -664,6 +674,69 @@ HV * perl_png_get_valid (perl_libpng_t * png)
     return perl_valid;
 }
 
+void perl_png_set_rows (perl_libpng_t * png, AV * rows)
+{
+    unsigned char ** row_pointers;
+    int i;
+    int n_rows;
+
+    if (png->row_pointers) {
+        fprintf (stderr, "Row pointers already allocated.\n");
+        return;
+    }
+    /* Check that this is the same as the height of the image. */
+    n_rows = av_len (rows);
+       // printf ("%d rows.\n", n_rows);
+    row_pointers = calloc (n_rows, sizeof (unsigned char *));
+    if (! row_pointers) {
+        fprintf (stderr, "calloc failed.\n");
+        return;
+    }
+    for (i = 0; i <= n_rows; i++) {
+        /* Check that this is the same as the width of the image. */
+        int length;
+        SV * row_i;
+        row_i = * av_fetch (rows, i, 0);
+        row_pointers[i] = SvPV (row_i, length);
+        //        printf ("%d %d '%s'\n", i, length, row_pointers[i]);
+    }
+    png_set_rows (pngi, row_pointers);
+    /* Keep a record of the allocated memory in order to free it */
+    png->row_pointers = row_pointers;
+}
+
+void 
+perl_png_set_IHDR (perl_libpng_t * png, HV * IHDR)
+{
+    /* The first four are set to illegal values. We really should
+       check the values going in to this routine. */
+    png_uint_32 width = 0;
+    png_uint_32 height = 0;
+    int bit_depth = 0;
+    int color_type = 0;
+    int interlace_method = PNG_INTERLACE_NONE;
+    int compression_type = PNG_COMPRESSION_TYPE_DEFAULT;
+    int filter_type = PNG_FILTER_TYPE_DEFAULT;
+
+
+#define FETCH(x) {                                              \
+        SV ** fetched = hv_fetch (IHDR, #x, strlen (#x), 0);    \
+        if (fetched) {                                          \
+            x = SvIV (*fetched);                                \
+        }                                                       \
+    }
+    FETCH (width);
+    FETCH (height);
+    FETCH (bit_depth);
+    FETCH (color_type);
+    FETCH (interlace_method);
+    if (width == 0 || height == 0 || bit_depth == 0) {
+        fprintf (stderr, "Bad values for width/height/bit depth.\n");
+        return;
+    }
+    png_set_IHDR (pngi, width, height, bit_depth, color_type,
+                  interlace_method, compression_type, filter_type);
+}
 
 /*
    Local Variables:

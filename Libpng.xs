@@ -36,7 +36,7 @@ void perl_png_destroy_write_struct (Png)
         perl_png_destroy_write_struct (Png);
         OUTPUT:
 
-void perl_png_write_png (Png, transforms)
+void perl_png_write_png (Png, transforms = PNG_TRANSFORM_IDENTITY)
         Image::PNG::Libpng::t *  Png
         int transforms
         CODE:
@@ -63,15 +63,12 @@ void perl_png_read_png (Png, transforms = PNG_TRANSFORM_IDENTITY)
         png_read_png (Png->png, Png->info, transforms, 0);
         OUTPUT:
 
-int perl_png_get_IHDR (Png, IHDR_ref)
+HV * perl_png_get_IHDR (Png)
         Image::PNG::Libpng::t *  Png
-        HV * IHDR_ref
         CODE:
-        int w, h, bit_depth, color_type;
-        RETVAL = perl_png_get_IHDR (Png, IHDR_ref);
+        RETVAL = perl_png_get_IHDR (Png);
         OUTPUT:
         RETVAL
-        IHDR_ref
 
 int perl_png_get_tIME (Png, time_ref)
         Image::PNG::Libpng::t *  Png
@@ -169,7 +166,7 @@ HV * perl_png_get_cHRM (Png)
         OUTPUT:
         RETVAL
 
-int perl_png_get_channels (Png);
+int perl_png_get_channels (Png)
         Image::PNG::Libpng::t * Png
         CODE:
         RETVAL = png_get_channels (Png->png, Png->info);
@@ -177,7 +174,7 @@ int perl_png_get_channels (Png);
         RETVAL
 
 
-HV * perl_png_get_sBIT (Png, sig_bit);
+HV * perl_png_get_sBIT (Png, sig_bit)
         Image::PNG::Libpng::t * Png
         CODE:
         RETVAL = perl_png_get_sBIT (Png);
@@ -185,7 +182,7 @@ HV * perl_png_get_sBIT (Png, sig_bit);
         RETVAL
 
 
-HV * perl_png_get_oFFs (Png);
+HV * perl_png_get_oFFs (Png)
         Image::PNG::Libpng::t * Png
         CODE:
         RETVAL = perl_png_get_oFFs (Png);
@@ -193,7 +190,7 @@ HV * perl_png_get_oFFs (Png);
         RETVAL
 
 
-HV * perl_png_get_pHYs (Png);
+HV * perl_png_get_pHYs (Png)
         Image::PNG::Libpng::t * Png
         CODE:
         RETVAL = perl_png_get_pHYs (Png);
@@ -201,7 +198,7 @@ HV * perl_png_get_pHYs (Png);
         RETVAL
 
 
-int perl_png_get_sRGB (Png);
+int perl_png_get_sRGB (Png)
         Image::PNG::Libpng::t * Png
         CODE:
         RETVAL = perl_png_get_sRGB (Png);
@@ -209,11 +206,24 @@ int perl_png_get_sRGB (Png);
         RETVAL
 
 
-HV * perl_png_get_valid (Png);
+HV * perl_png_get_valid (Png)
         Image::PNG::Libpng::t * Png
         CODE:
         RETVAL = perl_png_get_valid (Png);
         OUTPUT:
         RETVAL
 
+void perl_png_set_rows (Png, rows)
+        Image::PNG::Libpng::t * Png
+        AV * rows
+        CODE:
+        perl_png_set_rows (Png, rows);
+        OUTPUT:
 
+void perl_png_set_IHDR (Png, IHDR)
+        Image::PNG::Libpng::t * Png
+        HV * IHDR
+        CODE:
+        perl_png_set_IHDR (Png, IHDR);
+        OUTPUT:
+        
