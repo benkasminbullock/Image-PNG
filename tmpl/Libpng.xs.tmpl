@@ -1,3 +1,4 @@
+#line 2 "tmpl/Libpng.xs.tmpl"
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
@@ -6,7 +7,7 @@
 #include "perl-libpng.h"
 #include "const-c.inc"
 
-MODULE = [% config.base %]	PACKAGE = [% config.base %]::Libpng  PREFIX = perl_png_
+MODULE = [% config.base %] PACKAGE = [% config.base %]::Libpng PREFIX = perl_png_
 
 PROTOTYPES: ENABLE
 
@@ -70,12 +71,19 @@ HV * perl_png_get_IHDR (Png)
         OUTPUT:
         RETVAL
 
-HV * perl_png_get_tIME (Png)
+SV * perl_png_get_tIME (Png)
         [% config.base %]::Libpng::t *  Png
         CODE:
         RETVAL = perl_png_get_time (Png);
         OUTPUT:
         RETVAL
+
+void perl_png_set_tIME (Png, time = &PL_sv_undef)
+        [% config.base %]::Libpng::t *  Png
+        SV * time
+        CODE:
+        perl_png_set_time (Png, time);
+        OUTPUT:
 
 SV * perl_png_get_text (Png)
         [% config.base %]::Libpng::t *  Png
@@ -83,6 +91,13 @@ SV * perl_png_get_text (Png)
         RETVAL = perl_png_get_text (Png);
         OUTPUT:
         RETVAL
+
+void perl_png_set_text (Png, text)
+        [% config.base %]::Libpng::t *  Png
+        AV * text
+        CODE:
+        perl_png_set_text (Png, text);
+        OUTPUT:
 
 int perl_png_sig_cmp (sig, start = 0, num_to_check = 8)
         SV * sig
@@ -244,3 +259,10 @@ void perl_png_set_filter (Png, filters)
         png_set_filter (Png->png, 0, filters);
         OUTPUT:
 
+void perl_png_set_verbosity (Png, verbosity = 0)
+        [% config.base %]::Libpng::t * Png
+        int verbosity; 
+        CODE:
+        perl_png_set_verbosity (Png, verbosity);
+        OUTPUT:
+        

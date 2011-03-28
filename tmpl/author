@@ -11,16 +11,20 @@ You can use, copy, modify and redistribute [% config.base %] and
 associated files under the Artistic Licence or the GNU General Public
 Licence.
 
-=head1 FOR DEVELOPERS
+=head1 FOR PROGRAMMERS
 
-If you are interested in altering the public version of this module,
-please note that the distributed files are not the source code of the
-module. If you wish to obtain the source code repository of [%
-config.base %], please access [% config.repository %] using the "git"
-source control system.
+(This section is only for people who want to fix a bug or add an
+improvement to this module, and who want to share the change with
+other people by adding it to the public version of this module.)
 
-The original files of this distribution make heavy use of the
+If you want to alter this module, please note very carefully that the
+distributed files are not actually the source code of the module. If
+you wish to obtain the source code of [% config.base %], please access
+[% config.repository %] using the "git" source control system.
+
+The original files of this distribution make very heavy use of the
 L<Template> Perl module in order to cut down the amount of repetitive
 stuff which needs to be put into various source and documentation
-files.
+files. If you plan to alter the C file, you also need a program called
+"cfunctions" which you can download from sourceforge.
 

@@ -347,16 +347,30 @@ there is no modification time it returns an undefined value.
 [% cor(fn="get_tIME") %], with a Perl hash reference
 substituted for the C struct C<png_timep> used in libpng.
 
+=head2 set_tIME
+
+    # Set the time to "now"
+    set_tIME ($png);
+    # Set the time
+    set_tIME ($png, {year => 1999, month => 12});
+
+Set the modification time of the PNG to the hash value given by the
+second argument. If the second argument is omitted, the time is set to
+the current time. If any of year, month, day, hour, minute or second
+is omitted, these are set to zero.
+
+[% cor(fn="set_tIME") %], with a Perl hash reference
+substituted for the C struct C<png_timep> used in libpng.
+
 =head2 get_text
 
-    my @text_chunks;
-    [% config.base %]::Libpng::get_text ($png, \@text_chunks);
+    my $text_chunks = [% config.base %]::Libpng::get_text ($png);
 
-This subroutine gets all the text chunks in the PNG image and puts
-them into the array reference given as the third argument. Each
-element of the array represents one text chunk. The element
-representing one chunk is a hash reference with the text fields such
-as "key", "lang_key", "compression" taken from the PNG's information.
+This subroutine gets all the text chunks in the PNG image and returns
+them as an array reference. Each element of the array represents one
+text chunk. The element representing one chunk is a hash reference
+with the text fields such as "key", "lang_key", "compression" taken
+from the PNG's information.
 
 The text data is uncompressed by libpng. If it is international text,
 [% config.base %]::Libpng automatically puts it into Perl's internal
@@ -369,6 +383,19 @@ the requirements of a PNG text section.
 
 [% cor(fn="get_text") %], with a Perl array of hash
 references substituted for the C array of structs used in libpng.
+
+=head2 set_text
+
+    set_text ($png, $text_chunks);
+
+This sets the text chunks in an array reference C<$text_chunks>. [%
+wfirstarg %]. If you call it more than once, the chunks are appended
+to the existing ones rather than replacing them.
+
+    set_text ($png, [{compression => PNG_TEXT_COMPRESSION_NONE,
+                      keyword => "Copyright",
+                      text => "Copyright (C) 1997 The Dukes of Hazzard",
+              }]);
 
 =head2 get_color_type
 
