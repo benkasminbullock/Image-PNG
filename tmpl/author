@@ -4,9 +4,23 @@
 
 =head1 COPYRIGHT & LICENCE
 
-The [% config.base %] module and associated files are copyright (C) 
+The [% config.base %] package and associated files are copyright (C)
 [% config.year %] [% config.author %].
 
 You can use, copy, modify and redistribute [% config.base %] and
 associated files under the Artistic Licence or the GNU General Public
 Licence.
+
+=head1 FOR DEVELOPERS
+
+If you are interested in altering the public version of this module,
+please note that the distributed files are not the source code of the
+module. If you wish to obtain the source code repository of [%
+config.base %], please access [% config.repository %] using the "git"
+source control system.
+
+The original files of this distribution make heavy use of the
+L<Template> Perl module in order to cut down the amount of repetitive
+stuff which needs to be put into various source and documentation
+files.
+

@@ -204,6 +204,11 @@ dependency for this module because it seems not to work in batch mode,
 but stop and prompt the user. I'm interested in hearing feedback from
 users whether this works or not on various platforms.
 
+=head3 Image::PNG::Rewriter
+
+L<Image::PNG::Rewriter> is a utility for unpacking and recompressing
+the IDAT (image data) part of a PNG image.
+
 =head2 About the PNG format
 
 =head3 The PNG specification

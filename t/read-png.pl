@@ -8,7 +8,7 @@ use Image::PNG::Libpng ':all';
 use Image::PNG::Const ':all';
 
 my $size = 1000;
-my $file = 'poo3.png';
+my $file = 'tantei-san.png';
 
 open my $input, "<:raw", $file;
 my $png = create_read_struct ();

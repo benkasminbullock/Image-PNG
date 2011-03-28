@@ -2,24 +2,26 @@ use warnings;
 use strict;
 use FindBin;
 use autodie;
-use File::PNG::Libpng;
+use [% config.base %]::Libpng;
 use Test::More tests => 3;
 
 my $file_name = "$FindBin::Bin/tantei-san.png";
-my $png = File::PNG::Libpng::create_read_struct ();
+my $png = [% config.base %]::Libpng::create_read_struct ();
 open my $file, "<:raw", $file_name;
-File::PNG::Libpng::init_io ($png, $file);
-my $info = File::PNG::Libpng::create_info_struct ($png);
+[% config.base %]::Libpng::init_io ($png, $file);
 #print "Reading PNG.\n";
-File::PNG::Libpng::read_png ($png, $info);
+[% config.base %]::Libpng::read_png ($png);
 #print "Getting rows.\n";
-my @colors;
-File::PNG::Libpng::get_PLTE ($png, $info, \@colors);
+my $colors = [% config.base %]::Libpng::get_PLTE ($png);
 #exit;
 #for my $color (@colors) {
 #    print "Red: $color->{red} green: $color->{green} blue: $color->{blue}\n";
 #}
-ok ($colors[10]->{red} == 10);
-ok ($colors[20]->{green} == 20);
-ok ($colors[200]->{blue} == 200);
+ok ($colors->[10]->{red} == 10);
+ok ($colors->[20]->{green} == 20);
+ok ($colors->[200]->{blue} == 200);
 close $file;
+
+# Local Variables:
+# mode: perl
+# End:

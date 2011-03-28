@@ -1,5 +1,7 @@
 version: 0.01
 base: Image::PNG
 author: Ben Bullock
+author_pause: BKB
 email: bkb@cpan.org
 year: 2011
+repository: http://www.lemoda.net/projects/image-png/repo/

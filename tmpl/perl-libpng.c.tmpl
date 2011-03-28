@@ -23,6 +23,14 @@ typedef perl_libpng_t [% config.base_underscore %]__Libpng__t;
 
 #define pngi png->png, png->info
 
+/* The following macro is used for useless arguments from libpng which
+   are always set to zero. It is not used for arguments which are set
+   to zero for some other reason than because they are useless
+   (e.g. flush functions which are set to zero because we don't need
+   them). */
+
+#define UNUSED_ZERO_ARG 0
+
 /* The following time fields are used in "perl_png_timep_to_hash" for
    converting the PNG modification time structure ("png_time") into a
    Perl associative array. */
@@ -37,6 +45,10 @@ static const char * time_fields[] = {
 };
 
 #define N_TIME_FIELDS (sizeof (time_fields) / sizeof (const char *))
+
+/* Return an undefined value. */
+
+#define UNDEF return &PL_sv_undef
 
 static perl_libpng_t *
 perl_png_allocate ()
@@ -260,64 +272,53 @@ perl_png_textp_to_hash (const png_textp text_ptr)
   This is the C part of [% config.base %]::get_text.
  */
 
-int
-perl_png_get_text (perl_libpng_t * png, SV * text_ref)
+SV *
+perl_png_get_text (perl_libpng_t * png)
 {
     int num_text = 0;
-    if (SvROK (text_ref)) {
-        if (SvTYPE (SvRV (text_ref)) == SVt_PVAV) {
-            AV * text_chunks = (AV *) SvRV (text_ref);
-            png_textp text_ptr;
-            int i;
+    png_textp text_ptr;
 
-            png_get_text (pngi, & text_ptr, & num_text);
-            for (i = 0; i < num_text; i++) {
-                HV * hash;
-                SV * hash_ref;
-                
-                //                printf ("%d %s\n", i, text_ptr[i].key);
-                hash = perl_png_textp_to_hash (text_ptr + i);
-                hash_ref = newRV_inc ((SV *) hash);
-                av_push (text_chunks, hash_ref);
-            }
+    png_get_text (pngi, & text_ptr, & num_text);
+
+    if (num_text > 0) {
+        int i;
+        SV * text_ref;
+        AV * text_chunks;
+
+        text_chunks = newAV ();
+        for (i = 0; i < num_text; i++) {
+            HV * hash;
+            SV * hash_ref;
+            
+            hash = perl_png_textp_to_hash (text_ptr + i);
+            hash_ref = newRV_inc ((SV *) hash);
+            av_push (text_chunks, hash_ref);
         }
-        else {
-            fprintf (stderr, "Not an AV ref\n");
-        }
+        return (SV *) text_chunks;
+    } else {
+        UNDEF;
     }
-    else {
-        fprintf (stderr, "Not a ref\n");
-    }
-    return num_text;
 }
 
 /* If the PNG contains a valid time, put the time into a Perl
-   associative array described by "time_ref". */
+   associative array. */
 
-int
-perl_png_get_time (perl_libpng_t * png, SV * time_ref)
+HV * 
+perl_png_get_time (perl_libpng_t * png)
 {
     png_timep mod_time = 0;
     int status;
+    HV * time;
+
+    time = newHV ();
     status = png_get_tIME (pngi, & mod_time);
     if (status && mod_time) {
-        if (SvROK (time_ref)) {
-            if (SvTYPE (SvRV (time_ref)) == SVt_PVHV) {
-                HV * time = (HV *) SvRV (time_ref);
-                perl_png_timep_to_hash (mod_time, time);
-            }
-            else {
-                fprintf (stderr, "Not a hash reference.\n");
-            }
-        }
-        else {
-            fprintf (stderr, "Not a reference.\n");
-        }
+        perl_png_timep_to_hash (mod_time, time);
     }
     else {
         fprintf (stderr, "No time info in PNG file.\n");
     }
-    return status;
+    return time;
 }
 
 int
@@ -365,24 +366,59 @@ perl_png_scalar_read (png_structp png,
     si->read_position += byte_count_to_read;
 }
 
-/* Make the Perl scalar "image_data" into the image data to be read. */
+/* Read a PNG from a Perl scalar "image_data". */
 
 void
-perl_png_scalar_as_image (perl_libpng_t * png,
-                          SV * image_data)
+perl_png_read_from_scalar (perl_libpng_t * png,
+                           SV * image_data,
+                           int transforms)
 {
-    scalar_as_image_t * si;
-    si = calloc (1, sizeof (scalar_as_image_t));
+    scalar_as_image_t si = {0};
 
-    fprintf (stderr, "Settign up the image.\n");
+    fprintf (stderr, "Setting up the image.\n");
     /* We don't need the following anywhere. However we probably
        should keep track of where the data comes from. */
-    si->png_image = image_data;
-    si->data = SvPV (si->png_image, si->length);
+    si.png_image = image_data;
+    si.data = SvPV (si.png_image, si.length);
     /* Check it is a valid PNG here using png_sig_cmp. */
 
     /* Set the reader for png->png to our function. */
-    png_set_read_fn (png->png, si, perl_png_scalar_read);
+    png_set_read_fn (png->png, & si, perl_png_scalar_read);
+    png_read_png (png->png, png->info, transforms, UNUSED_ZERO_ARG);
+}
+
+static void
+perl_png_scalar_write (png_structp png, png_bytep bytes_to_write,
+                       png_size_t byte_count_to_write)
+{
+    scalar_as_image_t * si;
+
+    si = png_get_io_ptr (png);
+    if (si->png_image == 0) {
+        si->png_image = newSVpv (bytes_to_write, byte_count_to_write);
+    }
+    else {
+        sv_catpvn (si->png_image, bytes_to_write, byte_count_to_write);
+    }
+}
+
+/* Write the PNG image data into a Perl scalar. */
+
+SV *
+perl_png_write_to_scalar (perl_libpng_t * png, int transforms)
+{
+    scalar_as_image_t * si;
+    si = calloc (1, sizeof (scalar_as_image_t));
+    SV * image_data;
+
+    fprintf (stderr, "Setting up the image.\n");
+    /* Set the writer for png->png to our function. */
+    png_set_write_fn (png->png, si, perl_png_scalar_write,
+                      0 /* No flush function */);
+    png_write_png (pngi, transforms, UNUSED_ZERO_ARG);
+    image_data = si->png_image;
+    free (si);
+    return image_data;
 }
 
 HV *
@@ -405,7 +441,7 @@ perl_png_get_IHDR (perl_libpng_t * png)
                            & bit_depth, & color_type, & interlace_method,
                            & compression_method, & filter_method);
 #define STORE(x) {                                                      \
-        if (!hv_store (IHDR, #x, strlen (#x), newSViv (x), 0)) {    \
+        if (!hv_store (IHDR, #x, strlen (#x), newSViv (x), 0)) {        \
             fprintf (stderr, "hv_store failed.\n");                     \
         }                                                               \
     }
@@ -469,97 +505,84 @@ const char * perl_png_text_compression_name (int text_compression)
 
 #undef PERL_PNG_COLOR_TYPE
 
-AV *
-perl_png_get_rows (perl_libpng_t * png)
-{
-    png_bytepp rows;
-    int rowbytes;
-    int height;
-    SV ** row_svs;
-    int r;
-    AV * perl_rows;
-
-    /* Get the information from the PNG. */
-
-    height = png_get_image_height (pngi);
-    if (height == 0) {
-        fprintf (stderr, "Image has no height.\n");
-        return 0;
-        /* We are shafted. */
-    }
-    else {
-        //        printf ("Image has height %d\n", height);
-    }
-    rows = png_get_rows (pngi);
-    if (rows == 0) {
-        fprintf (stderr, "Image has no rows.\n");
-        return 0;
-        /* We are shafted. */
-    }
-    else {
-        //        printf ("Image has some rows\n");
-    }
-    rowbytes = png_get_rowbytes (pngi);
-    if (rowbytes == 0) {
-        fprintf (stderr, "Image rows have zero length.\n");
-        return 0;
-        /* We are shafted. */
-    }
-    else {
-        //        printf ("Image rows are length %d\n", rowbytes);
-    }
-
-    /* Create Perl stuff to put the row info into. */
-
-    row_svs = calloc (height, sizeof (SV *));
-    if (! row_svs) {
-        /* We are shafted. */
-        return 0;
-    }
-    //    printf ("Making %d scalars.\n", height);
-    for (r = 0; r < height; r++) {
-        row_svs[r] = newSVpvn (rows[r], rowbytes);
-    }
-    perl_rows = av_make (height, row_svs);
-    //    printf ("There are %d elements in the array.\n", av_len (perl_rows));
-    free (row_svs);
-    return perl_rows;
-}
-
 /* Return an array of hashes containing the colour values of the palette. */
 
-int
-perl_png_get_PLTE (perl_libpng_t * png,
-                   AV * perl_colors)
+AV *
+perl_png_get_PLTE (perl_libpng_t * png)
 {
-    png_colorp colors;
-    int n_colors;
+    png_colorp colours;
+    int n_colours;
     png_uint_32 status;
     int i;
+    AV * perl_colours;
 
-    status = png_get_PLTE (pngi, & colors, & n_colors);
+    status = png_get_PLTE (pngi, & colours, & n_colours);
+    perl_colours = newAV ();
     if (status != PNG_INFO_PLTE) {
-        return status;
+        return perl_colours;
     }
-    av_clear (perl_colors);
-    for (i = 0; i < n_colors; i++) {
+    for (i = 0; i < n_colours; i++) {
         HV * palette_entry;
 
         //        printf ("Palette entry %d\n", i);
         palette_entry = newHV ();
-#define PERL_PNG_STORE_COLOR(x) hv_store (palette_entry, #x, strlen (#x), \
-                           newSViv (colors[i].x), 0)
-        PERL_PNG_STORE_COLOR (red);
-        PERL_PNG_STORE_COLOR (green);
-        PERL_PNG_STORE_COLOR (blue);
-#undef PERL_PNG_STORE_COLOR
-        av_push (perl_colors, newRV ((SV *) palette_entry));
+#define PERL_PNG_STORE_COLOUR(x) hv_store (palette_entry, #x, strlen (#x), \
+                           newSViv (colours[i].x), 0)
+        PERL_PNG_STORE_COLOUR (red);
+        PERL_PNG_STORE_COLOUR (green);
+        PERL_PNG_STORE_COLOUR (blue);
+#undef PERL_PNG_STORE_COLOUR
+        av_push (perl_colours, newRV ((SV *) palette_entry));
     }
+    return perl_colours;
 }
+
+void
+perl_png_set_PLTE (perl_libpng_t * png, AV * perl_colors)
+{
+    int n_colors;
+    png_colorp colors;
+    int i;
+
+    n_colors = av_len (perl_colors) + 1;
+    if (n_colors == -1) {
+        fprintf (stderr, "Empty array.\n");
+        return;
+    }
+    //    printf ("There are %d colours in the palette.\n", n_colors);
+
+    colors = calloc (n_colors, sizeof (png_color));
+
+    /* Put the colours from Perl into the libpng structure. */
+
+#define PERL_PNG_FETCH_COLOR(x) {                                       \
+        SV * rgb_sv = * (hv_fetch (palette_entry, #x, strlen (#x), 0)); \
+        colors[i].x = SvIV (rgb_sv);                                    \
+    }
+    for (i = 0; i < n_colors; i++) {
+        HV * palette_entry;
+        SV * color_i;
+
+        color_i = * av_fetch (perl_colors, i, 0);
+        palette_entry = (HV *) SvRV (color_i);
+
+        PERL_PNG_FETCH_COLOR (red);
+        PERL_PNG_FETCH_COLOR (green);
+        PERL_PNG_FETCH_COLOR (blue);
+    }
+
+#undef PERL_PNG_FETCH_COLOR
+
+    png_set_PLTE (pngi, colors, n_colors);
+    free (colors);
+}
+
+/* Create a hash containing the colour values of a pointer to a
+   png_color_16 structure. */
 
 static HV * perl_png_color_16_to_hv (png_color_16p colour)
 {
-    HV * perl_colour; // ni yurete
+    HV * perl_colour;
     perl_colour = newHV ();
 #define PERL_COLOUR(x) \
     hv_store (perl_colour, #x, strlen (#x), newSViv (colour->x), 0)
@@ -569,11 +592,11 @@ static HV * perl_png_color_16_to_hv (png_color_16p colour)
     PERL_COLOUR(blue);
     PERL_COLOUR(gray);
 #undef PERL_COLOUR
-    // Machi wa koi suru mono tachi no minato
     return perl_colour;
 }
 
 #define VALID(x) png_get_valid (pngi, PNG_INFO_ ## x)
+#undef UNDEF
 #define UNDEF return newHV ()
 
 HV * perl_png_get_bKGD (perl_libpng_t * png)
@@ -673,6 +696,63 @@ HV * perl_png_get_valid (perl_libpng_t * png)
     return perl_valid;
 }
 
+AV *
+perl_png_get_rows (perl_libpng_t * png)
+{
+    png_bytepp rows;
+    int rowbytes;
+    int height;
+    SV ** row_svs;
+    int r;
+    AV * perl_rows;
+
+    /* Get the information from the PNG. */
+
+    height = png_get_image_height (pngi);
+    if (height == 0) {
+        fprintf (stderr, "Image has no height.\n");
+        return 0;
+        /* We are shafted. */
+    }
+    else {
+        //        printf ("Image has height %d\n", height);
+    }
+    rows = png_get_rows (pngi);
+    if (rows == 0) {
+        fprintf (stderr, "Image has no rows.\n");
+        return 0;
+        /* We are shafted. */
+    }
+    else {
+        //        printf ("Image has some rows\n");
+    }
+    rowbytes = png_get_rowbytes (pngi);
+    if (rowbytes == 0) {
+        fprintf (stderr, "Image rows have zero length.\n");
+        return 0;
+        /* We are shafted. */
+    }
+    else {
+        printf ("Image rows are length %d\n", rowbytes);
+    }
+
+    /* Create Perl stuff to put the row info into. */
+
+    row_svs = calloc (height, sizeof (SV *));
+    if (! row_svs) {
+        /* We are shafted. */
+        return 0;
+    }
+    //    printf ("Making %d scalars.\n", height);
+    for (r = 0; r < height; r++) {
+        row_svs[r] = newSVpvn (rows[r], rowbytes);
+    }
+    perl_rows = av_make (height, row_svs);
+    //    printf ("There are %d elements in the array.\n", av_len (perl_rows));
+    free (row_svs);
+    return perl_rows;
+}
+
 void perl_png_set_rows (perl_libpng_t * png, AV * rows)
 {
     unsigned char ** row_pointers;
@@ -697,7 +777,7 @@ void perl_png_set_rows (perl_libpng_t * png, AV * rows)
         SV * row_i;
         row_i = * av_fetch (rows, i, 0);
         row_pointers[i] = SvPV (row_i, length);
-        //        printf ("%d %d '%s'\n", i, length, row_pointers[i]);
+        //        printf ("%d %d\n", i, length);
     }
     png_set_rows (pngi, row_pointers);
     /* Keep a record of the allocated memory in order to free it */
@@ -714,8 +794,8 @@ perl_png_set_IHDR (perl_libpng_t * png, HV * IHDR)
     int bit_depth = 0;
     int color_type = 0;
     int interlace_method = PNG_INTERLACE_NONE;
-    int compression_type = PNG_COMPRESSION_TYPE_DEFAULT;
-    int filter_type = PNG_FILTER_TYPE_DEFAULT;
+    const int compression_type = PNG_COMPRESSION_TYPE_DEFAULT;
+    const int filter_type = PNG_FILTER_TYPE_DEFAULT;
 
 
 #define FETCH(x) {                                              \
@@ -735,6 +815,13 @@ perl_png_set_IHDR (perl_libpng_t * png, HV * IHDR)
     }
     png_set_IHDR (pngi, width, height, bit_depth, color_type,
                   interlace_method, compression_type, filter_type);
+}
+
+void
+perl_png_write_png (perl_libpng_t * png, int transforms)
+{
+    printf ("Trying to write your crap.\n");
+    png_write_png (pngi, transforms, UNUSED_ZERO_ARG);
 }
 
 /*

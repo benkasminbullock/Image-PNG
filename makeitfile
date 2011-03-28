@@ -1,0 +1,24 @@
+LIBPNGPM=lib/Image/PNG/Libpng.pm
+
+TOUT=lib/Image/PNG.pm $(LIBPNGPM) perl-libpng.c Libpng.xs \
+	Makefile.PL perl-libpng.c Libpng.xs
+TIN=tmpl/Libpng.pm.tmpl tmpl/libpng_doc build/LibpngInfo.pm \
+	tmpl/author tmpl/config \
+	tmpl/perl-libpng.c.tmpl tmpl/Libpng.xs.tmpl \
+	tmpl/Libpng.t.tmpl tmpl/Const.t.tmpl tmpl/PNG.t.tmpl \
+	tmpl/PNG.pm.tmpl
+
+HTML=/usr/local/www/data/image-png-libpng.html
+
+Makefile:	Makefile.PL
+	perl Makefile.PL
+
+HTML:	$(LIBPNGPM)
+	perldoc -o html $(LIBPNGPM) > $(HTML)
+
+$(TOUT): $(TIN)
+	build/make-files.pl
+
+# Local Variables:
+# mode: makefile
+# End:

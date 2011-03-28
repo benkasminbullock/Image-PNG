@@ -9,6 +9,7 @@ BEGIN {
     use FindBin;
     use lib "$FindBin::Bin";
     use Build;
+    use LibpngInfo 'template_vars';
 };
 use autodie;
 
@@ -17,7 +18,7 @@ my %config = Build::read_config ();
 my $tt = Template->new (
     ABSOLUTE => 1,
     INCLUDE_PATH => $config{tmpl_dir},
-    STRICT => 1,
+#    STRICT => 1,
 );
 
 my @files = qw/
@@ -26,6 +27,7 @@ my @files = qw/
                   typemap
                   perl-libpng.c
                   PNG.pm
+                  Container.pm
                   Makefile.PL
                   PNG.t
                   Libpng.t
@@ -38,6 +40,14 @@ $vars{config} = \%config;
 $vars{functions} = Build::get_functions (\%config);
 $vars{self} = $0;
 $vars{date} = scalar gmtime ();
+
+# Get lots of stuff about libpng from the module LibpngInfo in the
+# same directory as this script, used to build documentation etc.
+
+template_vars (\%vars);
+#for my $x (@{$vars{ihdr_fields}}) {
+#    print $x->{name}, "\n";
+#}
 
 for my $file (@files) {
     my $template = "$file.tmpl";

@@ -52,7 +52,7 @@ my $png2 = [% config.base %]::Libpng::create_read_struct ();
 [% config.base %]::Libpng::init_io ($png2, $file2);
 [% config.base %]::Libpng::read_info ($png2);
 my %times;
-[% config.base %]::Libpng::get_tIME ($png2, \%times);
+%times = %{[% config.base %]::Libpng::get_tIME ($png2)};
 ok ($times{year} == 2010, "year");
 ok ($times{month} == 12, "month");
 ok ($times{day} == 29, "day");
@@ -67,8 +67,7 @@ open my $file3, "<", $text_file_name or die "Can't open '$text_file_name': $!";
 my $png3 = [% config.base %]::Libpng::create_read_struct ();
 [% config.base %]::Libpng::init_io ($png3, $file3);
 [% config.base %]::Libpng::read_info ($png3);
-my @text_chunks;
-[% config.base %]::Libpng::get_text ($png3, \@text_chunks);
+my @text_chunks = @{[% config.base %]::Libpng::get_text ($png3)};
 
 my $chunk1 = $text_chunks[0];
 ok ($chunk1->{compression} == 0, "text compression");

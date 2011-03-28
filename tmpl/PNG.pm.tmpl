@@ -4,6 +4,7 @@ require Exporter;
 @EXPORT_OK = qw/display_text/;
 use [% config.base %]::Const ':all';
 use [% config.base %]::Libpng;
+use [% config.base %]::Container;
 use warnings;
 use strict;
 use Carp;
@@ -50,67 +51,188 @@ sub write_info_error
     }
 }
 
+sub verbose
+{
+    my ($png) = @_;
+    return $png->{verbosity};
+}
+
+sub verbosity
+{
+    my ($png, $verbosity) = @_;
+    if ($verbosity) {
+        printf "I am a %s. I am going to print messages about what I'm doing. You can surprsss this by calling \$me->verbosity () or by using an option %s->new ({verbosity} = 0);.\n", (__PACKAGE__) x 2;
+    }
+    $png->{verbosity} = 1;
+}
+
 sub new
 {
     my ($package, $options) = @_;
     my $png = {};
     bless $png;
-    # The marker "read_ok" is set to true if a PNG file has
-    # successfully been read into the data object.
-    $png->{read_ok} = undef;
+    $png->{read} = undef;
     # The marker "error_string" contains the most recent error.
     $png->{error_string} = '';
     if ($options && ref $options eq 'HASH') {
-        if ($options->{verbose}) {
-            $png->{verbose} = $options->{verbose};
+        if ($options->{verbosity}) {
+            $png->verbosity ($options->{verbosity});
         }
         if ($options->{file}) {
-            $png->read_file ($options->{file});
+            $png->read ($options->{file});
         }
     }
     return $png;
 }
 
-sub read_file
+sub [% config.base %]::read
 {
     my ($png, $file_name) = @_;
+    if ($png->verbose) {
+        print "I am going to try to read a file called '$file_name'.\n";
+    }
     if (! defined $file_name) {
         carp __PACKAGE__, ": You called 'read_file' without giving a file name";
         return;
     }
-    if ($png->{read_file_name}) {
-        carp __PACKAGE__,
-            ": I have already been used to read a file called '$png->{read_file_name}': please create a new object for '$file_name'.";
-        return;
+    my $read = [% config.base %]::Container->new ({read_only => 1});
+    $read->set_file_name ($file_name);
+    $read->open ();
+    $read->read ();
+    if ($png->verbose) {
+        my $ihdr = [% config.base %]::Libpng::get_IHDR ($read->png ());
+        printf ("The size of the image is %d X %d; its colour type is %s; its bit depth is %d\n", $ihdr->{width}, $ihdr->{height}, [% config.base %]::Libpng::color_type_name ($ihdr->{color_type}), $ihdr->{bit_depth});
     }
-    $png->{read_file_name} = $file_name;
-    if (! -f $png->{read_file_name}) {
-        carp __PACKAGE__, 
-            ": I was asked to read a file '$png->{read_file_name}' which I can't locate";
-        return;
-    }
-    $png->{read_png} = [% config.base %]::Libpng::create_read_struct ();
-    if (! open $png->{read_fh}, "<:raw", $png->{read_file_name}) {
-        carp __PACKAGE__,
-            ": I tried to open $png->{read_file_name} but encountered the following error: $!";
-        return;
-    }
-    [% config.base %]::Libpng::init_io ($png->{read_png}, $png->{read_fh});
-    [% config.base %]::Libpng::read_png ($png->{read_png});
-    $png->{read_ok} = 1;
+
+    $png->{read} = $read;
     return 1;
 }
 
-sub write_file
+sub handle_error
+{
+    my ($png, $message) = @_;
+    croak $message;
+}
+
+sub [% config.base %]::write
 {
     my ($png, $file_name) = @_;
+    if ($png->verbose) {
+        print "I am going to try to write a PNG file called '$file_name'.\n";
+    }
     if (! $png->{write_ok}) {
-        if (! $png->{read_ok}) {
+        if (! $png->{read}) {
             $png->write_info_error ();
         }
         $png->init_write ();
     }
-#    if (! $png->{write}->{
+    my $write = $png->{write};
+    $write->{file_name} = $file_name;
+    # Check whether the image to be written has all of its IHDR information.
+    if (! $write->{ihdr_set}) {
+        if ($png->verbose) {
+            print "The image to be written doesn't seem to know what its header is supposed to be, so I'm going to try to find a substitute.\n";
+        }
+        if ($png->{read}) {
+            if ($png->verbose) {
+                print "I am copying the header from the image which I read in.\n";
+            }
+            my $ihdr = [% config.base %]::Libpng::get_IHDR ($png->{read}->png ());
+            if ($png->verbose) {
+                print "I've got a header and now I'm going to try to put it into the output.\n";
+            }
+            [% config.base %]::Libpng::set_IHDR ($write->{png}, $ihdr);
+            $write->{ihdr} = $ihdr;
+        }
+        else {
+            $png->handle_error ("I have no IHDR (header) data for the image; use the 'IHDR' method to set the IHDR values");
+        }
+    }
+    if ($png->verbose) {
+        print "I've got a header to write. Now I'm going to check the image data before writing it out.\n";
+    }
+    # Check whether the image data (the rows of the image) exist in
+    # some form or other.
+    if (! $write->{rows_set}) {
+        if ($png->verbose) {
+            print "You haven't specified what data you want me to write.\n";
+        }
+        # If the user has not specified what rows to write, assume
+        # that he wants to use the rows from a PNG object which has
+        # already been read in.
+        if ($png->{read}) {
+            if ($png->verbose) {
+                print "I am setting the image data for the image to write to data which I read in from another image.";
+            }
+            my $rows = [% config.base %]::Libpng::get_rows ($png->{read_png});
+            if ($png->verbose) {
+                print "I've got the data from the read image and now I'm going to set up the writing to write that data.\n";
+            }
+            [% config.base %]::Libpng::set_rows ($write->{png}, $rows);
+        }
+        else {
+            # There is no row data for the image.
+            $png->handle_error ("I have no row data for the image; use the 'rows' method to set the rows.");
+            return;
+        }
+    }
+    printf ("Its colour type is %s.\n", [% config.base %]::Libpng::color_type_name ($write->{ihdr}->{color_type}));
+
+    if ($write->{ihdr}->{color_type} == PNG_COLOR_TYPE_PALETTE) {
+        if ($png->verbose) {
+            print "The image you want to write has a palette, so I am going to check whether the palette is ready to be written.\n";
+        }
+        if (! $write->{palette_set}) {
+            print "The image doesn't have a palette set.\n";
+            if ($png->{read}) {
+                print "I am going to try to get one from the image I read in.\n";
+                my $palette = [% config.base %]::Libpng::get_PLTE ($png->{read_png});
+                for my $color (@$palette) {
+                    for my $hue (qw/red green blue/) {
+                        printf "%s: %d ", $hue, $color->{$hue};
+                    }
+                    print "\n";
+                }
+                [% config.base %]::Libpng::set_PLTE ($write->{png}, $palette);
+            }
+            else {
+                $png->handle_error ("You asked me to write an image with a palette, but I don't have any information about the palette for the image.");
+            }
+        }
+    }
+
+    if ($png->verbose) {
+        print "I've got the data for the header and the image now so I can write a minimal PNG.\n";
+    }
+    # Now the rows are set.
+    open my $output, ">:raw", $write->{file_name}
+        or $png->handle_error ("opening file '$write->{file_name}' failed: $!'");
+    [% config.base %]::Libpng::init_io ($write->{png}, $output);
+    [% config.base %]::Libpng::write_png ($write->{png});
+}
+
+# Private
+
+sub do_not_write
+{
+    my ($png, $chunk) = @_;
+    push @{$png->{write}->{ignored_chunks}}, $chunk;
+}
+
+# Public
+
+sub [% config.base %]::delete
+{
+    my ($png, @chunks) = @_;
+    if (! $png->{write_ok}) {
+        if (! $png->{read}) {
+            $png->write_info_error ();
+        }
+        $png->init_write ();
+    }
+    for my $chunk (@chunks) {
+        $png->do_not_write ($chunk);
+    }
 }
 
 sub write_set
@@ -135,8 +257,6 @@ sub init_write
     $png->{write} = {};
     $png->{write}->{png} =
         [% config.base %]::Libpng::create_write_struct ();
-    $png->{write}->{info} =
-        [% config.base %]::Libpng::create_info_struct ($png->{write_png});
     $png->{write_ok} = 1;
 }
 
@@ -166,6 +286,24 @@ sub data
     return $png->{data};
 }
 
+# Public
+
+sub IHDR
+{
+    my ($png, $ihdr) = @_;
+    if ($ihdr) {
+        [% config.base %]::Libpng::set_IHDR ($png->{write}->{png},
+                                             $ihdr);
+        $png->{write}->{ihdr_set} = 1;
+    }
+    else {
+        $ihdr = [% config.base %]::Libpng::get_IHDR ($png->{read_png});
+    }
+    return $ihdr;
+}
+
+# Private
+
 sub get_IHDR
 {
     my ($png) = @_;
@@ -173,7 +311,7 @@ sub get_IHDR
         carp __PACKAGE__, ": I was requested to read the IHDR of the PNG data, but I have already read it.";
         return;
     }
-    $png->{IHDR} = [% config.base %]::Libpng::get_IHDR ($png->{read_png});
+    $png->{IHDR} = [% config.base %]::Libpng::get_IHDR ($png->{read}->png ());
 }
 
 sub get
@@ -246,10 +384,11 @@ sub rows
                                                  $png->{write}->{IHDR});
         }
         [% config.base %]::Libpng::set_rows ($png->{write_png}, $rows);
+        $png->{write}->{rows_set} = 1;
     }
     else {
         # Read the rows
-        if (! $png->{read_ok}) {
+        if (! $png->{read}) {
             #        $png->handle_error ("");
             return;
         }
@@ -260,7 +399,7 @@ sub rows
 sub rowbytes
 {
     my ($png) = @_;
-    if (! $png->{read_ok}) {
+    if (! $png->{read}) {
 #        $png->handle_error ("");
         return;
     }
@@ -271,8 +410,8 @@ sub text
 {
     my ($png, $text) = @_;
     if (! $png->{text}) {
-        my $text_ref = [];
-        [% config.base %]::Libpng::get_text ($png->{read_png}, $text_ref);
+        my $text_ref =
+            [% config.base %]::Libpng::get_text ($png->{read_png});
         $png->{text} = $text_ref;
         # Change the text compression field to words rather than numbers.
         for my $text (@{$png->{text}}) {
@@ -288,10 +427,8 @@ sub text
 
 sub time
 {
-    my ($png, $time) = @_;
-    my %time;
-    [% config.base %]::Libpng::get_tIME ($png->{read_png}, \%time);
-    return \%time;
+    my ($png) = @_;
+    return [% config.base %]::Libpng::get_tIME ($png->{read_png});
 }
 
 # We need to free the memory associated with the C structs allocated

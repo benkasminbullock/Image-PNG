@@ -25,6 +25,8 @@ sub read_config
     }
     close $config_fh;
     $config{out_dir} = "$config{base}";
+    $config{base_hyphen} = $config{base};
+    $config{base_hyphen} =~ s/::/-/g;
     $config{base_underscore} = $config{base};
     $config{base_underscore} =~ s/:/_/g;
     $config{out_dir} =~ s/::/\//g;

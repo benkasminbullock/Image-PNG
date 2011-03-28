@@ -40,7 +40,7 @@ void perl_png_write_png (Png, transforms = PNG_TRANSFORM_IDENTITY)
         [% config.base %]::Libpng::t *  Png
         int transforms
         CODE:
-        png_write_png (Png->png, Png->info, transforms, 0);
+        perl_png_write_png (Png, transforms);
         OUTPUT:
 
 void perl_png_init_io (Png, fp)
@@ -70,23 +70,19 @@ HV * perl_png_get_IHDR (Png)
         OUTPUT:
         RETVAL
 
-int perl_png_get_tIME (Png, time_ref)
+HV * perl_png_get_tIME (Png)
         [% config.base %]::Libpng::t *  Png
-        SV * time_ref
         CODE:
-        RETVAL = perl_png_get_time (Png, time_ref);
+        RETVAL = perl_png_get_time (Png);
         OUTPUT:
         RETVAL
-        time_ref
 
-int perl_png_get_text (Png, text_ref)
+SV * perl_png_get_text (Png)
         [% config.base %]::Libpng::t *  Png
-        SV * text_ref
         CODE:
-        RETVAL = perl_png_get_text (Png, text_ref);
+        RETVAL = perl_png_get_text (Png);
         OUTPUT:
         RETVAL
-        text_ref
 
 int perl_png_sig_cmp (sig, start = 0, num_to_check = 8)
         SV * sig
@@ -97,11 +93,12 @@ int perl_png_sig_cmp (sig, start = 0, num_to_check = 8)
         OUTPUT:
         RETVAL
 
-void perl_png_scalar_as_image (Png, scalar)
-        [% config.base %]::Libpng::t *  Png
+void perl_png_read_from_scalar (Png, scalar, transforms = 0)
+        [% config.base %]::Libpng::t * Png
         SV * scalar
+        int transforms
         CODE:
-        perl_png_scalar_as_image (Png, scalar);
+        perl_png_read_from_scalar (Png, scalar, transforms);
         OUTPUT:
 
 const char * perl_png_color_type_name (color_type)
@@ -144,13 +141,18 @@ int perl_png_get_rowbytes (Png)
         OUTPUT:
         RETVAL
 
-int perl_png_get_PLTE (Png, colors)
+AV * perl_png_get_PLTE (Png)
+        [% config.base %]::Libpng::t *  Png
+        CODE:
+        RETVAL = perl_png_get_PLTE (Png);
+        OUTPUT:
+        RETVAL
+
+void perl_png_set_PLTE (Png, colors)
         [% config.base %]::Libpng::t *  Png
         AV * colors
         CODE:
-        RETVAL = perl_png_get_PLTE (Png, colors);
-        OUTPUT:
-        RETVAL
+        perl_png_set_PLTE (Png, colors);
 
 HV * perl_png_get_bKGD (Png)
         [% config.base %]::Libpng::t *  Png
@@ -227,3 +229,18 @@ void perl_png_set_IHDR (Png, IHDR)
         perl_png_set_IHDR (Png, IHDR);
         OUTPUT:
         
+SV * perl_png_write_to_scalar (Png, transforms = 0)
+        [% config.base %]::Libpng::t * Png
+        int transforms;
+        CODE:
+        RETVAL = perl_png_write_to_scalar (Png, transforms);
+        OUTPUT:
+        RETVAL
+
+void perl_png_set_filter (Png, filters)
+        [% config.base %]::Libpng::t * Png
+        int filters;
+        CODE:
+        png_set_filter (Png->png, 0, filters);
+        OUTPUT:
+
