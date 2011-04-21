@@ -60,8 +60,11 @@ typedef perl_libpng_t * [% config.base_underscore %]__Libpng;
 
 /* Return an undefined value. */
 
-#define UNDEF return &PL_sv_undef
-
+#define UNDEF {                                 \
+        if (png->raise_undefined) {             \
+        }                                       \
+        return &PL_sv_undef;                    \
+    }
 /* Send a message. */
 
 #if 1
@@ -839,7 +842,7 @@ perl_png_write_png (perl_libpng_t * png, int transforms)
                                   
 
 
-HV *
+SV *
 perl_png_get_IHDR (perl_libpng_t * png)
 {
     png_uint_32 width;
@@ -872,7 +875,7 @@ perl_png_get_IHDR (perl_libpng_t * png)
     STORE (filter_method);
 #undef STORE
 
-    return IHDR;
+    return newRV_inc ((SV *) IHDR);
 }
 
 void 
@@ -901,7 +904,8 @@ perl_png_set_IHDR (perl_libpng_t * png, HV * IHDR)
     FETCH (color_type);
     FETCH (interlace_method);
     if (width == 0 || height == 0 || bit_depth == 0) {
-        fprintf (stderr, "Bad values for width/height/bit depth.\n");
+        perl_png_error (png, "Bad values for width (%d), height (%d), or bit depth (%d)",
+                        width, height, bit_depth);
         return;
     }
     png_set_IHDR (pngi, width, height, bit_depth, color_type,
@@ -976,7 +980,7 @@ const char * perl_png_text_compression_name (int text_compression)
 
 /* Return an array of hashes containing the colour values of the palette. */
 
-AV *
+SV *
 perl_png_get_PLTE (perl_libpng_t * png)
 {
     png_colorp colours;
@@ -986,10 +990,10 @@ perl_png_get_PLTE (perl_libpng_t * png)
     AV * perl_colours;
 
     status = png_get_PLTE (pngi, & colours, & n_colours);
-    perl_colours = newAV ();
     if (status != PNG_INFO_PLTE) {
-        return perl_colours;
+        UNDEF;
     }
+    perl_colours = newAV ();
     for (i = 0; i < n_colours; i++) {
         HV * palette_entry;
 
@@ -1003,7 +1007,7 @@ perl_png_get_PLTE (perl_libpng_t * png)
 #undef PERL_PNG_STORE_COLOUR
         av_push (perl_colours, newRV ((SV *) palette_entry));
     }
-    return perl_colours;
+    return newRV_inc ((SV *) perl_colours);
 }
 
 void
@@ -1072,232 +1076,30 @@ static HV * perl_png_color_16_to_hv (png_color_16p colour)
 
 
 #define VALID(x) png_get_valid (pngi, PNG_INFO_ ## x)
-#undef UNDEF
-#define UNDEF return newHV ()
 
-HV * perl_png_get_bKGD (perl_libpng_t * png)
+SV * perl_png_get_bKGD (perl_libpng_t * png)
 {
     if (VALID(bKGD)) {
         png_color_16p background;
         if (png_get_bKGD (pngi, & background)) {
-            return perl_png_color_16_to_hv (background);
+            return newRV_inc ((SV *) perl_png_color_16_to_hv (background));
         }
     }
     UNDEF;
 }
 
-HV * perl_png_get_cHRM (perl_libpng_t * png)
+SV * perl_png_get_cHRM (perl_libpng_t * png)
 {
     if (VALID (cHRM)) {
         HV * ice;
         ice = newHV ();
-        return ice;
+        return newRV_inc ((SV *) ice);
     }
     UNDEF;
 }
 
-HV * perl_png_get_sBIT (perl_libpng_t * png)
+SV * perl_png_get_sBIT (perl_libpng_t * png)
 {
-    if (VALID (sBIT)) {
-    HV * sig_bit;
-    sig_bit = newHV ();
-    return sig_bit;
-    }
-    UNDEF;
-}
-
-HV * perl_png_get_oFFs (perl_libpng_t * png)
-{
-    if (VALID (oFFs)) {
-    HV * offset;
-
-    offset = newHV ();
-    return offset;
-    }
-    UNDEF;
-}
-
-HV * perl_png_get_pHYs (perl_libpng_t * png)
-{
-    if (VALID (pHYs)) {
-    HV * phys;
-
-    phys = newHV ();
-    return phys;
-    }
-    UNDEF;
-}
-
-int perl_png_get_sRGB (perl_libpng_t * png)
-{
-    /* I'm not sure what to return if there is no valid sRGB value. */
-
-    int intent = 0;
-
-    if (VALID (sRGB)) {
-        png_get_sRGB (pngi, & intent);
-    }
-    return intent;
-}
-
-HV * perl_png_get_valid (perl_libpng_t * png)
-{
-    HV * perl_valid;
-    unsigned int valid;
-
-    perl_valid = newHV ();
-    valid = png_get_valid (pngi, 0xFFFFFFFF);
-#define V(x) \
-    hv_store (perl_valid, #x, strlen (#x), newSViv (valid & PNG_INFO_ ## x), 0)
-
-    V(gAMA);
-    V(sBIT);
-    V(cHRM);
-    V(PLTE);
-    V(tRNS);
-    V(bKGD);
-    V(hIST);
-    V(pHYs);
-    V(oFFs);
-    V(tIME);
-    V(pCAL);
-    V(sRGB);
-    V(iCCP);
-    V(sPLT);
-    V(sCAL);
-    V(IDAT);
-
-#undef V
-
-    return perl_valid;
-}
-
-/*  ___                                  _       _        
-   |_ _|_ __ ___   __ _  __ _  ___    __| | __ _| |_ __ _ 
-    | || '_ ` _ \ / _` |/ _` |/ _ \  / _` |/ _` | __/ _` |
-    | || | | | | | (_| | (_| |  __/ | (_| | (_| | || (_| |
-   |___|_| |_| |_|\__,_|\__, |\___|  \__,_|\__,_|\__\__,_|
-                        |___/                              */
-
-
-AV *
-perl_png_get_rows (perl_libpng_t * png)
-{
-    png_bytepp rows;
-    int rowbytes;
-    int height;
-    SV ** row_svs;
-    int r;
-    AV * perl_rows;
-
-    /* Get the information from the PNG. */
-
-    height = png_get_image_height (pngi);
-    if (height == 0) {
-        perl_png_error (png, "Image has no height");
-    }
-    else {
-        MESSAGE ("Image has height %d\n", height);
-    }
-    rows = png_get_rows (pngi);
-    if (rows == 0) {
-        perl_png_error (png, "Image has no rows");
-    }
-    else {
-        MESSAGE ("Image has some rows\n");
-    }
-    rowbytes = png_get_rowbytes (pngi);
-    if (rowbytes == 0) {
-        perl_png_error (png, "Image rows have zero length");
-    }
-    else {
-        MESSAGE ("Image rows are length %d\n", rowbytes);
-    }
-
-    /* Create Perl stuff to put the row info into. */
-
-    GET_MEMORY (row_svs, height);
-    MESSAGE ("Making %d scalars.\n", height);
-    for (r = 0; r < height; r++) {
-        row_svs[r] = newSVpvn ((char *) rows[r], rowbytes);
-    }
-    perl_rows = av_make (height, row_svs);
-    MESSAGE ("There are %d elements in the array.\n", av_len (perl_rows));
-    PERL_PNG_FREE (row_svs);
-    return perl_rows;
-}
-
-/* Set the rows of the image to "rows". */
-
-void perl_png_set_rows (perl_libpng_t * png, AV * rows)
-{
-    unsigned char ** row_pointers;
-    int i;
-    int n_rows;
-
-    if (png->row_pointers) {
-        perl_png_error (png, "Row pointers already allocated");
-    }
-    /* Check that this is the same as the height of the image. */
-    n_rows = av_len (rows);
-    MESSAGE ("%d rows.\n", n_rows);
-    GET_MEMORY (row_pointers, n_rows);
-    for (i = 0; i <= n_rows; i++) {
-        /* Check that this is the same as the width of the image. */
-        unsigned int length;
-        SV * row_i;
-        row_i = * av_fetch (rows, i, 0);
-        row_pointers[i] = (unsigned char *) SvPV (row_i, length);
-        MESSAGE ("%d %d\n", i, length);
-    }
-    png_set_rows (pngi, row_pointers);
-    /* Keep a record of the allocated memory in order to PERL_PNG_FREE it */
-    png->row_pointers = row_pointers;
-}
-
-/*  __  __                                                                      
-   |  \/  | ___  ___ ___  __ _  __ _  ___  ___      ___ _ __ _ __ ___  _ __ ___ 
-   | |\/| |/ _ \/ __/ __|/ _` |/ _` |/ _ \/ __|    / _ \ '__| '__/ _ \| '__/ __|
-   | |  | |  __/\__ \__ \ (_| | (_| |  __/\__ \_  |  __/ |  | | | (_) | |  \__ \
-   |_|  |_|\___||___/___/\__,_|\__, |\___||___( )  \___|_|  |_|  \___/|_|  |___/
-                               |___/          |/                                
-                    _                            _                 
-     __ _ _ __   __| | __      ____ _ _ __ _ __ (_)_ __   __ _ ___ 
-    / _` | '_ \ / _` | \ \ /\ / / _` | '__| '_ \| | '_ \ / _` / __|
-   | (_| | | | | (_| |  \ V  V / (_| | |  | | | | | | | | (_| \__ \
-    \__,_|_| |_|\__,_|   \_/\_/ \__,_|_|  |_| |_|_|_| |_|\__, |___/
-                                                         |___/      */
-
-void perl_png_set_verbosity (perl_libpng_t * png, int verbosity)
-{
-    png->verbosity = verbosity;
-    MESSAGE ("You have asked me to print messages saying what I'm doing.\n");
-}
-
-/* What should we do when there is an undefined variable, print an
-   error message, raise an error, or nothing at all? */
-
-void perl_png_handle_undefined (perl_libpng_t * png, int die, int raise)
-{
-    png->print_undefined = !! raise;
-    png->raise_undefined = !! die;
-}
-
-/* What should we do for other errors, print an error message, raise
-   an error, or nothing at all? */
-
-void perl_png_handle_error (perl_libpng_t * png, int die, int raise)
-{
-    png->print_errors = !! raise;
-    png->raise_errors = !! die;
-}
-
-#undef UNDEF
-#define UNDEF return &PL_sv_undef
-
-
-/* PNG chunks have to be four bytes in length. The following macro is
-   defined solely in order to make this program more readable to human
    programmers. */
 
 #define PNG_CHUNK_NAME_LENGTH 4
@@ -1338,6 +1140,10 @@ SV * perl_png_get_unknown_chunks (perl_libpng_t * png)
             png_chunk = unknown_chunks + i;
             perl_chunk = newHV ();
             if (strlen (png_chunk->name) != PNG_CHUNK_NAME_LENGTH) {
+                perl_png_error (png, "Chunk name '%s' has wrong number of "
+                                "characters: %d required",
+                                png_chunk->name,
+                                PNG_CHUNK_NAME_LENGTH);
                 /* PANIC */
             }
             name = newSVpvn (png_chunk->name, PNG_CHUNK_NAME_LENGTH);
