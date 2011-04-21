@@ -440,9 +440,6 @@ sub DESTROY
     if ($png->{verbose}) {
         print "Freeing the memory of a PNG object.\n";
     }
-    if ($png->{read_png}) {
-        [% config.base %]::Libpng::destroy_read_struct ($png->{read_png});
-    }
 }
 
 # The text segment of the PNG should probably be an object in its own

@@ -16,7 +16,7 @@ binmode STDOUT, ":utf8";
 
 my $png = [% config.base %]::Libpng::create_read_struct ();
 ok ($png, 'call "create_read_struct" and get something');
-
+[% config.base %]::Libpng::set_verbosity ($png, 1);
 my $file_name = "$FindBin::Bin/test.png";
 
 open my $file, "<", $file_name or die "Can't open '$file_name': $!";
@@ -59,12 +59,13 @@ ok ($times{day} == 29, "day");
 ok ($times{hour} == 16, "hour");
 ok ($times{minute} == 20, "minute");
 ok ($times{second} == 20, "second");
-[% config.base %]::Libpng::destroy_read_struct ($png2);
+#[% config.base %]::Libpng::destroy_read_struct ($png2);
 close $file2 or die $!;
 
 my $text_file_name = "$FindBin::Bin/with-text.png";
 open my $file3, "<", $text_file_name or die "Can't open '$text_file_name': $!";
 my $png3 = [% config.base %]::Libpng::create_read_struct ();
+#[% config.base %]::Libpng::set_verbosity ($png3, 1);
 [% config.base %]::Libpng::init_io ($png3, $file3);
 [% config.base %]::Libpng::read_info ($png3);
 my @text_chunks = @{[% config.base %]::Libpng::get_text ($png3)};
@@ -78,7 +79,7 @@ ok ($chunk3->{compression} == 1, "text compression for iTXT");
 ok ($chunk3->{key} eq 'Detective', "text key");
 ok ($chunk3->{lang_key} eq '探偵', "text lang_key");
 ok ($chunk3->{text} eq '工藤俊作', "text text in UTF-8");
-[% config.base %]::Libpng::destroy_read_struct ($png3);
+#[% config.base %]::Libpng::destroy_read_struct ($png3);
 close $file3 or die $!;
 
 my $number_version = [% config.base %]::Libpng::access_version_number ();

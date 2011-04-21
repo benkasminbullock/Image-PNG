@@ -7,7 +7,7 @@ use lib '../blib/lib';
 use lib '../blib/arch';
 use Image::PNG::Libpng ':all';
 my $kanji = '蟹';
-my $image = get ('http://mikan/kanjivg/memory.cgi?k=' . uri_escape ($kanji));
+my $image = get ('http://kanji.sljfaq.org/kanjivg/memory.cgi?k=' . uri_escape ($kanji));
 my $png = create_read_struct ();
 read_from_scalar ($png, $image);
 my $text = Image::PNG::Libpng::get_text ($png);

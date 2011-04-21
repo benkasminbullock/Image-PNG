@@ -2,11 +2,11 @@
 
 [%- libpng = "=head3 Correspondence to libpng" -%]
 [%- noinfo = "No info structure" -%]
-[%- seenoinfo = BLOCK -%]
-See L</[%- noinfo -%]>.
+[%- xnoinfo = BLOCK -%]
+L</[% noinfo %]>
 [%- END -%]
 [%-  noinfoxref = BLOCK -%]
-It does not take a second "info" argument. [% seenoinfo -%]
+It does not take a second "info" argument. [% noinfo -%]
 [%- END -%]
 [% transform_list = BLOCK %]
 =over
@@ -61,14 +61,16 @@ format.
 
 [% config.base %]::Libpng consists of Perl subroutines which mirror
 the C functions in libpng, plus helper subroutines to make it easier
-to read and write PNG data in Perl. For the differences between 
-[% config.base %]::Libpng and libpng, see 
-L</Differences from libpng>.
+to read and write PNG data in Perl. 
 
 If you are looking for an easy way to access PNG files, I recommend
 you to try the companion module L<[% config.base %]>, which offers a
 simplified "object-oriented" interface to the functions in this
 module.
+
+If you are familiar with libpng, and you would like to know what the
+differences between this module and libpng are, please go to the
+section L</Differences from libpng>.
 
 =head1 FUNCTIONS
 
@@ -78,11 +80,11 @@ module.
 
 Create a structure for reading a PNG.
 
-[% cor(fn="create_read_struct") %] in libpng with
-all of the error and warning handler variables set to zero, which
-means that the error and warning methods used are the default libpng
-ones. There is no facility to alter the libpng error handler in
-[% config.base %]. See L</BUGS>.
+[% cor(fn="create_read_struct") %] plus C<create_info_struct> (see [%
+xnoinfo %]) with all of the error and warning handler variables set
+to zero, which means that the error and warning methods used are the
+default libpng ones. There is no facility to alter the libpng error
+handler in [% config.base %]. See L</BUGS>.
 
 =head2 create_write_struct
 
@@ -90,11 +92,11 @@ ones. There is no facility to alter the libpng error handler in
 
 Create a structure for writing a PNG.
 
-[% cor(fn="create_write_struct") %] in libpng with
-all of the error and warning handler variables set to zero, which
-means that the error and warning methods used are the default libpng
-ones. There is no facility to alter the libpng error handler in
-[% config.base %]. See L</BUGS>.
+[% cor(fn="create_write_struct") %] plus C<create_info_struct> (see [%
+xnoinfo %]) with all of the error and warning handler variables set to
+zero, which means that the error and warning methods used are the
+default libpng ones. There is no facility to alter the libpng error
+handler in [% config.base %]. See L</BUGS>.
 
 =head2 destroy_read_struct
 
@@ -103,7 +105,7 @@ ones. There is no facility to alter the libpng error handler in
 This frees the memory associated with C<$png>. 
 
 [% cor(fn="destroy_read_struct") %], without the
-info and end_info arguments. [% seenoinfo %]
+info and end_info arguments. See [% xnoinfo %].
 
 =head2 destroy_write_struct
 
@@ -112,6 +114,8 @@ info and end_info arguments. [% seenoinfo %]
 This frees the memory associated with C<$png>.
 
 [% cor(fn="destroy_write_struct") %].
+
+=head1 Input and output
 
 =head2 init_io
 
@@ -138,47 +142,6 @@ or
 [% cor(fn="init_io") %], with a Perl
 file handle substituting for the C C<FILE *>.
 
-=head2 sig_cmp
-
-    if (sig_cmp ($should_be_png)) {
-        print "Your data does not have a PNG signature.\n";
-    }
-
-This subroutine looks at C<$should_be_png> and checks whether its
-first bytes correspond to a valid PNG signature. It returns a true
-value if they do not. It can also take two further arguments
-consisting of a byte offset and a number of bytes to check
-respectively:
-
-    sig_cmp ($should_be_png, 0, 8);
-
-If these arguments are not supplied, the byte offset is assumed
-to be zero, and the number of bytes to check is assumed to be eight.
-
-[% cor(fn="sig_cmp") %], with default arguments of
-0 and 8 if second and third arguments are not supplied.
-
-=head2 get_valid
-
-    my $valid = get_valid ($png);
-    if ($valid->{oFFs}) {
-        print "The PNG has valid screen offsets.\n";
-    }
-
-This function returns a hash with a key for each possible chunk which
-may or may not be valid. The chunks which you can test for are
-
-=over
-[% FOR chunk IN chunks %]
-=item [% chunk.name %]
-[% END %]
-=back
-
-[% rfirstpng %]
-
-[% cor(fn = "get_valid") %], with the difference being that the
-return value is a hash containing a key for each possible chunk.
-
 =head2 read_from_scalar
 
      my $png = create_read_struct ();
@@ -191,9 +154,11 @@ data from the structure on being called.
 This is useful when you have image data stored in a Perl scalar, for example
 
      use LWP::Simple;
-     my $image_data = get 'http://www.example.com/yamaguchi-momoe.png';
+     my $image_data = get 'http://www.example.com/example.png';
+     # Now $image_data contains the PNG file
      my $png = create_read_struct ();
      read_from_scalar ($png, $image_data);
+     # Now $png contains the PNG information from the image.
 
 [% libpng %]
 
@@ -255,6 +220,84 @@ argument. The fourth, unused, argument to C<png_read_png> does not
 need to be supplied. [% unused %]
 
 [% noinfoxref %]
+
+=head2 write_png
+
+    write_png ($png);
+
+This writes the PNG to the file stream. When you use this, you are
+supposed to already have opened a file for writing with
+L</init_io>. For example,
+
+    open my $output, ">:raw", 'out.png';
+    init_io ($png, $output);
+    write_png ($png);
+    close $output;
+
+There is an optional second argument consisting of transformations to
+apply to the PNG image before writing it:
+
+    use [% config.base %]::Const qw/PNG_TRANSFORM_STRIP_ALPHA/;
+    write_png ($png, PNG_TRANSFORM_STRIP_ALPHA);
+
+The transformations which can be applied are as follows:
+
+[% transform_list %]
+
+(NOTE: this list might be wrong, it is just copied from the linux lib
+pages & the linux lib pages have different transformations for the
+read and write png functions.)
+
+[% cor(fn="write_png") %].
+
+=head1 The image header
+
+See [% spec("11IHDR") %] for information on the PNG standards for
+the image header.
+
+
+=head2 sig_cmp
+
+    if (sig_cmp ($should_be_png)) {
+        print "Your data does not have a PNG signature.\n";
+    }
+
+This subroutine looks at C<$should_be_png> and checks whether its
+first bytes correspond to a valid PNG signature. It returns a true
+value if they do not. It can also take two further arguments
+consisting of a byte offset and a number of bytes to check
+respectively:
+
+    sig_cmp ($should_be_png, 0, 8);
+
+If these arguments are not supplied, the byte offset is assumed
+to be zero, and the number of bytes to check is assumed to be eight.
+
+[% cor(fn="sig_cmp") %], with default arguments of
+0 and 8 if second and third arguments are not supplied.
+
+=head2 get_valid
+
+    my $valid = get_valid ($png);
+    if ($valid->{oFFs}) {
+        print "The PNG has valid screen offsets.\n";
+    }
+
+This function returns a hash with a key for each possible chunk which
+may or may not be valid. The chunks which you can test for are
+
+=over
+[% FOR chunk IN chunks %]
+=item [% chunk.name %]
+[% END %]
+=back
+
+[% rfirstpng %]
+
+[% cor(fn = "get_valid") %], with the difference being that the
+return value is a hash containing a key for each possible chunk.
+
+
 
 =head2 get_IHDR
 
@@ -330,7 +373,20 @@ C<[%- field.name %]>, [% END -%]
 in C<png_set_IHDR> can only take one possible value, so the routine
 ignores them. [% unused %]
 
+=head2 get_color_type
 
+    my $color_type;
+    [% config.base %]::Libpng::get_color_type ($png, \$color_type);
+
+This returns an integer value. If you want to get a name for the
+colour type, use L</color_type_name>.
+
+[% cor(fn="get_color_type") %].
+
+=head1 PNG timestamps
+
+See [% spec("11timestampinfo") %] for information on the PNG standards for
+time stamp information.
 
 =head2 get_tIME
 
@@ -361,6 +417,11 @@ is omitted, these are set to zero.
 
 [% cor(fn="set_tIME") %], with a Perl hash reference
 substituted for the C struct C<png_timep> used in libpng.
+
+=head1 Text chunks
+
+See [% spec("11textinfo") %] for information on the PNG standards for
+text information.
 
 =head2 get_text
 
@@ -397,15 +458,46 @@ to the existing ones rather than replacing them.
                       text => "Copyright (C) 1997 The Dukes of Hazzard",
               }]);
 
-=head2 get_color_type
+[% cor(fn="set_text") %].
 
-    my $color_type;
-    [% config.base %]::Libpng::get_color_type ($png, \$color_type);
+=head1 Private chunks
 
-This returns an integer value. If you want to get a name for the
-colour type, use L</color_type_name>.
+=head2 get_unknown_chunks
 
-[% cor(fn="get_color_type") %].
+    my $private_chunks = get_unknown_chunks ($png);
+
+This gets all of the private chunks from the image. The return value
+is an array reference containing hash references. If there are no
+private chunks, this returns an undefined value. There is one element
+of the array for each chunk member.
+
+Each member hash reference has the following keys:
+
+=over
+[% FOR field IN unknown_chunk_fields %]
+=item [% field.name %]
+
+[% field.description %]
+[% END %]
+=back
+
+The "size" field of the PNG structure is not stored, because the
+"data" member of the hash contains information on its length.
+
+[% cor(fn="get_unknown_chunks") %]
+
+=head2 set_unknown_chunks
+
+    set_unknown_chunks ($png, $private_chunks);
+
+[% cor(fn="set_unknown_chunks") %]
+
+=head1 Helper functions
+
+These helper functions assist the programmer in the transition from
+libpng, which uses C conventions such as upper case macros standing
+for numerical constants and C structures, to Perl's string-based
+conventions.
 
 =head2 color_type_name
 
@@ -456,6 +548,8 @@ the word "COMPRESSION", so for example the libpng constant
 C<PNG_ITXT_COMPRESSION_zTXt> corresponds to a return value of
 C<ITXT_zTXt>.
 
+=head1 Library version functions
+
 =head2 get_libpng_ver
 
     my $libpng_version = [% config.base %]::Libpng::get_libpng_ver ();
@@ -475,6 +569,11 @@ This function returns the version of the libpng library which the
 module is using as an integer number.
 
 [% cor(fn="access_version_number") %].
+
+=head1 Palettes
+
+See [% spec("11PLTE") %] for information on the PNG standards for
+the palette chunk.
 
 =head2 get_PLTE
 
@@ -525,6 +624,8 @@ creates a palette with two entries in C<$png>.
 
 [% cor(fn="set_PLTE") %].
 
+=head1 Image data
+
 =head2 get_rows
 
     my $rows = [% config.base %]::Libpng::get_rows ($png);
@@ -568,6 +669,8 @@ in order to prevent problems occuring.
 
 [% cor(fn="get_rowbytes") %].
 
+=head1 Compression and filtering
+
 =head2 set_filter
 
     use Image::PNG::Const 'PNG_FILTER_NONE';
@@ -592,35 +695,6 @@ filter types.
 
 [% cor(fn="set_filter") %] with the second (unused)
 argument omitted. [% unused %]
-
-=head2 write_png
-
-    write_png ($png);
-
-This writes the PNG to the file stream. When you use this, you are
-supposed to already have opened a file for writing with
-L</init_io>. For example,
-
-    open my $output, ">:raw", 'out.png';
-    init_io ($png, $output);
-    write_png ($png);
-    close $output;
-
-There is an optional second argument consisting of transformations to
-apply to the PNG image before writing it:
-
-    use [% config.base %]::Const qw/PNG_TRANSFORM_STRIP_ALPHA/;
-    write_png ($png, PNG_TRANSFORM_STRIP_ALPHA);
-
-The transformations which can be applied are as follows:
-
-[% transform_list %]
-
-(NOTE: this list might be wrong, it is just copied from the linux lib
-pages & the linux lib pages have different transformations for the
-read and write png functions.)
-
-[% cor(fn="write_png") %].
 
 =head1 EXPORTS
 
@@ -772,6 +846,8 @@ consider adding that facility to the module.
 =head1 SEE ALSO
 
 =head2 [% pngspec %]
+
+[% INCLUDE "pngspec" %]
 
 =head2 [% libpngdoc %]
 

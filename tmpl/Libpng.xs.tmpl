@@ -266,3 +266,17 @@ void perl_png_set_verbosity (Png, verbosity = 0)
         perl_png_set_verbosity (Png, verbosity);
         OUTPUT:
         
+void perl_png_set_unknown_chunks (Png, unknown_chunks)
+        [% config.base %]::Libpng::t * Png
+        AV * unknown_chunks
+        CODE:
+        perl_png_set_unknown_chunks (Png, unknown_chunks);
+        OUTPUT:
+
+SV * perl_png_get_unknown_chunks (Png)
+        [% config.base %]::Libpng::t * Png
+        CODE:
+        RETVAL = perl_png_get_unknown_chunks (Png);
+        OUTPUT:
+        RETVAL
+

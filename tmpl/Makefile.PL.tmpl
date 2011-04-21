@@ -227,6 +227,7 @@ EOF
     $cfunctions_build .= <<EOF;
 Libpng.o: perl-libpng.h
 
+perl-libpng.o: perl-libpng.h my-xs.h
 EOF
     my $has_cfunctions = find_program ('cfunctions', $verbose);
 
@@ -234,6 +235,9 @@ EOF
         $cfunctions_build .= <<EOF;
 perl-libpng.h:  perl-libpng.c
 	cfunctions -i -n -c perl-libpng.c
+
+my-xs.h:        my-xs.c
+	cfunctions -i -n -c my-xs.c
 
 EOF
     }

@@ -8,6 +8,7 @@
 #include "XSUB.h"
 
 #include "perl-libpng.h"
+#include "my-xs.h"
 
 #ifdef HEADER
 
@@ -17,38 +18,45 @@ typedef struct perl_libpng {
     png_structp png;
     png_infop info;
     png_infop end_info;
+    enum {perl_png_unknown_obj, perl_png_read_obj, perl_png_write_obj} type;
+    /* Number of rows. */
     void * row_pointers;
-    /* Blabbermouth. */
-    int verbosity;
-    /* Raise an error (die) if there is an error other than something
+    /* Number of times we have called calloc. */
+    int memory_gets;
+    /* If the following variable is set to a true value, the module
+       prints messages about what it is doing. */
+    int verbosity : 1;
+    /* If the following variable is set to a true value, the module
+       raises an error (die) if there is an error other than something
        being undefined. */
-    int raise_errors;
+    int raise_errors : 1;
     /* Print error messages. */
-    int print_errors;
+    int print_errors : 1;
     /* Raise an error (die) if something is undefined. */
-    int raise_undefined;
+    int raise_undefined : 1;
     /* Print a message on STDERR if something is undefined. */
-    int print_undefined;
+    int print_undefined : 1;
 }
 perl_libpng_t;
 
 typedef perl_libpng_t [% config.base_underscore %]__Libpng__t;
 
+typedef perl_libpng_t * [% config.base_underscore %]__Libpng;
+
 #endif
+
+/* Convenient macro for libpng function arguments. */
 
 #define pngi png->png, png->info
 
-/* The following macro is used for useless arguments from libpng which
+/* The following macro is used to indicate to programmers reading this
+   which arguments are "useless" (ignored) arguments from libpng which
    are always set to zero. It is not used for arguments which are set
    to zero for some other reason than because they are useless
    (e.g. flush functions which are set to zero because we don't need
    them). */
 
 #define UNUSED_ZERO_ARG 0
-
-/* The following time fields are used in "perl_png_timep_to_hash" for
-   converting the PNG modification time structure ("png_time") into a
-   Perl associative array. */
 
 /* Return an undefined value. */
 
@@ -57,14 +65,81 @@ typedef perl_libpng_t [% config.base_underscore %]__Libpng__t;
 /* Send a message. */
 
 #if 1
-#define MESSAGE(x...) {                         \
-        if (png->verbosity) {                   \
-            printf (x);                         \
-        }                                       \
+#define MESSAGE(x...) {                                 \
+        if (png->verbosity) {                           \
+            printf ("%s:%d: ", __FILE__, __LINE__);     \
+            printf (x);                                 \
+        }                                               \
     }
 #else
 #define MESSAGE(x...)
 #endif
+
+/*  _____                         
+   | ____|_ __ _ __ ___  _ __ ___ 
+   |  _| | '__| '__/ _ \| '__/ __|
+   | |___| |  | | | (_) | |  \__ \
+   |_____|_|  |_|  \___/|_|  |___/ */
+                               
+
+
+/* Print a warning message. */
+
+static void perl_png_warn (perl_libpng_t * png, const char * format, ...)
+{
+    va_list ap;
+    va_start (ap, format);
+    /* Undocumented Perl function "vwarn" */
+    vwarn (format, & ap);
+    va_end (ap);
+}
+
+/* Print a warning message. */
+
+static void perl_png_error (perl_libpng_t * png, const char * format, ...)
+{
+    va_list ap;
+    va_start (ap, format);
+    /* Undocumented Perl function "vcroak" */
+    vcroak (format, & ap);
+    va_end (ap);
+}
+
+/*  _ _ _                                                  
+   | (_) |__  _ __  _ __   __ _    ___ _ __ _ __ ___  _ __ 
+   | | | '_ \| '_ \| '_ \ / _` |  / _ \ '__| '__/ _ \| '__|
+   | | | |_) | |_) | | | | (_| | |  __/ |  | | | (_) | |   
+   |_|_|_.__/| .__/|_| |_|\__, |  \___|_|  |_|  \___/|_|   
+             |_|          |___/                            
+    _                     _ _               
+   | |__   __ _ _ __   __| | | ___ _ __ ___ 
+   | '_ \ / _` | '_ \ / _` | |/ _ \ '__/ __|
+   | | | | (_| | | | | (_| | |  __/ |  \__ \
+   |_| |_|\__,_|_| |_|\__,_|_|\___|_|  |___/ */
+                                         
+
+/* The following things are used to handle errors from libpng. See the
+   create_read_struct and create_write_struct calls below. */
+
+
+/* Error handler for libpng. */
+
+static void
+perl_png_error_fn (png_structp png_ptr, png_const_charp error_msg)
+{
+    perl_libpng_t * png = png_get_error_ptr (png_ptr);
+    perl_png_warn (png, "%s", error_msg);
+}
+
+/* Warning handler for libpng. */
+
+static void
+perl_png_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
+{
+    perl_libpng_t * png = png_get_error_ptr (png_ptr);
+    perl_png_warn (png, "%s", warning_msg);
+}
+
 
 /*   ____      _      ___      __               
     / ___| ___| |_   ( _ )    / _|_ __ ___  ___ 
@@ -80,21 +155,52 @@ typedef perl_libpng_t [% config.base_underscore %]__Libpng__t;
                                                  
 
 
+/* Get memory using the following in order to keep count of the number
+   of objects in use at the end of execution, to ensure that there are
+   no memory leaks. All allocation is done via "calloc" rather than
+   "malloc". */
+
+#define GET_MEMORY(thing, number) {                                     \
+        thing = calloc (number, sizeof (*thing));                       \
+        if (! thing) {                                                  \
+            perl_png_error (png, "%s:%d: Call to calloc for "           \
+                            "%d '%s' failed: out of memory",            \
+                            __FILE__, __LINE__, number, #thing);        \
+        }                                                               \
+        png->memory_gets++;                                             \
+    }
+
+/* Free memory using the following in order to keep count of the
+   number of objects still in use. */
+
+#define PERL_PNG_FREE(thing) {                  \
+        png->memory_gets--;                     \
+        free (thing);                           \
+    }
+
 static perl_libpng_t *
 perl_png_allocate ()
 {
-    perl_libpng_t * png = calloc (1, sizeof (perl_libpng_t));
+    perl_libpng_t * png;
+    GET_MEMORY (png, 1);
     return png;
 }
+
+# define CREATE_ARGS                                            \
+    PNG_LIBPNG_VER_STRING,                                      \
+    png,                                                        \
+    perl_png_error_fn,                                          \
+    perl_png_warning_fn
 
 perl_libpng_t *
 perl_png_create_write_struct ()
 {
     perl_libpng_t * png = perl_png_allocate ();
-    png->png = png_create_write_struct (PNG_LIBPNG_VER_STRING, 0, 0, 0);
+    png->png = png_create_write_struct (CREATE_ARGS);
     png->info = png_create_info_struct (png->png);
     png->end_info = 0;
     png->row_pointers = 0;
+    png->type = perl_png_write_obj;
     return png;
 }
 
@@ -102,10 +208,26 @@ perl_libpng_t *
 perl_png_create_read_struct ()
 {
     perl_libpng_t * png = perl_png_allocate ();
-    png->png = png_create_read_struct (PNG_LIBPNG_VER_STRING, 0, 0, 0);
+    png->png = png_create_read_struct (CREATE_ARGS);
     png->info = png_create_info_struct (png->png);
     png->row_pointers = 0;
+    png->type = perl_png_read_obj;
     return png;
+}
+
+#undef CREATE_ARGS
+
+/* Free the structure and do a simple memory leak check. */
+
+static void free_png (perl_libpng_t * png)
+{
+    MESSAGE ("Freeing PNG memory.\n");
+    if (png->memory_gets != 1) {
+        perl_png_warn (png, "Memory leak detected: there are %d "
+                       "allocated pieces of memory which have not "
+                       "been freed.\n", png->memory_gets - 1);
+    }
+    free (png);
 }
 
 void
@@ -113,35 +235,36 @@ perl_png_destroy_write_struct (perl_libpng_t * png)
 {
     png_destroy_write_struct (& png->png, & png->info);
     if (png->row_pointers) {
-        free (png->row_pointers);
+        PERL_PNG_FREE (png->row_pointers);
     }
-    free (png);
+    free_png (png);
 }
 
 void
 perl_png_destroy_read_struct (perl_libpng_t * png)
 {
     png_destroy_read_struct (& png->png, & png->info, & png->end_info);
-    free (png);
+    free_png (png);
 }
 
-
-/*  _____                         
-   | ____|_ __ _ __ ___  _ __ ___ 
-   |  _| | '__| '__/ _ \| '__/ __|
-   | |___| |  | | | (_) | |  \__ \
-   |_____|_|  |_|  \___/|_|  |___/ */
-                               
-
-
-/* Print a warning message. */
-
-static void perl_png_warn (const char * format, ...)
+void
+perl_png_destroy (perl_libpng_t * png)
 {
-    va_list ap;
-    va_start (ap, format);
-    vfprintf (stderr, "format", ap);
-    va_end (ap);
+    //    printf ("Destroying png %p\n", png);
+    if (! png) {
+        //        printf ("Destroy called with a null pointer.\n");
+        return;
+    }
+    //#    printf ("Destroying %p.\n", png);
+    if (png->type == perl_png_write_obj) {
+        perl_png_destroy_write_struct (png);
+    }
+    else if (png->type == perl_png_read_obj) {
+        perl_png_destroy_read_struct (png);
+    }
+    else {
+        perl_png_error (png, "Attempt to destroy an object of unknown type");
+    }
 }
 
 /*  _____         _   
@@ -154,7 +277,7 @@ static void perl_png_warn (const char * format, ...)
 /* Create a scalar value from the "text" field of the PNG text chunk
    contained in "text_ptr". */
 
-static SV * make_text_sv (const png_textp text_ptr)
+static SV * make_text_sv (perl_libpng_t * png, const png_textp text_ptr)
 {
     SV * sv;
     char * text = 0;
@@ -187,7 +310,7 @@ static SV * make_text_sv (const png_textp text_ptr)
             is_itxt = 1;
 
             if (! is_utf8_string ((unsigned char *) text, length)) {
-                perl_png_warn ("According to its compression type, a text chunk in the current PNG file claims to be ITXT but Perl's 'is_utf8_string' says that its encoding is invalid.");
+                perl_png_warn (png, "According to its compression type, a text chunk in the current PNG file claims to be ITXT but Perl's 'is_utf8_string' says that its encoding is invalid.");
                 is_itxt = 0;
             }
         }
@@ -204,7 +327,7 @@ static SV * make_text_sv (const png_textp text_ptr)
 /* Convert the "lang_key" field of a "png_text" structure into a Perl
    scalar. */
 
-static SV * lang_key_to_sv (const char * lang_key)
+static SV * lang_key_to_sv (perl_libpng_t * png, const char * lang_key)
 {
     SV * sv;
     if (lang_key) {
@@ -215,7 +338,7 @@ static SV * lang_key_to_sv (const char * lang_key)
         length = strlen (lang_key);
         sv = newSVpv (lang_key, length);
         if (! is_utf8_string ((unsigned char *) lang_key, length)) {
-            perl_png_warn ("A language key 'lang_key' member of a 'png_text' structure in the file failed Perl's 'is_utf8_string' test, which says that its encoding is invalid.");
+            perl_png_warn (png, "A language key 'lang_key' member of a 'png_text' structure in the file failed Perl's 'is_utf8_string' test, which says that its encoding is invalid.");
             is_itxt = 0;
         }
         if (is_itxt) {
@@ -251,7 +374,7 @@ static const char * text_fields[] = {
    the PNG text values in "text_ptr". */
 
 static HV *
-perl_png_textp_to_hash (const png_textp text_ptr)
+perl_png_textp_to_hash (perl_libpng_t * png, const png_textp text_ptr)
 {
     int i;
     /* Scalar values which will be added to elements of "text_hash". */
@@ -264,7 +387,7 @@ perl_png_textp_to_hash (const png_textp text_ptr)
     /* Depending on whether the "text" field of "text_ptr" is a string
        or a null value, create an SV copy of it or create an SV which
        contains the undefined value. */
-    f[2] = make_text_sv (text_ptr);
+    f[2] = make_text_sv (png, text_ptr);
     if (text_ptr->lang) {
         /* According to section 4.2.3.3 of the PNG specification, the
            "lang" field of the "png_text" structure contains a
@@ -278,7 +401,7 @@ perl_png_textp_to_hash (const png_textp text_ptr)
         /* The language code may be empty. */
         f[3] = newSV (0);
     }
-    f[4] = lang_key_to_sv (text_ptr->lang_key);
+    f[4] = lang_key_to_sv (png, text_ptr->lang_key);
     f[5] = newSViv (text_ptr->text_length);
     f[6] = newSViv (text_ptr->itxt_length);
 
@@ -317,7 +440,7 @@ perl_png_get_text (perl_libpng_t * png)
 
             MESSAGE ("text %d:\n", i);
             
-            hash = perl_png_textp_to_hash (text_ptr + i);
+            hash = perl_png_textp_to_hash (png, text_ptr + i);
             hash_ref = newRV_inc ((SV *) hash);
             av_push (text_chunks, hash_ref);
         }
@@ -444,7 +567,7 @@ perl_png_set_text (perl_libpng_t * png, AV * text_chunks)
         /* Complain to the user */
         return;
     }
-    png_texts = calloc (num_text, sizeof (png_text));
+    GET_MEMORY (png_texts, num_text);
     for (i = 0; i < num_text; i++) {
         int ok = 0;
         SV ** chunk_pointer;
@@ -476,10 +599,9 @@ perl_png_set_text (perl_libpng_t * png, AV * text_chunks)
         png_set_text (pngi, png_texts, num_ok);
     }
     else {
-        MESSAGE ("None of your text chunks was allowed.\n");
-        /* Bitch loudly. */
+        perl_png_warn (png, "None of your text chunks was allowed");
     }
-    free (png_texts);
+    PERL_PNG_FREE (png_texts);
 }
 
 /*  _____ _                
@@ -489,6 +611,10 @@ perl_png_set_text (perl_libpng_t * png, AV * text_chunks)
      |_| |_|_| |_| |_|\___| */
                         
 
+
+/* The following time fields are used in "perl_png_timep_to_hash" for
+   converting the PNG modification time structure ("png_time") into a
+   Perl associative array. */
 
 static const char * time_fields[] = {
     "year",
@@ -552,7 +678,6 @@ perl_png_set_time (perl_libpng_t * png, SV * input_time)
     png_time mod_time = {0};
     SV * ref;
 
-    MESSAGE ("Going to a go, go.\n");
     ref = SvRV(input_time);
     if (ref && SvTYPE (ref) == SVt_PVHV) {
         HV * time_hash = (HV *) SvRV (input_time);
@@ -686,16 +811,16 @@ SV *
 perl_png_write_to_scalar (perl_libpng_t * png, int transforms)
 {
     scalar_as_image_t * si;
-    si = calloc (1, sizeof (scalar_as_image_t));
     SV * image_data;
 
-    fprintf (stderr, "Setting up the image.\n");
+    GET_MEMORY (si, 1);
+    MESSAGE ("Setting up the image.\n");
     /* Set the writer for png->png to our function. */
     png_set_write_fn (png->png, si, perl_png_scalar_write,
                       0 /* No flush function */);
     png_write_png (pngi, transforms, UNUSED_ZERO_ARG);
     image_data = si->png_image;
-    free (si);
+    PERL_PNG_FREE (si);
     return image_data;
 }
 
@@ -889,13 +1014,12 @@ perl_png_set_PLTE (perl_libpng_t * png, AV * perl_colors)
     int i;
 
     n_colors = av_len (perl_colors) + 1;
-    if (n_colors == -1) {
-        fprintf (stderr, "Empty array.\n");
-        return;
+    if (n_colors == 0) {
+        perl_png_error (png, "Empty array of colours in set_PLTE");
     }
     MESSAGE ("There are %d colours in the palette.\n", n_colors);
 
-    colors = calloc (n_colors, sizeof (png_color));
+    GET_MEMORY (colors, n_colors);
 
     /* Put the colours from Perl into the libpng structure. */
 
@@ -918,7 +1042,7 @@ perl_png_set_PLTE (perl_libpng_t * png, AV * perl_colors)
 #undef PERL_PNG_FETCH_COLOR
 
     png_set_PLTE (pngi, colors, n_colors);
-    free (colors);
+    PERL_PNG_FREE (colors);
 }
 
 /* Create a hash containing the colour values of a pointer to a
@@ -1070,27 +1194,21 @@ perl_png_get_rows (perl_libpng_t * png)
 
     height = png_get_image_height (pngi);
     if (height == 0) {
-        fprintf (stderr, "Image has no height.\n");
-        return 0;
-        /* We are shafted. */
+        perl_png_error (png, "Image has no height");
     }
     else {
         MESSAGE ("Image has height %d\n", height);
     }
     rows = png_get_rows (pngi);
     if (rows == 0) {
-        fprintf (stderr, "Image has no rows.\n");
-        return 0;
-        /* We are shafted. */
+        perl_png_error (png, "Image has no rows");
     }
     else {
         MESSAGE ("Image has some rows\n");
     }
     rowbytes = png_get_rowbytes (pngi);
     if (rowbytes == 0) {
-        fprintf (stderr, "Image rows have zero length.\n");
-        return 0;
-        /* We are shafted. */
+        perl_png_error (png, "Image rows have zero length");
     }
     else {
         MESSAGE ("Image rows are length %d\n", rowbytes);
@@ -1098,20 +1216,18 @@ perl_png_get_rows (perl_libpng_t * png)
 
     /* Create Perl stuff to put the row info into. */
 
-    row_svs = calloc (height, sizeof (SV *));
-    if (! row_svs) {
-        /* We are shafted. */
-        return 0;
-    }
+    GET_MEMORY (row_svs, height);
     MESSAGE ("Making %d scalars.\n", height);
     for (r = 0; r < height; r++) {
         row_svs[r] = newSVpvn ((char *) rows[r], rowbytes);
     }
     perl_rows = av_make (height, row_svs);
     MESSAGE ("There are %d elements in the array.\n", av_len (perl_rows));
-    free (row_svs);
+    PERL_PNG_FREE (row_svs);
     return perl_rows;
 }
+
+/* Set the rows of the image to "rows". */
 
 void perl_png_set_rows (perl_libpng_t * png, AV * rows)
 {
@@ -1120,17 +1236,12 @@ void perl_png_set_rows (perl_libpng_t * png, AV * rows)
     int n_rows;
 
     if (png->row_pointers) {
-        fprintf (stderr, "Row pointers already allocated.\n");
-        return;
+        perl_png_error (png, "Row pointers already allocated");
     }
     /* Check that this is the same as the height of the image. */
     n_rows = av_len (rows);
-       MESSAGE ("%d rows.\n", n_rows);
-    row_pointers = calloc (n_rows, sizeof (unsigned char *));
-    if (! row_pointers) {
-        fprintf (stderr, "calloc failed.\n");
-        return;
-    }
+    MESSAGE ("%d rows.\n", n_rows);
+    GET_MEMORY (row_pointers, n_rows);
     for (i = 0; i <= n_rows; i++) {
         /* Check that this is the same as the width of the image. */
         unsigned int length;
@@ -1140,7 +1251,7 @@ void perl_png_set_rows (perl_libpng_t * png, AV * rows)
         MESSAGE ("%d %d\n", i, length);
     }
     png_set_rows (pngi, row_pointers);
-    /* Keep a record of the allocated memory in order to free it */
+    /* Keep a record of the allocated memory in order to PERL_PNG_FREE it */
     png->row_pointers = row_pointers;
 }
 
@@ -1163,6 +1274,150 @@ void perl_png_set_verbosity (perl_libpng_t * png, int verbosity)
     MESSAGE ("You have asked me to print messages saying what I'm doing.\n");
 }
 
+/* What should we do when there is an undefined variable, print an
+   error message, raise an error, or nothing at all? */
+
+void perl_png_handle_undefined (perl_libpng_t * png, int die, int raise)
+{
+    png->print_undefined = !! raise;
+    png->raise_undefined = !! die;
+}
+
+/* What should we do for other errors, print an error message, raise
+   an error, or nothing at all? */
+
+void perl_png_handle_error (perl_libpng_t * png, int die, int raise)
+{
+    png->print_errors = !! raise;
+    png->raise_errors = !! die;
+}
+
+#undef UNDEF
+#define UNDEF return &PL_sv_undef
+
+
+/* PNG chunks have to be four bytes in length. The following macro is
+   defined solely in order to make this program more readable to human
+   programmers. */
+
+#define PNG_CHUNK_NAME_LENGTH 4
+
+/*  ____       _            _              _                 _        
+   |  _ \ _ __(_)_   ____ _| |_ ___    ___| |__  _   _ _ __ | | _____ 
+   | |_) | '__| \ \ / / _` | __/ _ \  / __| '_ \| | | | '_ \| |/ / __|
+   |  __/| |  | |\ V / (_| | ||  __/ | (__| | | | |_| | | | |   <\__ \
+   |_|   |_|  |_| \_/ \__,_|\__\___|  \___|_| |_|\__,_|_| |_|_|\_\___/ */
+                                                                   
+
+
+/* Get any unknown chunks from the program. */
+
+SV * perl_png_get_unknown_chunks (perl_libpng_t * png)
+{
+    png_unknown_chunkp unknown_chunks;
+    int n_chunks;
+    n_chunks = png_get_unknown_chunks (pngi, & unknown_chunks);
+    if (n_chunks == 0) {
+        UNDEF;
+    }
+    else {
+        AV * chunk_list;
+        SV * chunk_list_ref;
+        int i;
+
+        chunk_list = newAV ();
+        for (i = 0; i < n_chunks; i++) {
+            HV * perl_chunk;
+            SV * perl_chunk_ref;
+            png_unknown_chunk * png_chunk;
+            /* These hold the chunk info from the PNG chunk */
+            SV * name;
+            SV * data;
+            SV * location;
+
+            png_chunk = unknown_chunks + i;
+            perl_chunk = newHV ();
+            if (strlen (png_chunk->name) != PNG_CHUNK_NAME_LENGTH) {
+                /* PANIC */
+            }
+            name = newSVpvn (png_chunk->name, PNG_CHUNK_NAME_LENGTH);
+            data = newSVpvn (png_chunk->name, png_chunk->size);
+            location = newSViv (png_chunk->location);
+#define STORE(x) hv_store (perl_chunk, #x, strlen (#x), x, 0);
+            STORE(name);
+            STORE(data);
+            STORE(location);
+#undef STORE
+            perl_chunk_ref = newRV_inc ((SV *) perl_chunk);
+            av_push (chunk_list, perl_chunk_ref);
+        }
+        chunk_list_ref = newRV_inc ((SV *) chunk_list);
+        return chunk_list_ref;
+    }
+}
+
+void perl_png_set_unknown_chunks (perl_libpng_t * png, AV * chunk_list)
+{
+    /* n_chunks is the number of chunks the user proposes to add to
+       the PNG. */
+    int n_chunks;
+    /* n_ok_chunks is the number of chunks which are acceptable to add
+       to the PNG. */
+    int n_ok_chunks;
+    int i;
+    png_unknown_chunkp unknown_chunks;
+
+    n_chunks = av_len (chunk_list) + 1;
+   
+    if (n_chunks == 0) {
+        perl_png_error (png, "Number of unknown chunks is zero");
+    }
+    GET_MEMORY (unknown_chunks, n_chunks);
+    n_ok_chunks = 0;
+    MESSAGE ("OK.\n");
+    for (i = 0; i < n_chunks; i++) {
+        HV * perl_chunk;
+        png_unknown_chunk * png_chunk;
+        char * name;
+        int name_length;
+        char * data;
+        int data_length;
+        int location;
+
+        MESSAGE ("%d.\n", i);
+        /* Get the chunk name and check it is four bytes long. */
+
+        HASH_FETCH_PV (perl_chunk, name);
+        if (name_length != PNG_CHUNK_NAME_LENGTH) {
+            perl_png_warn (png, "Illegal PNG chunk name length, "
+                           "chunk names must be %d characters long",
+                           PNG_CHUNK_NAME_LENGTH);
+            continue;
+        }
+        strncpy (png_chunk->name, name, PNG_CHUNK_NAME_LENGTH);
+
+        /* Get the data part of the unknown chunk. */
+
+        HASH_FETCH_PV (perl_chunk, data);
+        png_chunk = unknown_chunks + n_ok_chunks;
+        
+        png_chunk->data = data;
+        png_chunk->size = data_length;
+
+        /* Get the proposed location of the unknown chunk. */
+
+        HASH_FETCH_IV (perl_chunk, location);
+        if (location == 0) {
+            /* warn this means "don't write the chunk". */
+            perl_png_warn (png, "Unknown chunk location is zero, which means 'don't write the chunk'");
+        }
+        png_chunk->location = location;
+        n_ok_chunks++;
+    }
+    MESSAGE ("sending %d chunks.\n", n_ok_chunks);
+    png_set_unknown_chunks (pngi, unknown_chunks, n_ok_chunks);
+    PERL_PNG_FREE (unknown_chunks);
+}
 
 /*
    Local Variables:

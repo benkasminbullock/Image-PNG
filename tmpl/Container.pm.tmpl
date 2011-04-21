@@ -1,3 +1,7 @@
+# This is a wrapper for the png structure to hide some of the details
+# of the Libpng interface from the PNG.pm module. An end user should
+# never use this, only [% config.base %] or [% config.base %]::Libpng.
+
 package [% config.base %]::Container;
 use warnings;
 use strict;

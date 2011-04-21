@@ -1,23 +1,42 @@
 LIBPNGPM=lib/Image/PNG/Libpng.pm
+PNGPM=lib/Image/PNG.pm
 
-TOUT=lib/Image/PNG.pm $(LIBPNGPM) perl-libpng.c Libpng.xs \
-	Makefile.PL perl-libpng.c Libpng.xs
-TIN=tmpl/Libpng.pm.tmpl tmpl/libpng_doc build/LibpngInfo.pm \
+TOUT=lib/Image/PNG.pm lib/Image/PNG/Container.pm \
+	$(LIBPNGPM) perl-libpng.c Libpng.xs \
+	Makefile.PL META.json
+TIN=    tmpl/Libpng.pm.tmpl \
+	tmpl/libpng_doc \
+	build/LibpngInfo.pm \
 	tmpl/author tmpl/config \
-	tmpl/perl-libpng.c.tmpl tmpl/Libpng.xs.tmpl \
-	tmpl/Libpng.t.tmpl tmpl/Const.t.tmpl tmpl/PNG.t.tmpl \
-	tmpl/PNG.pm.tmpl
+	tmpl/perl-libpng.c.tmpl \
+	tmpl/Libpng.xs.tmpl \
+	tmpl/Libpng.t.tmpl \
+	tmpl/Const.t.tmpl \
+	tmpl/PNG.t.tmpl \
+	tmpl/PNG.pm.tmpl \
+	tmpl/META.json.tmpl \
+	tmpl/Container.pm.tmpl \
+	tmpl/typemap.tmpl
 
 HTML=/usr/local/www/data/image-png-libpng.html
+HTML2=/usr/local/www/data/image-png.html
+
+all:	$(TOUT) Makefile
 
 Makefile:	Makefile.PL
 	perl Makefile.PL
 
+$(TOUT): $(TIN)
+	build/make-files.pl
+
 HTML:	$(LIBPNGPM)
 	perldoc -o html $(LIBPNGPM) > $(HTML)
 
-$(TOUT): $(TIN)
-	build/make-files.pl
+HTML2:	$(PNGPM)
+	perldoc -o html $(PNGPM) > $(HTML2)
+
+clean:
+	-rm -rf $(TOUT) Makefile.old perl-libpng.h
 
 # Local Variables:
 # mode: makefile

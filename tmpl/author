@@ -8,8 +8,28 @@ The [% config.base %] package and associated files are copyright (C)
 [% config.year %] [% config.author %].
 
 You can use, copy, modify and redistribute [% config.base %] and
-associated files under the Artistic Licence or the GNU General Public
-Licence.
+associated files under the Perl Artistic Licence or the GNU General
+Public Licence.
+
+=head1 SUPPORT
+
+=head2 Mailing list
+
+There is a mailing list at
+L<http://groups.google.com/group/perlimagepng>. You don't need to be a
+member of the list to post messages to the list or participate in
+discussions. Your messages may be held for moderation though.
+
+If you have anything at all to say about the module, whether it is bug
+reports, feature requests, or anything else, I'd prefer to discuss it
+on the mailing list because that way there is a public record which
+everyone can access, rather than being restricted to email. That means
+that, for example, if someone else takes over maintaining this module,
+they can easily access records of previous discussions.
+
+=head2 CPAN stuff
+
+There is a bug tracker at [% config.rt %].
 
 =head1 FOR PROGRAMMERS
 

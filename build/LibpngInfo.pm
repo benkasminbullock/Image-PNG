@@ -72,6 +72,38 @@ EOF
 },
 );
 
+my @unknown_chunk_fields = (
+{
+    name => 'name',
+    c => 'png_byte',
+    description => <<EOF,
+The name of the unknown chunk, in the PNG chunk format (four bytes).
+EOF
+},
+{
+    name => 'location',
+    c => 'png_byte',
+    description => <<EOF,
+The location of the unknown chunk.
+EOF
+    values => [
+    {
+        value => 0, 	
+        meaning => "do not write the chunk",
+    }, {
+        value => "PNG_HAVE_IHDR",
+        meaning => "insert chunk before PLTE",
+    }, {
+        value => 'PNG_HAVE_PLTE',	 	
+        meaning => 'insert chunk before IDAT',
+    }, {
+        value => 'PNG_AFTER_IDAT',
+        meaning => 'insert chunk after IDAT',
+    },
+    ],
+},
+);
+
 my $input_file = '/usr/local/include/png.h';
 my @macros;
 my %macros;
@@ -376,6 +408,7 @@ sub template_vars
     $vars_ref->{filters} = \@filters;
     $vars_ref->{transforms} = \@transforms;
     $vars_ref->{chunks} = \@chunks;
+    $vars_ref->{unknown_chunk_fields} = \@unknown_chunk_fields;
 }
 
 1;

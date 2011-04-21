@@ -3,7 +3,7 @@
 
 [% config.base %]
 
-Read and write PNG (Portable Network Graphics) files
+[% config.abstract %]
 
 =head1 SYNOPSIS
 
@@ -213,8 +213,7 @@ the IDAT (image data) part of a PNG image.
 
 =head3 The PNG specification
 
-L<The PNG specification|http://www.w3.org/TR/PNG/> (link to W3
-consortium) explains the details of the PNG format.
+[% INCLUDE "pngspec" %]
 
 =head3 PNG The Definitive Guide by Greg Roelofs
 

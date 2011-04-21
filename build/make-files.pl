@@ -33,6 +33,7 @@ my @files = qw/
                   Libpng.t
                   PLTE.t
                   Const.t
+                  META.json
               /;
 
 my %vars;
@@ -49,11 +50,20 @@ template_vars (\%vars);
 #    print $x->{name}, "\n";
 #}
 
+# These files go in the top directory
+
+my %top_dir = (
+    'Makefile.PL' => 1,
+    'Libpng.xs' => 1,
+    'typemap' => 1,
+    'perl-libpng.c' => 1,
+    'META.json' => 1,
+);
+
 for my $file (@files) {
     my $template = "$file.tmpl";
     my $output;
-    if ($file eq 'Makefile.PL' || $file eq 'Libpng.xs' ||
-        $file eq 'typemap' || $file eq 'perl-libpng.c') {
+    if ($top_dir{$file}) {
         $output = $file;
     }
     elsif ($file eq 'PNG.pm') {

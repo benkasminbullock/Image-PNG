@@ -6,9 +6,10 @@ use_ok ("[% config.base %]");
 
 use [% config.base %];
 
-my $png = [% config.base %]->new ();
+my $png = [% config.base %]->new ({verbosity => undef});
 my $file = "$FindBin::Bin/test.png";
 $png->read ($file);
+#$png->verbosity (1);
 ok ($png->width () == 100, "oo-width");
 ok ($png->height () == 100, "oo-height");
 ok ($png->color_type () eq 'RGB', "oo colour type");
