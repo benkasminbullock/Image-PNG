@@ -1,16 +1,15 @@
 use warnings;
 use strict;
-use autodie;
 use FindBin;
 use Image::PNG::Libpng ':all';
 use Test::More tests => 9;
 
 
 my $png = create_read_struct ();
-open my $fh, "<:raw", "$FindBin::Bin/bgyn6a16.png";
+open my $fh, "<:raw", "$FindBin::Bin/bgyn6a16.png" or die $!;
 init_io ($png, $fh);
 read_png ($png);
-close $fh;
+close $fh or die $!;
 my $bg = get_bKGD ($png);
 ok ($bg, "get background");
 my %col = (

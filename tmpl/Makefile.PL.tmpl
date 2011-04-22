@@ -156,9 +156,17 @@ I tried to compile and run a small test program in C to see if I could
 #include the libpng header file "png.h" and link to the library
 "libpng". Somehow or other this didn't work out. If you don't have
 libpng on your system, sorry but you need to install it to use
-[% config.base %]. If you think you have libpng on your system, please edit
-the file "Makefile.PL" and run "perl Makefile.PL" again. The relevant
-lines are right at the top of the file,
+[% config.base %]. 
+
+If you are on Ubuntu Linux, you probably need to do something like
+
+    sudo aptitude install libpng-dev
+
+to install the header file "png.h" for libpng into your system.
+
+If you think you have libpng on your system, please edit the file
+"Makefile.PL" and run "perl Makefile.PL" again. The relevant lines are
+right at the top of the file,
 
 my $png_lib_dir;
 my $png_include_dir;

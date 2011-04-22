@@ -42,8 +42,9 @@ This function corresponds to C<png_[% fn %]>
 
 =head1 NAME
 
-
 [% config.base %]::Libpng - Perl interface to the C library "libpng".
+
+[% INCLUDE "warning" %]
 
 =head1 SYNOPSIS
 
@@ -63,14 +64,13 @@ format.
 the C functions in libpng, plus helper subroutines to make it easier
 to read and write PNG data in Perl. 
 
-If you are looking for an easy way to access PNG files, I recommend
-you to try the companion module L<[% config.base %]>, which offers a
-simplified "object-oriented" interface to the functions in this
-module.
+For an easy way to access PNG files, try the companion module L<[%
+config.base %]>, which offers a simplified interface to the functions
+in this module.
 
-If you are familiar with libpng, and you would like to know what the
-differences between this module and libpng are, please go to the
-section L</Differences from libpng>.
+For those who are familiar with libpng, to know what the differences
+between this module and libpng are, please go to the section
+L</Differences from libpng>.
 
 =head1 FUNCTIONS
 
@@ -81,10 +81,8 @@ section L</Differences from libpng>.
 Create a structure for reading a PNG.
 
 [% cor(fn="create_read_struct") %] plus C<create_info_struct> (see [%
-xnoinfo %]) with all of the error and warning handler variables set
-to zero, which means that the error and warning methods used are the
-default libpng ones. There is no facility to alter the libpng error
-handler in [% config.base %]. See L</BUGS>.
+xnoinfo %]) with the error and warning handler variables set up to use
+Perl's error reporting.
 
 =head2 create_write_struct
 
@@ -93,10 +91,8 @@ handler in [% config.base %]. See L</BUGS>.
 Create a structure for writing a PNG.
 
 [% cor(fn="create_write_struct") %] plus C<create_info_struct> (see [%
-xnoinfo %]) with all of the error and warning handler variables set to
-zero, which means that the error and warning methods used are the
-default libpng ones. There is no facility to alter the libpng error
-handler in [% config.base %]. See L</BUGS>.
+xnoinfo %])  with the error and warning handler variables set up to use
+Perl's error reporting.
 
 =head2 destroy_read_struct
 
@@ -151,7 +147,7 @@ This subroutine sets the image data of C<$png> to be the contents of a
 Perl scalar variable C<$string>. [% rfirstpng %] It reads in all the
 data from the structure on being called.
 
-This is useful when you have image data stored in a Perl scalar, for example
+This is useful when image data is stored in a Perl scalar. For example
 
      use LWP::Simple;
      my $image_data = get 'http://www.example.com/example.png';
@@ -162,10 +158,11 @@ This is useful when you have image data stored in a Perl scalar, for example
 
 [% libpng %]
 
-This subroutine uses C<png_set_read_fn> to set the reading function of
-C<$png> to be its own routine which reads data from the Perl
-scalar. It then uses C<png_read_png> to read all the data. The C
-function which does this is called C<perl_png_scalar_read>, 
+This uses C<png_set_read_fn> to set the reading function of C<$png> to
+a routine which reads data from Perl scalars. It then uses
+C<png_read_png> to read all the data.
+
+The C function which does this is called C<perl_png_scalar_read>, 
 [% perl_libpng_c %].
 
 See also L</Input/output manipulation functions>.
@@ -174,9 +171,8 @@ See also L</Input/output manipulation functions>.
 
     my $image_data = write_to_scalar ($png);
 
-This subroutine writes the PNG graphic which has been created in
-C<$png> into a Perl scalar which contains the data of the file. So,
-for example,
+This writes the PNG image data in C<$png> into a Perl scalar. So, for
+example,
 
     my $img = write_to_scalar ($png);
     open my $output, ">:raw", "test-write-scalar.png";
@@ -211,7 +207,8 @@ transformations to apply to the image:
      read_png ($png, PNG_TRANSFORM_STRIP_ALPHA);
 
 In the absence of any third argument, the default value of
-C<PNG_TRANSFORM_IDENTITY> is applied. The possible transformations which can be applied are
+C<PNG_TRANSFORM_IDENTITY> is applied. The possible transformations
+which can be applied are
 
 [%- transform_list -%]
 
@@ -225,9 +222,8 @@ need to be supplied. [% unused %]
 
     write_png ($png);
 
-This writes the PNG to the file stream. When you use this, you are
-supposed to already have opened a file for writing with
-L</init_io>. For example,
+This writes the PNG to the file stream. Before using this, open a file
+for writing and set it up with L</init_io>. For example,
 
     open my $output, ">:raw", 'out.png';
     init_io ($png, $output);
@@ -296,8 +292,6 @@ may or may not be valid. The chunks which you can test for are
 
 [% cor(fn = "get_valid") %], with the difference being that the
 return value is a hash containing a key for each possible chunk.
-
-
 
 =head2 get_IHDR
 
@@ -581,30 +575,25 @@ the palette chunk.
      # Get the green value of the twentieth entry in the palette.
      my $green = $colours->[20]->{green};
 
-This function gets the palette from the PNG. The return value of the
-palette is put into the array reference given as the third
-argument. This array contains hash references with the values "green",
-"blue" and "red" for the colour of each pixel in the
-palette.
+This function gets the palette from the PNG. The return value is an
+array reference containing the palette. This array contains hash
+references with the values "green", "blue" and "red" for the colour of
+each pixel in the palette. If the PNG has no palette, it returns an
+undefined value.
 
-If the PNG has no palette, it returns an undefined value.
-
-Note that a PNG may or may not contain a palette. To check whether the
-PNG actually contains a palette, use something of the following form:
+A PNG image may or may not contain a palette. To check whether the
+image contains a palette, use something of the following form:
 
      use [% config.base %]::Const ':all';
-     my $color_type;
-     [% config.base %]::Libpng::get_color_type ($png, \$color_type)
+     my $color_type = [% config.base %]::Libpng::get_color_type ($png);
      if ($color_type == PNG_COLOR_TYPE_PALETTE) {
          # The PNG uses a palette.
      }
 
-A PNG may also contain a palette even when the "color_type" does not
-indicate that, so you may also want to use L</get_valid>.
+A PNG image may also contain a palette even when the "color_type" does
+not indicate that. To check for that case, use L</get_valid>.
 
-[% cor(fn="get_PLTE") %], except for the fourth
-argument, the number of colours in the palette, which is not necessary
-in a Perl routine, since Perl arrays contain their own size.
+[% cor(fn="get_PLTE") %].
 
 =head2 set_PLTE
 
@@ -631,8 +620,8 @@ creates a palette with two entries in C<$png>.
     my $rows = [% config.base %]::Libpng::get_rows ($png);
     my $pixel = substr ($rows->[10], 20, 1);
 
-This subroutine returns the rows of the PNG image, after uncompressing
-and unfiltering, as binary data. The return value, C<$rows> in the
+This returns the rows of the PNG image, after uncompressing and
+unfiltering, as binary data. The return value, C<$rows> in the
 example, is an array reference with a number of rows equal to the
 height of the PNG image. Each row consists of the actual binary data,
 which you will need to cut out using a routine like L<substr> or
@@ -641,8 +630,8 @@ contain bytes equal to zero.
 
 You can get the number of bytes in each row using L</get_rowbytes>.
 
-Please note that Perl automatically terminates each row of data with
-an extra zero byte at the end.
+Each row is a Perl string. Perl terminates each row of data with an
+extra zero byte at the end.
 
 [% cor(fn="get_rows") %].
 
@@ -714,25 +703,19 @@ those of libpng, with the following differences.
 
 This module, C<[% config.base %]::Libpng> does not use the "info"
 structure of libpng. Almost all libpng functions require two initial
-arguments, a C<png_structp> and a C<png_infop>. These are in fact not
-independent; the "info" structure can only be used with the "png"
-structure it was created with, so it's not only pointless but also
-dangerous to keep both. If a user naively tries to use an "info"
-structure with a different "png" structure from the one it was created
-with, it will generate mysterious-looking errors such as memory
-violations. So, in [% config.base %]::Libpng, both the "png" and the
-"info" are contained in the first argument to each function.
+arguments, a C<png_structp> and a C<png_infop>. However, in 
+[% config.base %]::Libpng, both the "png" and the "info" are contained in
+the first argument to each function.
 
 =head2 [% unused_title %]
 
 This module eliminates all the unevaluated arguments of libpng. For
 example, libpng requires the user to pass a pointer to a C<png_struct>
 before calling the library to ask for its version number (see
-L</get_libpng_ver>), but for obvious reasons the library ignores the
-this structure anyway, so this module does not duplicate this. There
-are many similar instances of unevaluated arguments which seem to have
-been intended for some kind of future expansion of the PNG
-format. They have all been eliminated from this module.
+L</get_libpng_ver>), but the library ignores the this structure
+anyway, so this module does not duplicate this. There are many similar
+instances of unevaluated arguments, which have all been eliminated
+from this module.
 
 If you are interested in exactly which libpng arguments are omitted,
 you can find each instance [% perl_libpng_c %] in the macro
@@ -740,45 +723,23 @@ C<UNUSED_ZERO_ARG>.
 
 =head2 Function return values are used to return values
 
-There is a lot of inconsistency between different functions in
-libpng, with some returning their results using references, and some
-using the function return value. For example C<png_get_rows> (see
-L</get_rows>) uses the return value of the function to return an array
-of pointers, and yet C<png_get_PLTE> (see L</get_PLTE>) uses a pointer
-reference to return an array of pointers, and the return value to
-indicate errors. In [% config.base %]::Libpng, I've chosen to use the
-return value in every instance. Errors are indicated by an undefined
-return value. You can also choose to raise errors or print errors
-using the L</raise_error> and L</print_error> options.
+In libpng, some functions return results using references, and some
+return results using the function's return value. For example
+C<png_get_rows> (see L</get_rows>) uses the return value of the
+function to return an array of pointers, but C<png_get_PLTE> (see
+L</get_PLTE>) uses a pointer reference to return an array of pointers,
+and the return value to indicate errors. 
 
-The error handling is also very odd; some functions use the return
-value to indicate errors, and some of the functions don't bother
-indicating errors at all but simply fail silently on what should be
-fatal error conditions. Compounding this, some of the functions which
-use the return value to indicate an error use a non-zero value to
-indicate an error, and some of them use a zero value to indicate an
-error.
+[% config.base %]::Libpng uses only the return value. Errors and
+non-existence are indicated by a return value of the undefined
+value. You can also choose to raise errors or print errors using the
+L</raise_error> and L</print_error> options.
 
-[% libpngdoc %] suggests using setjmp/longjmp to handle errors, which
-is not a sensible way to deal with errors in library code, and is not
-something I would want to introduce into a Perl extension module.
-
-Finally, many parts of the interface aren't properly documented.  For
-example, for many of the functions in the library there is no
-information anywhere in the documentation about the return values of
-the functions, and one simply has to examine the source code.
-
-So, the main interface of this package is in L<[% config.base %]>, and
-this module is just a bridge between L<[% config.base %]> and
-libpng. I made [% config.base %]::Libpng a mirror of the libpng
-functions not because I think that the libpng functions are worth
-duplicating in Perl, but because I don't want to have to design a
-consistent procedural interface to libpng in Perl.  If you find [%
-config.base %]::Libpng inconsistent and confusing, please use L<[%
-config.base %]> instead. [% config.base %]::Libpng is a representation
-of libpng's fairly eccentric interface in Perl, whereas L<[%
-config.base %]> is an attempt to make a simple Perl interface to the
-PNG file format.
+In libpng, some functions use the return value to indicate errors, and
+some of the functions don't indicate errors but fail silently. Some of
+the functions which use the return value to indicate an error use a
+non-zero value to indicate an error, and some of them use a zero value
+to indicate an error.
 
 =head2 Other unimplemented parts of libpng
 
@@ -789,7 +750,8 @@ This module does not offer an interface to C<png_malloc> and C<png_free>.
 =head3 Error handling functions
 
 This module does not offer an interface to C<png_error> and
-C<png_get_error_ptr>.
+C<png_get_error_ptr>. It redirects the error and warning handlers to
+Perl's error stream.
 
 =head3 Input/output manipulation functions
 
@@ -810,16 +772,9 @@ png_write_chunk, png_write_end, png_write_info, png_write_row, or
 png_write_rows.
 
 
-
 =head1 BUGS
 
 This section documents some known deficiencies in the module.
-
-=head2 No error handlers
-
-The PNG error handlers should probably be set to something which Perl
-can make sense of, but I'm not too sure how to set this up. I haven't
-added the required libpng "setjmp" error handling to this module.
 
 =head2 set_rows is unreliable
 
@@ -858,9 +813,9 @@ L<http://libpng.org/pub/png/libpng-manual.txt> and the manual page
 libpng.3, which you can read using "man 3 libpng".
 
 Be warned that the documentation which comes with libpng is rather
-sketchy. See L</Differences from libpng>. It doesn't contain full specifications
-(prototypes, return values) for all of the functions in the
-library. If you are considering programming in C using libpng, you
+sketchy. See L</Differences from libpng>. It doesn't contain full
+specifications (prototypes, return values) for all of the functions in
+the library. If you are considering programming in C using libpng, you
 will definitely also need to look at the header file "png.h".  In some
 cases you will also need to look at the source code of the library.
 
@@ -875,36 +830,6 @@ the libpng routines, something which is often only available elsewhere
 by actually looking at the libpng source code. These pages are usually
 the first hits on search engines if you search for a function name in
 libpng.
-
-=head3 PNG to/from Perl scalars
-
-For the method used to create L</read_from_scalar>, see 
-"Reading PNG Images from Memory - Joey Hammer's .plan" at L<http://blog.hammerian.net/2009/reading-png-images-from-memory/>. 
-This explains how to use libpng's C<png_set_read_function> to read from in-memory data.
-
-=head3 libpng examples in C
-
-The following pages are some examples of using libpng in C to create
-PNG files.
-
-=over
-
-=item Write a PNG file using C and libpng
-
-See L<http://www.lemoda.net/png/c-write-png/index.html> for an example
-of how to write a PNG file using libpng.
-
-=item Set the modification time of a PNG
-
-See L<http://www.lemoda.net/png/png-set-time/index.html> for an
-example of how to set the modification time of a PNG file in C.
-
-=item Create a PNG with text segments
-
-See L<http://www.lemoda.net/png/png-text/index.html> for an example of
-how to make a PNG file with text segments in C.
-
-=back
 
 [% INCLUDE "author" %]
 

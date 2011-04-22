@@ -1,6 +1,7 @@
+#line 2 "Libpng.t.tmpl"
 use warnings;
 use strict;
-use Test::More tests => 19;
+use Test::More;
 use FindBin;
 use File::Compare;
 BEGIN { use_ok('[% config.base %]::Libpng') };
@@ -74,11 +75,16 @@ my $chunk1 = $text_chunks[0];
 ok ($chunk1->{compression} == 0, "text compression");
 ok ($chunk1->{key} eq 'Title', "text key");
 ok ($chunk1->{text} eq 'Mona Lisa', "text text");
-my $chunk3 = $text_chunks[2];
-ok ($chunk3->{compression} == 1, "text compression for iTXT");
-ok ($chunk3->{key} eq 'Detective', "text key");
-ok ($chunk3->{lang_key} eq '探偵', "text lang_key");
-ok ($chunk3->{text} eq '工藤俊作', "text text in UTF-8");
+if ([% config.base %]::Libpng::supports ('iTXt')) {
+    my $chunk3 = $text_chunks[2];
+    ok ($chunk3->{compression} == 1, "text compression for iTXT");
+    ok ($chunk3->{key} eq 'Detective', "text key");
+    ok ($chunk3->{lang_key} eq '探偵', "text lang_key");
+    ok ($chunk3->{text} eq '工藤俊作', "text text in UTF-8");
+}
+else {
+    print "Your libpng does not support international text.\n";
+}
 #[% config.base %]::Libpng::destroy_read_struct ($png3);
 close $file3 or die $!;
 
@@ -90,7 +96,15 @@ my $version = [% config.base %]::Libpng::get_libpng_ver ();
 #print $version;
 #print "\n";
 $version =~ s/\./0/g;
-ok ($number_version == $version, "Library version OK");
+
+# The following fails for older versions of libpng which seem to have
+# a different numbering system.
+
+if ($number_version > 100000) {
+    ok ($number_version == $version, "Library version $number_version == $version OK");
+}
+
+done_testing ();
 
 # for my $text_chunk (@text_chunks) {
 # for my $k (keys %$text_chunk) {

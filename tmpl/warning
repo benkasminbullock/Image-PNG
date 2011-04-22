@@ -1,0 +1,10 @@
+=head1 WARNING
+
+This version of the module is solely for evaluation and testing. This
+module is currently incomplete and untested, and contains errors,
+bugs, and inconsistencies, including unresolved memory corruption
+errors which can crash Perl. The documentation below refers to
+functions which may or may not exist in the completed module and
+contains links to things which do not exist and may never exist.
+
+

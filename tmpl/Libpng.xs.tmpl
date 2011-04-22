@@ -3,6 +3,11 @@
 #include "perl.h"
 #include "XSUB.h"
 
+/* There is some kind of collision between a file included by "perl.h"
+   and "png.h" for very old versions of libpng, like the one used on
+   Ubuntu Linux. */
+
+#define PNG_SKIP_SETJMP_CHECK
 #include <png.h>
 #include "perl-libpng.h"
 #include "const-c.inc"
@@ -277,6 +282,13 @@ SV * perl_png_get_unknown_chunks (Png)
         [% config.base %]::Libpng::t * Png
         CODE:
         RETVAL = perl_png_get_unknown_chunks (Png);
+        OUTPUT:
+        RETVAL
+
+int perl_png_supports (what)
+        const char * what
+        CODE:
+        RETVAL = perl_png_supports (what);
         OUTPUT:
         RETVAL
 

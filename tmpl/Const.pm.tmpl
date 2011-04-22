@@ -19,15 +19,15 @@ use constant {
 
 =head1 NAME
 
-File::PNG::Const
+[% config.base %]::Const
 
 =head1 SYNOPSIS
 
        # Get the constants you need:
-       use File::PNG::Const qw/PNG_TRANSFORM_INVERT_ALPHA
+       use [% config.base %]::Const qw/PNG_TRANSFORM_INVERT_ALPHA
                                PNG_COLOR_MASK_ALPHA/;
        # Get everything:
-       use File::PNG::Const ':all';
+       use [% config.base %]::Const ':all';
 
 This module contains no functions, only constants.
 
@@ -54,11 +54,11 @@ all the symbols in this module:
 
 This Perl module was automatically created from C<png.h>. To rebuild
 it, run the script "strip-constants.pl" in the top directory of the
-L<File::PNG> distribution. You need to have the L<Template> module
+L<[% config.base %]> distribution. You need to have the L<Template> module
 installed. You may need to edit the script somewhat, depending on your
 environment.
 
 The template for creating Const.pm is in directory C<tmpl> in the
-File::PNG distribution. Its name is C<Const.pm.tmpl>.
+[% config.base %] distribution. Its name is C<Const.pm.tmpl>.
 
 [% INCLUDE author %]

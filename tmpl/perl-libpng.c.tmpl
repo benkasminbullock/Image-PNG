@@ -291,9 +291,11 @@ static SV * make_text_sv (perl_libpng_t * png, const png_textp text_ptr)
         if (text_ptr->text_length != 0) {
             length = text_ptr->text_length;
         }
+#ifdef PNG_iTXt_SUPPORTED
         else if (text_ptr->itxt_length != 0) {
             length = text_ptr->itxt_length;
         }
+#endif /* iTXt */
     }
     if (text && length) {
 
@@ -391,6 +393,7 @@ perl_png_textp_to_hash (perl_libpng_t * png, const png_textp text_ptr)
        or a null value, create an SV copy of it or create an SV which
        contains the undefined value. */
     f[2] = make_text_sv (png, text_ptr);
+#ifdef PNG_iTXt_SUPPORTED
     if (text_ptr->lang) {
         /* According to section 4.2.3.3 of the PNG specification, the
            "lang" field of the "png_text" structure contains a
@@ -405,8 +408,11 @@ perl_png_textp_to_hash (perl_libpng_t * png, const png_textp text_ptr)
         f[3] = newSV (0);
     }
     f[4] = lang_key_to_sv (png, text_ptr->lang_key);
+#endif /* iTXt */
     f[5] = newSViv (text_ptr->text_length);
+#ifdef PNG_iTXt_SUPPORTED
     f[6] = newSViv (text_ptr->itxt_length);
+#endif /* iTXt */
 
     for (i = 0; i < N_TEXT_FIELDS; i++) {
         //printf ("%d:%s\n", i, text_fields[i]);
@@ -538,11 +544,13 @@ perl_png_set_text_from_hash (perl_libpng_t * png, png_text * text_out, HV * chun
         text_out->key = keyword;
         text_out->text = text;
         text_out->text_length = text_length;
+#ifdef PNG_iTXt_SUPPORTED
         if (is_itxt) {
             FETCH_PV (language_tag);
             text_out->lang = language_tag;
             text_out->lang_key = translated_keyword;
         }
+#endif
     }
     else {
             /* Compression method unknown. */
@@ -1100,9 +1108,209 @@ SV * perl_png_get_cHRM (perl_libpng_t * png)
 
 SV * perl_png_get_sBIT (perl_libpng_t * png)
 {
+    if (VALID (sBIT)) {
+        HV * sig_bit;
+        sig_bit = newHV ();
+        return newRV_inc ((SV *) sig_bit);
+    }
+    UNDEF;
+}
+
+SV * perl_png_get_oFFs (perl_libpng_t * png)
+{
+    if (VALID (oFFs)) {
+        HV * offset;
+        
+        offset = newHV ();
+        return newRV_inc ((SV *) offset);
+     }
+     UNDEF;
+ }
+ 
+SV * perl_png_get_pHYs (perl_libpng_t * png)
+{
+    if (VALID (pHYs)) {
+        HV * phys;
+        phys = newHV ();
+        return newRV_inc ((SV *) phys);
+    }
+    UNDEF;
+}
+
+int perl_png_get_sRGB (perl_libpng_t * png)
+{
+    /* I'm not sure what to return if there is no valid sRGB value. */
+
+    int intent = 0;
+
+    if (VALID (sRGB)) {
+        png_get_sRGB (pngi, & intent);
+    }
+    return intent;
+}
+
+SV * perl_png_get_valid (perl_libpng_t * png)
+{
+    HV * perl_valid;
+    unsigned int valid;
+
+    perl_valid = newHV ();
+    valid = png_get_valid (pngi, 0xFFFFFFFF);
+#define V(x) \
+    hv_store (perl_valid, #x, strlen (#x), newSViv (valid & PNG_INFO_ ## x), 0)
+
+    V(gAMA);
+    V(sBIT);
+    V(cHRM);
+    V(PLTE);
+    V(tRNS);
+    V(bKGD);
+    V(hIST);
+    V(pHYs);
+    V(oFFs);
+    V(tIME);
+    V(pCAL);
+    V(sRGB);
+    V(iCCP);
+    V(sPLT);
+    V(sCAL);
+    V(IDAT);
+
+#undef V
+
+    return newRV_inc ((SV *) perl_valid);
+}
+
+/*  ___                                  _       _        
+   |_ _|_ __ ___   __ _  __ _  ___    __| | __ _| |_ __ _ 
+    | || '_ ` _ \ / _` |/ _` |/ _ \  / _` |/ _` | __/ _` |
+    | || | | | | | (_| | (_| |  __/ | (_| | (_| | || (_| |
+   |___|_| |_| |_|\__,_|\__, |\___|  \__,_|\__,_|\__\__,_|
+                        |___/                              */
+
+
+SV *
+perl_png_get_rows (perl_libpng_t * png)
+{
+    png_bytepp rows;
+    int rowbytes;
+    int height;
+    SV ** row_svs;
+    int r;
+    AV * perl_rows;
+
+    /* Get the information from the PNG. */
+
+    height = png_get_image_height (pngi);
+    if (height == 0) {
+        perl_png_error (png, "Image has no height");
+    }
+    else {
+        MESSAGE ("Image has height %d\n", height);
+    }
+    rows = png_get_rows (pngi);
+    if (rows == 0) {
+        perl_png_error (png, "Image has no rows");
+    }
+    else {
+        MESSAGE ("Image has some rows\n");
+    }
+    rowbytes = png_get_rowbytes (pngi);
+    if (rowbytes == 0) {
+        perl_png_error (png, "Image rows have zero length");
+    }
+    else {
+        MESSAGE ("Image rows are length %d\n", rowbytes);
+    }
+
+    /* Create Perl stuff to put the row info into. */
+
+    GET_MEMORY (row_svs, height);
+    MESSAGE ("Making %d scalars.\n", height);
+    for (r = 0; r < height; r++) {
+        row_svs[r] = newSVpvn ((char *) rows[r], rowbytes);
+    }
+    perl_rows = av_make (height, row_svs);
+    MESSAGE ("There are %u elements in the array.\n", av_len (perl_rows));
+    PERL_PNG_FREE (row_svs);
+    return newRV_inc ((SV *) perl_rows);
+}
+
+/* Set the rows of the image to "rows". */
+
+void perl_png_set_rows (perl_libpng_t * png, AV * rows)
+{
+    unsigned char ** row_pointers;
+    int i;
+    int n_rows;
+
+    if (png->row_pointers) {
+        perl_png_error (png, "Row pointers already allocated");
+    }
+    /* Need to check that this is the same as the height of the image. */
+    n_rows = av_len (rows) + 1;
+    MESSAGE ("%d rows.\n", n_rows);
+    GET_MEMORY (row_pointers, n_rows);
+    for (i = 0; i < n_rows; i++) {
+        /* Need to check that this is the same as the width of the image. */
+        unsigned int length;
+        SV * row_i;
+        row_i = * av_fetch (rows, i, 0);
+        row_pointers[i] = (unsigned char *) SvPV (row_i, length);
+        MESSAGE ("%d %d\n", i, length);
+    }
+    png_set_rows (pngi, row_pointers);
+    /* "png" keeps a record of the allocated memory in order to free
+       it. */
+    png->row_pointers = row_pointers;
+}
+
+/*  __  __                                                                      
+   |  \/  | ___  ___ ___  __ _  __ _  ___  ___      ___ _ __ _ __ ___  _ __ ___ 
+   | |\/| |/ _ \/ __/ __|/ _` |/ _` |/ _ \/ __|    / _ \ '__| '__/ _ \| '__/ __|
+   | |  | |  __/\__ \__ \ (_| | (_| |  __/\__ \_  |  __/ |  | | | (_) | |  \__ \
+   |_|  |_|\___||___/___/\__,_|\__, |\___||___( )  \___|_|  |_|  \___/|_|  |___/
+                               |___/          |/                                
+                    _                            _                 
+     __ _ _ __   __| | __      ____ _ _ __ _ __ (_)_ __   __ _ ___ 
+    / _` | '_ \ / _` | \ \ /\ / / _` | '__| '_ \| | '_ \ / _` / __|
+   | (_| | | | | (_| |  \ V  V / (_| | |  | | | | | | | | (_| \__ \
+    \__,_|_| |_|\__,_|   \_/\_/ \__,_|_|  |_| |_|_|_| |_|\__, |___/
+                                                         |___/      */
+
+void perl_png_set_verbosity (perl_libpng_t * png, int verbosity)
+{
+    png->verbosity = verbosity;
+    MESSAGE ("You have asked me to print messages saying what I'm doing.\n");
+}
+
+/* What should we do when there is an undefined variable, print an
+   error message, raise an error, or nothing at all? */
+
+void perl_png_handle_undefined (perl_libpng_t * png, int die, int raise)
+{
+    png->print_undefined = !! raise;
+    png->raise_undefined = !! die;
+}
+
+/* What should we do for other errors, print an error message, raise
+   an error, or nothing at all? */
+
+void perl_png_handle_error (perl_libpng_t * png, int die, int raise)
+{
+    png->print_errors = !! raise;
+    png->raise_errors = !! die;
+}
+
+#undef UNDEF
+#define UNDEF return &PL_sv_undef
+
+
+/* PNG chunks have to be four bytes in length. The following macro is
+   defined solely in order to make this program more readable to human
    programmers. */
 
-#define PNG_CHUNK_NAME_LENGTH 4
+#define PERL_PNG_CHUNK_NAME_LENGTH 4
 
 /*  ____       _            _              _                 _        
    |  _ \ _ __(_)_   ____ _| |_ ___    ___| |__  _   _ _ __ | | _____ 
@@ -1139,14 +1347,14 @@ SV * perl_png_get_unknown_chunks (perl_libpng_t * png)
 
             png_chunk = unknown_chunks + i;
             perl_chunk = newHV ();
-            if (strlen (png_chunk->name) != PNG_CHUNK_NAME_LENGTH) {
+            if (strlen (png_chunk->name) != PERL_PNG_CHUNK_NAME_LENGTH) {
                 perl_png_error (png, "Chunk name '%s' has wrong number of "
                                 "characters: %d required",
                                 png_chunk->name,
-                                PNG_CHUNK_NAME_LENGTH);
+                                PERL_PNG_CHUNK_NAME_LENGTH);
                 /* PANIC */
             }
-            name = newSVpvn (png_chunk->name, PNG_CHUNK_NAME_LENGTH);
+            name = newSVpvn (png_chunk->name, PERL_PNG_CHUNK_NAME_LENGTH);
             data = newSVpvn (png_chunk->name, png_chunk->size);
             location = newSViv (png_chunk->location);
 #define STORE(x) hv_store (perl_chunk, #x, strlen (#x), x, 0);
@@ -1194,13 +1402,13 @@ void perl_png_set_unknown_chunks (perl_libpng_t * png, AV * chunk_list)
         /* Get the chunk name and check it is four bytes long. */
 
         HASH_FETCH_PV (perl_chunk, name);
-        if (name_length != PNG_CHUNK_NAME_LENGTH) {
+        if (name_length != PERL_PNG_CHUNK_NAME_LENGTH) {
             perl_png_warn (png, "Illegal PNG chunk name length, "
                            "chunk names must be %d characters long",
-                           PNG_CHUNK_NAME_LENGTH);
+                           PERL_PNG_CHUNK_NAME_LENGTH);
             continue;
         }
-        strncpy (png_chunk->name, name, PNG_CHUNK_NAME_LENGTH);
+        strncpy (png_chunk->name, name, PERL_PNG_CHUNK_NAME_LENGTH);
 
         /* Get the data part of the unknown chunk. */
 
@@ -1223,6 +1431,19 @@ void perl_png_set_unknown_chunks (perl_libpng_t * png, AV * chunk_list)
     MESSAGE ("sending %d chunks.\n", n_ok_chunks);
     png_set_unknown_chunks (pngi, unknown_chunks, n_ok_chunks);
     PERL_PNG_FREE (unknown_chunks);
+}
+
+/* Does the libpng support "what"? */
+
+int perl_png_supports (const char * what)
+{
+    if (strcmp (what, "iTXt") == 0) {
+#ifdef PNG_iTXt_SUPPORTED
+        return 1;
+#else
+        return 0;
+#endif /* iTXt */
+    }
 }
 
 /*
