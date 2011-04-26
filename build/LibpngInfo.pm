@@ -102,6 +102,13 @@ EOF
     },
     ],
 },
+{
+    name => 'data',
+    c => 'png_bytep',
+    description => <<EOF,
+The data of the unknown chunk
+EOF
+},
 );
 
 my $input_file = '/usr/local/include/png.h';

@@ -199,6 +199,8 @@ WriteMakefile (
     OBJECT       => 'Libpng.o perl-libpng.o',
     LIBS         => $libs,
     INC          => $inc,
+    AUTHOR => '[% config.author %] <[% config.email %]>',
+    LICENSE => 'perl',
 );
 
 my @names = (qw());

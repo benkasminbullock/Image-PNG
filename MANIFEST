@@ -23,4 +23,4 @@ t/bgyn6a16.png
 typemap
 my-xs.h
 my-xs.c
-
+META.json

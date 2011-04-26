@@ -1327,12 +1327,12 @@ SV * perl_png_get_unknown_chunks (perl_libpng_t * png)
     png_unknown_chunkp unknown_chunks;
     int n_chunks;
     n_chunks = png_get_unknown_chunks (pngi, & unknown_chunks);
+    MESSAGE ("There are %d private chunks.\n", n_chunks);
     if (n_chunks == 0) {
         UNDEF;
     }
     else {
         AV * chunk_list;
-        SV * chunk_list_ref;
         int i;
 
         chunk_list = newAV ();
@@ -1365,8 +1365,7 @@ SV * perl_png_get_unknown_chunks (perl_libpng_t * png)
             perl_chunk_ref = newRV_inc ((SV *) perl_chunk);
             av_push (chunk_list, perl_chunk_ref);
         }
-        chunk_list_ref = newRV_inc ((SV *) chunk_list);
-        return chunk_list_ref;
+        return newRV_inc ((SV *) chunk_list);
     }
 }
 
