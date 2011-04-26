@@ -456,14 +456,29 @@ to the existing ones rather than replacing them.
 
 =head1 Private chunks
 
+=head2 set_keep_unknown_chunks
+
+    use Image::PNG::Const 'PNG_HANDLE_CHUNK_ALWAYS';
+    set_keep_unknown_chunks ($png, PNG_HANDLE_CHUNK_ALWAYS);
+
+Tell libpng not to discard unknown chunks when reading the file.
+
 =head2 get_unknown_chunks
 
     my $private_chunks = get_unknown_chunks ($png);
+    # Get some data from a private chunk
+    my $chunk_three_data = $private_chunks->[3]->{data};
+    # Get the size of the data
+    print length $chunk_three_data;
 
-This gets all of the private chunks from the image. The return value
-is an array reference containing hash references. If there are no
-private chunks, this returns an undefined value. There is one element
-of the array for each chunk member.
+This gets all of the private chunks from the image. You need to call
+L</set_keep_unknown_chunks> with an appropriate value before reading
+the file, otherwise libpng discards unknown chunks when reading the
+file.
+
+The return value is an array reference containing hash references. If
+there are no private chunks, this returns an undefined value. There is
+one element of the array for each chunk member.
 
 Each member hash reference has the following keys:
 

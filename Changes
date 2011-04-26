@@ -1,0 +1,4 @@
+0.03
+
+Fixed a bug which dumps core on libpng error.
+Added access to set_keep_unknown_chunks

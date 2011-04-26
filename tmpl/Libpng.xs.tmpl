@@ -292,3 +292,10 @@ int perl_png_supports (what)
         OUTPUT:
         RETVAL
 
+void perl_png_set_keep_unknown_chunks (Png, keep, chunk_list = 0)
+        [% config.base %]::Libpng::t * Png
+        int keep
+        SV * chunk_list
+        CODE:
+        perl_png_set_keep_unknown_chunks (Png, keep, chunk_list);
+        OUTPUT:

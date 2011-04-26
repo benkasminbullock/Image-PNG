@@ -131,7 +131,7 @@ static void
 perl_png_error_fn (png_structp png_ptr, png_const_charp error_msg)
 {
     perl_libpng_t * png = png_get_error_ptr (png_ptr);
-    perl_png_warn (png, "%s", error_msg);
+    perl_png_error (png, "libpng error: %s\n", error_msg);
 }
 
 /* Warning handler for libpng. */
@@ -140,7 +140,7 @@ static void
 perl_png_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
 {
     perl_libpng_t * png = png_get_error_ptr (png_ptr);
-    perl_png_warn (png, "%s", warning_msg);
+    perl_png_warn (png, "libpng warning: %s\n", warning_msg);
 }
 
 
@@ -674,7 +674,7 @@ perl_png_get_time (perl_libpng_t * png)
     status = png_get_tIME (pngi, & mod_time);
     if (status && mod_time) {
         perl_png_timep_to_hash (mod_time, time);
-        return (SV *) time;
+        return newRV_inc ((SV *) time);
     }
     else {
         UNDEF;
@@ -1444,6 +1444,76 @@ int perl_png_supports (const char * what)
 #endif /* iTXt */
     }
 }
+
+void
+perl_png_set_keep_unknown_chunks (perl_libpng_t * png, int keep,
+                                  SV * chunk_list)
+{
+#if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
+    if (chunk_list && 
+        SvROK (chunk_list) && 
+        SvTYPE (SvRV (chunk_list)) == SVt_PVAV) {
+        int num_chunks;
+        char * chunk_list_text;
+        AV * chunk_list_av;
+        int i;
+        const int len = (PERL_PNG_CHUNK_NAME_LENGTH + 1);
+
+        chunk_list_av = (AV *) SvRV (chunk_list);
+        num_chunks = av_len (chunk_list_av) + 1;
+        MESSAGE ("There are %d chunks in your list.\n", num_chunks);
+        if (num_chunks == 0) {
+            goto empty_chunk_list;
+        }
+        chunk_list_text = calloc (len * num_chunks, sizeof (char));
+        png->memory_gets++;
+        for (i = 0; i < num_chunks; i++) {
+            const char * chunk_i_name;
+            int chunk_i_length;
+            SV ** chunk_i_sv_ptr;
+            int j;
+            chunk_i_sv_ptr = av_fetch (chunk_list_av, i, 0);
+            if (! chunk_i_sv_ptr) {
+                perl_png_error (png, "undefined chunk name at offset %d in chunk list", i);
+            }
+            chunk_i_name = SvPV (*chunk_i_sv_ptr, chunk_i_length);
+            if (chunk_i_length != PERL_PNG_CHUNK_NAME_LENGTH) {
+                perl_png_error (png, "chunk %i has bad length %d: should be %d in chunk list", i, chunk_i_length, PERL_PNG_CHUNK_NAME_LENGTH);
+            }
+            MESSAGE ("Keeping chunk '%s'\n", chunk_i_name);
+            for (j = 0; j < PERL_PNG_CHUNK_NAME_LENGTH; j++) {
+                chunk_list_text [ i * len + j ] = chunk_i_name [ j ];
+            }
+            chunk_list_text [ i * len + PERL_PNG_CHUNK_NAME_LENGTH ] = '\0';
+        }
+        png_set_keep_unknown_chunks (png->png, keep,
+                                     chunk_list_text, num_chunks);
+#if 0
+            if (! png->png->chunk_list) {
+                fprintf (stderr, "Zero.\n");
+            }
+        for (i = 0; i < num_chunks * len; i++) {
+            printf ("%02X", png->png->chunk_list[i]);
+        }
+        printf ("\n");
+        for (i = 0; i < num_chunks * len; i++) {
+            printf ("%02X", chunk_list_text[i]);
+        }
+        printf ("\n");
+#endif
+        free (chunk_list_text);
+        png->memory_gets--;
+    }
+    else {
+        MESSAGE ("There is no valid chunk list.\n");
+    empty_chunk_list:
+        png_set_keep_unknown_chunks (png->png, keep, 0, 0);
+    }
+#else
+    perl_png_error ("This function is not supported in your libpng");
+#endif
+}
+                                  
 
 /*
    Local Variables:
