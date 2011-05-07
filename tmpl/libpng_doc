@@ -846,6 +846,10 @@ by actually looking at the libpng source code. These pages are usually
 the first hits on search engines if you search for a function name in
 libpng.
 
+[% INCLUDE "other_modules" %]
+
+[% INCLUDE "examples_doc" %]
+
 [% INCLUDE "author" %]
 
 =cut

@@ -9,7 +9,7 @@ BEGIN {
     use FindBin;
     use lib "$FindBin::Bin";
     use Build;
-    use LibpngInfo 'template_vars';
+    use LibpngInfo 'template_vars', '@chunks';
 };
 use autodie;
 
@@ -22,6 +22,7 @@ my $tt = Template->new (
 );
 
 my @files = qw/
+                  Util.pm
                   Libpng.pm
                   Libpng.xs
                   typemap
@@ -34,11 +35,19 @@ my @files = qw/
                   PLTE.t
                   Const.t
                   META.json
+                  META.yml
               /;
 
 my %vars;
 $vars{config} = \%config;
-$vars{functions} = Build::get_functions (\%config);
+my $functions = Build::get_functions (\%config);
+for my $chunk (@chunks) {
+    if ($chunk->{auto_type}) {
+        my $name = $chunk->{name};
+        push @$functions, ("get_$name", "set_$name");
+    }
+}
+$vars{functions} = $functions;
 $vars{self} = $0;
 $vars{date} = scalar gmtime ();
 
@@ -58,7 +67,10 @@ my %top_dir = (
     'typemap' => 1,
     'perl-libpng.c' => 1,
     'META.json' => 1,
+    'META.yml' => 1,
 );
+
+my @outputs;
 
 for my $file (@files) {
     my $template = "$file.tmpl";
@@ -70,11 +82,14 @@ for my $file (@files) {
         $output = $config{main_module_out};
     }
     elsif ($file =~ /.t$/) {
-        $output = "$config{base_dir}/t/$file";
+        $output = "t/$file";
     }
     else {
         $output = "$config{submodule_dir}/$file";
     }
+    push @outputs, $output;
+
+    print "$output\n";
 #    print "Processing $template into $output.\n";
     $vars{input} = $template;
     $vars{output} = $output;
@@ -85,4 +100,30 @@ for my $file (@files) {
         or die '' . $tt->error ();
     chmod 0444, $output;
 }
+
+my @test_pngs = qw!
+t/test-write.png
+t/test.png
+t/with-text.png
+t/with-time.png
+t/tantei-san.png
+t/bgyn6a16.png
+t/xlfn0g04.png
+!;
+my @mani;
+push @mani, map {"tmpl/$_.tmpl"} @files;
+push @mani, @outputs;
+push @mani, @test_pngs;
+
+my $output = 'MANIFEST';
+if (-f $output) {
+chmod 0644, $output;
+}
+open my $out, '>', $output;
+for my $file (sort @mani) {
+    print $out "$file\n";
+}
+close $out;
+chmod 0444, $output;
+exit;
 

@@ -1,8 +1,8 @@
-version: 0.03
+version: 0.04
 base: Image::PNG
 author: Ben Bullock
 author_pause: BKB
 email: bkb@cpan.org
 year: 2011
-repository: http://www.lemoda.net/projects/image-png/repo/
 abstract: Read and write PNG (Portable Network Graphics) files
+license: perl

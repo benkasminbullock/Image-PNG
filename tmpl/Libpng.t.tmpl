@@ -104,6 +104,24 @@ if ($number_version > 100000) {
     ok ($number_version == $version, "Library version $number_version == $version OK");
 }
 
+# Read a file which is not correct. On version 0.02 this caused a core
+# dump of Perl because of a mistake in the error handler in
+# perl-libpng.c.tmpl. The error was fixed in 0.03 but this test is new
+# in 0.04.
+
+my $badpngfile = "$FindBin::Bin/xlfn0g04.png";
+if (! -f $badpngfile) {
+    die "You are missing a test file";
+}
+eval {
+    open my $badfh, "<:raw", $badpngfile or die $!;
+    my $badpng = [% config.base %]::Libpng::create_read_struct ();
+    [% config.base %]::Libpng::init_io ($badpng, $badfh);
+    [% config.base %]::Libpng::read_png ($badpng);
+};
+ok ($@, "Error reading bad PNG causes croak (not core dump)");
+ok ($@ =~ /libpng error/, "Found string 'libpng error' in error message.");
+
 done_testing ();
 
 # for my $text_chunk (@text_chunks) {

@@ -62,32 +62,23 @@ void perl_png_read_info (Png)
         png_read_info (Png->png, Png->info);
         OUTPUT:
 
+void perl_png_read_update_info (Png)
+        [% config.base %]::Libpng::t *  Png
+        CODE:
+        png_read_update_info (Png->png, Png->info);
+        OUTPUT:
+
+void perl_png_read_image (Png)
+        [% config.base %]::Libpng::t *  Png
+        CODE:
+        perl_png_read_image (Png);
+        OUTPUT:
+
 void perl_png_read_png (Png, transforms = PNG_TRANSFORM_IDENTITY)
         [% config.base %]::Libpng::t *  Png
         int transforms
         CODE:
         png_read_png (Png->png, Png->info, transforms, 0);
-        OUTPUT:
-
-SV * perl_png_get_IHDR (Png)
-        [% config.base %]::Libpng::t *  Png
-        CODE:
-        RETVAL = perl_png_get_IHDR (Png);
-        OUTPUT:
-        RETVAL
-
-SV * perl_png_get_tIME (Png)
-        [% config.base %]::Libpng::t *  Png
-        CODE:
-        RETVAL = perl_png_get_time (Png);
-        OUTPUT:
-        RETVAL
-
-void perl_png_set_tIME (Png, time = &PL_sv_undef)
-        [% config.base %]::Libpng::t *  Png
-        SV * time
-        CODE:
-        perl_png_set_time (Png, time);
         OUTPUT:
 
 SV * perl_png_get_text (Png)
@@ -112,6 +103,14 @@ int perl_png_sig_cmp (sig, start = 0, num_to_check = 8)
         RETVAL = perl_png_sig_cmp (sig, start, num_to_check);
         OUTPUT:
         RETVAL
+
+void perl_png_scalar_as_input (Png, scalar, transforms = 0)
+        [% config.base %]::Libpng::t * Png
+        SV * scalar
+        int transforms
+        CODE:
+        perl_png_scalar_as_input (Png, scalar, transforms);
+        OUTPUT:
 
 void perl_png_read_from_scalar (Png, scalar, transforms = 0)
         [% config.base %]::Libpng::t * Png
@@ -147,6 +146,13 @@ int perl_png_access_version_number ()
         OUTPUT:
         RETVAL
 
+void * perl_png_get_row_pointers (Png)
+        [% config.base %]::Libpng::t *  Png
+        CODE:
+        RETVAL = perl_png_get_row_pointers (Png);
+        OUTPUT:
+        RETVAL
+
 SV * perl_png_get_rows (Png)
         [% config.base %]::Libpng::t *  Png
         CODE:
@@ -161,69 +167,11 @@ int perl_png_get_rowbytes (Png)
         OUTPUT:
         RETVAL
 
-SV * perl_png_get_PLTE (Png)
-        [% config.base %]::Libpng::t *  Png
-        CODE:
-        RETVAL = perl_png_get_PLTE (Png);
-        OUTPUT:
-        RETVAL
-
-void perl_png_set_PLTE (Png, colors)
-        [% config.base %]::Libpng::t *  Png
-        AV * colors
-        CODE:
-        perl_png_set_PLTE (Png, colors);
-
-SV * perl_png_get_bKGD (Png)
-        [% config.base %]::Libpng::t *  Png
-        CODE:
-        RETVAL = perl_png_get_bKGD (Png);
-        OUTPUT:
-        RETVAL
-
-SV * perl_png_get_cHRM (Png)
-        [% config.base %]::Libpng::t *  Png
-        CODE:
-        RETVAL = perl_png_get_cHRM (Png);
-        OUTPUT:
-        RETVAL
 
 int perl_png_get_channels (Png)
         [% config.base %]::Libpng::t * Png
         CODE:
         RETVAL = png_get_channels (Png->png, Png->info);
-        OUTPUT:
-        RETVAL
-
-
-SV * perl_png_get_sBIT (Png, sig_bit)
-        [% config.base %]::Libpng::t * Png
-        CODE:
-        RETVAL = perl_png_get_sBIT (Png);
-        OUTPUT:
-        RETVAL
-
-
-SV * perl_png_get_oFFs (Png)
-        [% config.base %]::Libpng::t * Png
-        CODE:
-        RETVAL = perl_png_get_oFFs (Png);
-        OUTPUT:
-        RETVAL
-
-
-SV * perl_png_get_pHYs (Png)
-        [% config.base %]::Libpng::t * Png
-        CODE:
-        RETVAL = perl_png_get_pHYs (Png);
-        OUTPUT:
-        RETVAL
-
-
-int perl_png_get_sRGB (Png)
-        [% config.base %]::Libpng::t * Png
-        CODE:
-        RETVAL = perl_png_get_sRGB (Png);
         OUTPUT:
         RETVAL
 
@@ -235,6 +183,21 @@ SV * perl_png_get_valid (Png)
         OUTPUT:
         RETVAL
 
+void perl_png_set_row_pointers (Png, row_pointers)
+        [% config.base %]::Libpng::t * Png
+        void * row_pointers
+        CODE:
+        perl_png_set_row_pointers (Png, row_pointers);
+        OUTPUT:
+
+void perl_png_set_tRNS_pointer (Png, tRNS_pointer, num_tRNS_pointer)
+        [% config.base %]::Libpng::t * Png
+        void * tRNS_pointer
+        int num_tRNS_pointer
+        CODE:
+        perl_png_set_tRNS_pointer (Png, tRNS_pointer, num_tRNS_pointer);
+        OUTPUT:
+
 void perl_png_set_rows (Png, rows)
         [% config.base %]::Libpng::t * Png
         AV * rows
@@ -242,13 +205,6 @@ void perl_png_set_rows (Png, rows)
         perl_png_set_rows (Png, rows);
         OUTPUT:
 
-void perl_png_set_IHDR (Png, IHDR)
-        [% config.base %]::Libpng::t * Png
-        HV * IHDR
-        CODE:
-        perl_png_set_IHDR (Png, IHDR);
-        OUTPUT:
-        
 SV * perl_png_write_to_scalar (Png, transforms = 0)
         [% config.base %]::Libpng::t * Png
         int transforms;
@@ -299,3 +255,84 @@ void perl_png_set_keep_unknown_chunks (Png, keep, chunk_list = 0)
         CODE:
         perl_png_set_keep_unknown_chunks (Png, keep, chunk_list);
         OUTPUT:
+
+SV * perl_png_get_tRNS_palette (Png)
+        [% config.base %]::Libpng::t * Png
+        CODE:
+        RETVAL = perl_png_get_tRNS_palette (Png);
+        OUTPUT:
+        RETVAL
+
+void perl_png_set_PLTE_pointer (Png, colors, n_colors)
+        [% config.base %]::Libpng::t * Png
+        void * colors
+        int n_colors
+        CODE:
+        perl_png_set_PLTE_pointer (Png, colors, n_colors);
+        OUTPUT:
+
+void perl_png_set_expand (Png)
+        [% config.base %]::Libpng::t * Png
+        CODE:
+        perl_png_set_expand (Png);
+        OUTPUT:
+
+void perl_png_set_gray_to_rgb (Png)
+        [% config.base %]::Libpng::t * Png
+        CODE:
+        perl_png_set_gray_to_rgb (Png);
+        OUTPUT:
+
+void perl_png_set_filler (Png, filler, flags)
+        [% config.base %]::Libpng::t * Png
+        int filler
+        int flags
+        CODE:
+        perl_png_set_filler (Png, filler, flags);
+        OUTPUT:
+
+int perl_png_get_sRGB (Png)
+        [% config.base %]::Libpng::t * Png
+        CODE:
+        RETVAL = perl_png_get_sRGB (Png);
+        OUTPUT:
+        RETVAL
+
+void perl_png_set_sRGB (Png, sRGB)
+        [% config.base %]::Libpng::t * Png
+        int sRGB
+        CODE:
+        perl_png_set_sRGB (Png, sRGB);
+        OUTPUT:
+
+void perl_png_set_packing (Png)
+        [% config.base %]::Libpng::t * Png
+        CODE:
+        png_set_packing (Png->png);
+        OUTPUT:
+
+void perl_png_set_strip_16 (Png)
+        [% config.base %]::Libpng::t * Png
+        CODE:
+        perl_png_set_strip_16 (Png);
+        OUTPUT: 
+
+[%- FOR chunk IN chunks %]
+[%- IF chunk.auto_type %]
+SV * perl_png_get_[% chunk.name %] (Png)
+        [% config.base %]::Libpng::t * Png
+        CODE:
+        RETVAL = perl_png_get_[% chunk.name %] (Png);
+        OUTPUT:
+        RETVAL
+
+void perl_png_set_[% chunk.name %] (Png, [% chunk.name %])
+        [% config.base %]::Libpng::t * Png
+        [% chunk.auto_type | upper %] * [% chunk.name %]
+        CODE:
+        perl_png_set_[% chunk.name %] (Png, [% chunk.name %]);
+        OUTPUT:
+
+[% END %]
+[%- END %]
+#line 243 "Libpng.xs.tmpl"

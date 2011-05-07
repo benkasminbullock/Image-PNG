@@ -188,26 +188,7 @@ PNG library "libpng". [% config.base %] is built on top of this module.
 If you need to download libpng, see
 L<http://www.libpng.org/pub/png/libpng.html>. See also L</Alien::PNG>.
 
-=head2 Other Perl modules on CPAN
-
-=head3 Image::ExifTool
-
-L<Image::ExifTool> is a pure Perl (doesn't require a C compiler)
-solution for accessing the text segments of images. It has extensive
-support for PNG text segments.
-
-=head3 Alien::PNG
-
-L<Alien::PNG> claims to be a way of "building, finding and using PNG
-binaries". It may help in installing libpng. I didn't use it as a
-dependency for this module because it seems not to work in batch mode,
-but stop and prompt the user. I'm interested in hearing feedback from
-users whether this works or not on various platforms.
-
-=head3 Image::PNG::Rewriter
-
-L<Image::PNG::Rewriter> is a utility for unpacking and recompressing
-the IDAT (image data) part of a PNG image.
+[% INCLUDE "other_modules" %]
 
 =head2 About the PNG format
 
@@ -224,6 +205,8 @@ in making [% config.base %], so I can't vouch for it, but looking at the
 contents pages it appears to contain a lot of useful information,
 although it is definitely showing its age, with chapters about
 software such as Netscape Navigator and BeOS.
+
+[% INCLUDE "examples_doc" %]
 
 [% INCLUDE "author" %]
 

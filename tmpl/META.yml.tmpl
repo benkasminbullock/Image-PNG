@@ -1,4 +1,18 @@
-my $distmeta = {
-    name => '[% config.base %]',
-    abstract => '[% config.abstract %]',
-    description => '[% %]',
+name: '[% config.base %]',
+version: [% config.version %],
+abstract: '[% config.abstract %]',
+author:
+    - [% config.author %] [% config.email %]
+license: [% config.license %]
+distribution_type: module
+configure_requires:
+    ExtUtils::MakeMaker:  0
+build_requires:
+    ExtUtils::MakeMaker:  0
+requires:  {}
+no_index:
+    directory:
+        - t
+        - inc
+        - tmpl
+        - build

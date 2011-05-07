@@ -1,7 +1,7 @@
 package LibpngInfo;
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT_OK = qw/template_vars/;
+@EXPORT_OK = qw/template_vars @chunks/;
 use warnings;
 use strict;
 
@@ -341,71 +341,122 @@ png_write_row -- write a row of image data
 png_write_rows -- write multiple rows of image data
 EOF
 
-my @chunks = (
+# Known chunks. Here "in_valid" means the chunk is one of the ones
+# which is returned by the libpng routine "png_get_valid".
+
+our @chunks = (
 {
     name => 'gAMA',
+    in_valid => 1,
+    auto_type => 'hv',
 },
 
 {
     name => 'sBIT',
+    in_valid => 1,
+    auto_type => 'hv',
 },
 
 {
     name => 'cHRM',
+    in_valid => 1,
+    auto_type => 'hv',
 },
 
 {
     name => 'PLTE',
+    in_valid => 1,
+    auto_type => 'av',
 },
 
 {
     name => 'tRNS',
+    in_valid => 1,
+    auto_type => 'hv',
 },
 
 {
     name => 'bKGD',
+    in_valid => 1,
+    auto_type => 'hv',
 },
 
 {
     name => 'hIST',
+    in_valid => 1,
 },
 
 {
     name => 'pHYs',
+    in_valid => 1,
+    auto_type => 'hv',
 },
 
 {
     name => 'oFFs',
+    in_valid => 1,
+    auto_type => 'hv',
 },
 
 {
     name => 'tIME',
+    in_valid => 1,
+    auto_type => 'sv',
 },
 
 {
     name => 'pCAL',
+    in_valid => 1,
+    auto_type => 'hv',
 },
 
 {
     name => 'sRGB',
+    in_valid => 1,
 },
 
 {
     name => 'iCCP',
+    in_valid => 1,
+    auto_type => 'hv',
 },
 
 {
     name => 'sPLT',
+    in_valid => 1,
+    auto_type => 'hv',
 },
 
 {
     name => 'sCAL',
+    in_valid => 1,
+    auto_type => 'hv',
 },
 
 {
     name => 'IDAT',
+    in_valid => 1,
 },
+{
+    name => 'tEXt',
+    is_text => 1,
+},
+{
+    name => 'zTXt',
+    is_text => 1,
+},
+{
+    name => 'iTXt',
+    is_text => 1,
+},
+{
+    name => 'IHDR',
+    auto_type => 'hv',
+},
+
 );
+
+@chunks = sort {(uc $a->{name}) cmp (uc $b->{name})} @chunks;
 
 sub template_vars
 {
