@@ -19,6 +19,7 @@ TIN=    tmpl/Libpng.pm.tmpl \
 	tmpl/Container.pm.tmpl \
 	tmpl/typemap.tmpl \
 	tmpl/Util.pm.tmpl \
+	tmpl/other_modules \
 	build/make-files.pl
 
 HTML=/usr/local/www/data/image-png-libpng.html

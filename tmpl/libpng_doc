@@ -786,6 +786,28 @@ program's data area between calls. So this module doesn't deal with
 png_write_chunk, png_write_end, png_write_info, png_write_row, or
 png_write_rows.
 
+=head1 DIAGNOSTICS
+
+The module may produce the following error or warning messages.
+
+=over
+[% FOR diagnostic IN libpng_diagnostics %]
+
+=item [% diagnostic.message %]
+
+(
+[%- IF diagnostic.type == "error" -%]
+F
+[%- ELSIF diagnostic.type == "warn" -%]
+W
+[%- END -%]
+) [% IF diagnostic.comment %]
+[% diagnostic.comment %]
+[% END %]
+
+[% END %]
+
+=back
 
 =head1 BUGS
 
@@ -803,15 +825,13 @@ you will get a memory error.
 =head2 Conditional compilation
 
 It is possible to compile a version of the libpng library without
-support for, for example, text chunks by undefining a macro
-(C<PNG_TEXT_SUPPORTED>). However, this module ignores your libpng
-compilation choices, so it won't compile if you have such a libpng.
-
-I don't know whether many people in practice actually have such a
-libpng without text support or the other optional facilities, but if
-you encounter problems using this Perl module because of your
-conditionally-compiled libpng, then please let me know and I'll
-consider adding that facility to the module.
+support for various things. For example, it's possible to have a
+libpng without support for text chunks by undefining a macro
+C<PNG_TEXT_SUPPORTED>. The module supports some of the conditional
+compilation choices which I've found in practice, but it does not
+support every possible choice. If you encounter problems using this
+Perl module because of a conditionally-compiled libpng, then please
+let me know and I'll consider adding that facility to the module.
 
 =head1 SEE ALSO
 

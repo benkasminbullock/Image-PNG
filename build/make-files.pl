@@ -21,6 +21,8 @@ my $tt = Template->new (
 #    STRICT => 1,
 );
 
+my @libpng_diagnostics = Build::libpng_diagnostics (\%config);
+
 my @files = qw/
                   Util.pm
                   Libpng.pm
@@ -50,6 +52,7 @@ for my $chunk (@chunks) {
 $vars{functions} = $functions;
 $vars{self} = $0;
 $vars{date} = scalar gmtime ();
+$vars{libpng_diagnostics} = \@libpng_diagnostics;
 
 # Get lots of stuff about libpng from the module LibpngInfo in the
 # same directory as this script, used to build documentation etc.
@@ -102,7 +105,6 @@ for my $file (@files) {
 }
 
 my @test_pngs = qw!
-t/test-write.png
 t/test.png
 t/with-text.png
 t/with-time.png
@@ -114,6 +116,7 @@ my @mani;
 push @mani, map {"tmpl/$_.tmpl"} @files;
 push @mani, @outputs;
 push @mani, @test_pngs;
+push @mani, 'makeitfile';
 
 my $output = 'MANIFEST';
 if (-f $output) {

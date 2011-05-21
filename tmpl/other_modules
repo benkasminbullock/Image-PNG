@@ -17,11 +17,24 @@ users whether this works or not on various platforms.
 =head3 Image::PNG::Rewriter
 
 L<Image::PNG::Rewriter> is a utility for unpacking and recompressing
-the IDAT (image data) part of a PNG image.
+the IDAT (image data) part of a PNG image. The main purpose seems to
+be to recompress the image data with the module author's other module
+L<Compress::Deflate7>. Unfortunately that only works with Perl
+versions 5.12.
 
 =head3 Image::Pngslimmer
 
-L<Image::Pngslimmer> reduces the size of dynamically created PNG images.
+L<Image::Pngslimmer> reduces the size of dynamically created PNG
+images. It's very, very slow at reading PNG data, but seems to work
+OK.
 
+=head3 Image::Info
 
+L<Image::Info> is a module for getting information out of various
+types of images. It has good support for PNG and is written in pure
+Perl (doesn't require a C compiler). As well as basics such as height,
+width, and colour type, it can get text chunks, modification time,
+palette, gamma (gAMA chunk), resolution (pHYs chunk), and significant
+bits (sBIT chunk). At the time of writing (version 1.31) it doesn't
+support other chunks.
 

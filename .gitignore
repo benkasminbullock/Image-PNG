@@ -39,3 +39,8 @@ t/PNG.t
 
 perl-libpng.h
 
+# Created from templates
+
+META.yml
+META_new.yml
+META.json

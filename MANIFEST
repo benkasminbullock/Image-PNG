@@ -6,6 +6,7 @@ lib/Image/PNG.pm
 lib/Image/PNG/Container.pm
 lib/Image/PNG/Libpng.pm
 lib/Image/PNG/Util.pm
+makeitfile
 perl-libpng.c
 t/Const.t
 t/Libpng.t
@@ -13,7 +14,6 @@ t/PLTE.t
 t/PNG.t
 t/bgyn6a16.png
 t/tantei-san.png
-t/test-write.png
 t/test.png
 t/with-text.png
 t/with-time.png

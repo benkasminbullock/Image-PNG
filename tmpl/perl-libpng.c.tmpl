@@ -146,6 +146,7 @@ static void
 perl_png_error_fn (png_structp png_ptr, png_const_charp error_msg)
 {
     perl_libpng_t * png = png_get_error_ptr (png_ptr);
+    /* An error from libpng sent via Perl's warning handler. */
     perl_png_error (png, "libpng error: %s\n", error_msg);
 }
 
@@ -155,6 +156,7 @@ static void
 perl_png_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
 {
     perl_libpng_t * png = png_get_error_ptr (png_ptr);
+    /* A warning from libpng sent via Perl's warning handler. */
     perl_png_warn (png, "libpng warning: %s\n", warning_msg);
 }
 
@@ -181,6 +183,9 @@ perl_png_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
 #define GET_MEMORY(thing, number) {                                     \
         thing = calloc (number, sizeof (*thing));                       \
         if (! thing) {                                                  \
+            /* A request for more memory was refused. The first two
+               parameters are the file name and line number of where
+               this happened. */                \
             perl_png_error (png, "%s:%d: Call to calloc for "           \
                             "%d '%s' failed: out of memory",            \
                             __FILE__, __LINE__, number, #thing);        \
@@ -247,6 +252,8 @@ static void free_png (perl_libpng_t * png)
         PERL_PNG_FREE (png->image_data);
     }
     if (png->memory_gets != 1) {
+        /* The module's internal check for memory errors was tripped
+           somehow. This probably indicates a bug in the module. */
         perl_png_warn (png, "Memory leak detected: there are %d "
                        "allocated pieces of memory which have not "
                        "been freed.\n", png->memory_gets - 1);
@@ -284,6 +291,7 @@ perl_png_destroy (perl_libpng_t * png)
         perl_png_destroy_read_struct (png);
     }
     else {
+        /* There was an attempt to free some corrupted memory. */
         perl_png_error (png, "Attempt to destroy an object of unknown type");
     }
 }
@@ -629,6 +637,8 @@ perl_png_set_text (perl_libpng_t * png, AV * text_chunks)
         png_set_text (pngi, png_texts, num_ok);
     }
     else {
+        /* The user tried to set some text chunks in the image but
+           they were not allowed. */
         perl_png_warn (png, "None of your text chunks was allowed");
     }
     PERL_PNG_FREE (png_texts);
@@ -787,6 +797,8 @@ perl_png_scalar_read (png_structp pngstruct,
 
     png = png_get_io_ptr (pngstruct);
     if (! png->scalar_data) {
+        /* Something went wrong trying to read a PNG from a Perl
+           scalar. This probably indicates a bug in the program. */
         perl_png_error (png, "Trying to read from a PNG in memory but there is no PNG in memory");
     }
 
@@ -800,6 +812,9 @@ perl_png_scalar_read (png_structp pngstruct,
              byte_count_to_read, png->data_length, png->read_position);
     */
     if (png->read_position + byte_count_to_read > png->data_length) {
+        /* There was an attempt to read some data from a Perl scalar
+           which went beyond the expected end of the scalar in
+           memory. */
         perl_png_error (png, "Request for too many bytes %d on a scalar "
                         "of length %d at read position %d.\n",
                         byte_count_to_read, png->data_length,
@@ -954,7 +969,9 @@ perl_png_set_IHDR (perl_libpng_t * png, HV * IHDR)
     FETCH (color_type);
     FETCH (interlace_method);
     if (width == 0 || height == 0 || bit_depth == 0) {
-        perl_png_error (png, "Bad values for width (%d), height (%d), or bit depth (%d)",
+        /* The user tried to set a PNG header with unacceptable values,
+           as indicated. */
+        perl_png_error (png, "set_IHDR: Bad values for width (%d), height (%d), or bit depth (%d)",
                         width, height, bit_depth);
         return;
     }
@@ -1069,7 +1086,8 @@ perl_png_set_PLTE (perl_libpng_t * png, AV * perl_colors)
 
     n_colors = av_len (perl_colors) + 1;
     if (n_colors == 0) {
-        perl_png_error (png, "Empty array of colours in set_PLTE");
+        /* The user tried to set an empty palette of colours. */
+        perl_png_error (png, "set_PLTE: Empty array of colours in set_PLTE");
     }
     MESSAGE ("There are %d colours in the palette.\n", n_colors);
 
@@ -1312,6 +1330,8 @@ SV * perl_png_get_tRNS_palette (perl_libpng_t * png)
             UNDEF;
         }
         if (num_trans > 0x100) {
+            /* The user tried to set more than the maximum possible
+               number of transparencies for a paletted image. */
             perl_png_error (png, "Too many transparencies %d supplied",
                             num_trans);
         }
@@ -1380,6 +1400,7 @@ perl_png_get_rows (perl_libpng_t * png)
 
     height = png_get_image_height (pngi);
     if (height == 0) {
+        /* The height of the image is zero. */
         perl_png_error (png, "Image has no height");
     }
     else {
@@ -1387,6 +1408,7 @@ perl_png_get_rows (perl_libpng_t * png)
     }
     rows = png_get_rows (pngi);
     if (rows == 0) {
+        /* The image does not have any rows of image data. */
         perl_png_error (png, "Image has no rows");
     }
     else {
@@ -1394,6 +1416,7 @@ perl_png_get_rows (perl_libpng_t * png)
     }
     rowbytes = png_get_rowbytes (pngi);
     if (rowbytes == 0) {
+        /* The rows of image data have zero length. */
         perl_png_error (png, "Image rows have zero length");
     }
     else {
@@ -1425,11 +1448,13 @@ perl_png_read_image (perl_libpng_t * png)
     n_rows = png_get_image_height (pngi);
     rowbytes = png_get_rowbytes (pngi);
     if (! n_rows) {
+        /* The image we are trying to read has zero height. */
         perl_png_error (png, "Image has zero height");
     }
     GET_MEMORY (png->row_pointers, n_rows);
     png->image_data = malloc (rowbytes * n_rows);
     if (! png->image_data) {
+        /* We were refused the memory we want to read the image into. */
         perl_png_error (png, "Out of memory allocating %d bytes for image",
                         rowbytes * n_rows);
     }
@@ -1475,6 +1500,8 @@ void perl_png_set_rows (perl_libpng_t * png, AV * rows)
     int n_rows;
 
     if (png->row_pointers) {
+        /* There was an attempt to set the rows of an image after they
+           had already been set. */
         perl_png_error (png, "Row pointers already allocated");
     }
     /* Need to check that this is the same as the height of the image. */
@@ -1578,6 +1605,8 @@ SV * perl_png_get_unknown_chunks (perl_libpng_t * png)
             png_chunk = unknown_chunks + i;
             perl_chunk = newHV ();
             if (strlen ((const char *) png_chunk->name) != PERL_PNG_CHUNK_NAME_LENGTH) {
+                /* We tried to set an unknown chunk with a name which
+                   doesn't have four characters. */
                 perl_png_error (png, "Chunk name '%s' has wrong number of "
                                 "characters: %d required",
                                 png_chunk->name,
@@ -1613,6 +1642,7 @@ void perl_png_set_unknown_chunks (perl_libpng_t * png, AV * chunk_list)
     n_chunks = av_len (chunk_list) + 1;
    
     if (n_chunks == 0) {
+        /* The user tried to set an empty list of unknown chunks. */
         perl_png_error (png, "Number of unknown chunks is zero");
     }
     GET_MEMORY (unknown_chunks, n_chunks);
@@ -1632,6 +1662,8 @@ void perl_png_set_unknown_chunks (perl_libpng_t * png, AV * chunk_list)
 
         HASH_FETCH_PV (perl_chunk, name);
         if (name_length != PERL_PNG_CHUNK_NAME_LENGTH) {
+            /* The user's name for a private chunk was not a valid
+               length. In this case the chunk is ignored. */
             perl_png_warn (png, "Illegal PNG chunk name length, "
                            "chunk names must be %d characters long",
                            PERL_PNG_CHUNK_NAME_LENGTH);
@@ -1651,7 +1683,8 @@ void perl_png_set_unknown_chunks (perl_libpng_t * png, AV * chunk_list)
 
         HASH_FETCH_IV (perl_chunk, location);
         if (location == 0) {
-            /* warn this means "don't write the chunk". */
+            /* The user supplied a value for "location" of zero, which
+               means "don't write the chunk". */
             perl_png_warn (png, "Unknown chunk location is zero, which means 'don't write the chunk'");
         }
         png_chunk->location = location;
@@ -1673,6 +1706,8 @@ int perl_png_supports (const char * what)
         return 0;
 #endif /* iTXt */
     }
+    /* The user asked whether something was supported, but we don't
+       know what that thing is. */
     perl_png_warn (0, "Unknown string '%s'", what);
     return 0;
 }
@@ -1742,7 +1777,8 @@ perl_png_set_keep_unknown_chunks (perl_libpng_t * png, int keep,
         png_set_keep_unknown_chunks (png->png, keep, 0, 0);
     }
 #else
-    perl_png_error ("This function is not supported in your libpng");
+    /* libpng was compiled without this option. */
+    perl_png_error (png, "set_keep_unknown_chunks is not supported in your libpng");
 #endif
 }
 

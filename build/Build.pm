@@ -7,6 +7,7 @@ use warnings;
 use strict;
 use autodie;
 use Carp;
+use FindBin;
 
 my $base = "$FindBin::Bin/..";
 my $tmpl_dir = "$base/tmpl";
@@ -57,6 +58,53 @@ sub get_functions
     close $input;
 #    print "@functions";
     return \@functions;
+}
+
+# Extract a list of diagnostics for the Libpng part of the module for
+# use in the documentation.
+
+sub libpng_diagnostics
+{
+    my ($config_ref, $verbose) = @_;
+    my @diagnostics;
+    my $text = `cat tmpl/perl-libpng.c.tmpl`;
+    while ($text =~ m@
+                         # Comment describing the diagnostic
+                         (?:/\*\s*((?:[^\*]|\*[^/])+?)\s*\*/)?[\s|\\]+
+                         # Diagnostic call
+                         perl_png_(warn|error)\s*
+                         # First argument is the carry-all
+                         \(\s*png\s*,\s*
+                         # Text message
+                         ((?:"[^"]*"[\s\\]*)+)
+                     @xgsm) {
+        my $comment = $1;
+        my $type = $2;
+        my $message = $3;
+        $message =~ s/"[\s\\]+"//g;
+        $message =~ s/^"(.*)"$/$1/;
+        if ($comment) {
+            $comment =~ s/[\s|\\]+/ /g;
+        }
+        if ($verbose) {
+            if ($comment) {
+                print "$comment\n";
+            }
+            else {
+                print "No comment.\n";
+            }
+            print "$message\n";
+        }
+        push @diagnostics, {
+            message => $message,
+            type => $type,
+            comment => $comment,
+        };
+    }
+    if (! wantarray) {
+        die;
+    }
+    return @diagnostics;
 }
 
 1;
