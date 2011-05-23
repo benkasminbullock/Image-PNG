@@ -11,7 +11,7 @@ use Template;
 BEGIN {
     use FindBin;
     use lib "$FindBin::Bin";
-    use Build;
+    use ImagePNGBuild;
 };
 use autodie;
 my $verbose = 1;
@@ -64,7 +64,7 @@ my %macros;
     }
 }
 
-my %config = Build::read_config;
+my %config = ImagePNGBuild::read_config;
 
 my $output_file = "$config{submodule_dir}/Const.pm";
 

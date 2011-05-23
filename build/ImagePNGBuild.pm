@@ -1,8 +1,7 @@
-# This module is for building the Perl distribution from the
-# templates. This module is not one of the installed files of the
-# distribution.
+# This module builds the Perl distribution from the templates. This
+# module is not installed
 
-package Build;
+package ImagePNGBuild;
 use warnings;
 use strict;
 use autodie;

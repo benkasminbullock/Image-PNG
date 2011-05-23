@@ -1,0 +1,5 @@
+dists/*
+libpng-tests/*
+t/*
+oneoff/*
+.cleanok

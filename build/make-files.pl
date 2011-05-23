@@ -8,12 +8,12 @@ use Template;
 BEGIN {
     use FindBin;
     use lib "$FindBin::Bin";
-    use Build;
+    use ImagePNGBuild;
     use LibpngInfo 'template_vars', '@chunks';
 };
 use autodie;
 
-my %config = Build::read_config ();
+my %config = ImagePNGBuild::read_config ();
 
 my $tt = Template->new (
     ABSOLUTE => 1,
@@ -21,7 +21,7 @@ my $tt = Template->new (
 #    STRICT => 1,
 );
 
-my @libpng_diagnostics = Build::libpng_diagnostics (\%config);
+my @libpng_diagnostics = ImagePNGBuild::libpng_diagnostics (\%config);
 
 my @files = qw/
                   Util.pm
@@ -42,7 +42,7 @@ my @files = qw/
 
 my %vars;
 $vars{config} = \%config;
-my $functions = Build::get_functions (\%config);
+my $functions = ImagePNGBuild::get_functions (\%config);
 for my $chunk (@chunks) {
     if ($chunk->{auto_type}) {
         my $name = $chunk->{name};
@@ -112,10 +112,33 @@ t/tantei-san.png
 t/bgyn6a16.png
 t/xlfn0g04.png
 !;
+my @extras = qw!
+my-xs.c
+tmpl/author
+tmpl/config
+tmpl/Const.pm.tmpl
+tmpl/examples_doc
+tmpl/generated
+tmpl/libpng_doc
+tmpl/other_modules
+tmpl/png_doc
+tmpl/pngspec
+tmpl/version
+tmpl/warning
+build/ImagePNGBuild.pm
+build/LibpngInfo.pm
+build/make-files.pl
+Changes
+MANIFEST
+MANIFEST.SKIP
+my-xs.h
+perl-libpng.h
+!;
 my @mani;
 push @mani, map {"tmpl/$_.tmpl"} @files;
 push @mani, @outputs;
 push @mani, @test_pngs;
+push @mani, @extras;
 push @mani, 'makeitfile';
 
 my $output = 'MANIFEST';
