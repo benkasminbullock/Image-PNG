@@ -3,7 +3,7 @@ PNGPM=lib/Image/PNG.pm
 
 TOUT=lib/Image/PNG.pm lib/Image/PNG/Container.pm \
 	$(LIBPNGPM) perl-libpng.c Libpng.xs \
-	Makefile.PL META.json typemap t/PLTE.t
+	Makefile.PL META.json META.yml typemap t/PLTE.t
 TIN=    tmpl/Libpng.pm.tmpl \
 	tmpl/libpng_doc \
 	build/LibpngInfo.pm \
@@ -16,6 +16,7 @@ TIN=    tmpl/Libpng.pm.tmpl \
 	tmpl/PNG.t.tmpl \
 	tmpl/PNG.pm.tmpl \
 	tmpl/META.json.tmpl \
+	tmpl/META.yml.tmpl \
 	tmpl/Container.pm.tmpl \
 	tmpl/typemap.tmpl \
 	tmpl/Util.pm.tmpl \
@@ -26,7 +27,12 @@ TIN=    tmpl/Libpng.pm.tmpl \
 HTML=/usr/local/www/data/image-png-libpng.html
 HTML2=/usr/local/www/data/image-png.html
 
-all:	$(TOUT) Makefile
+
+all:	start
+	make
+	make test
+
+start:	$(TOUT) Makefile
 
 Makefile:	Makefile.PL
 	perl Makefile.PL

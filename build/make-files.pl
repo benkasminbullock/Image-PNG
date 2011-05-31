@@ -31,6 +31,7 @@ my @files = qw/
                   perl-libpng.c
                   PNG.pm
                   Container.pm
+                  Const.pm
                   Makefile.PL
                   PNG.t
                   Libpng.t

@@ -715,7 +715,10 @@ perl_png_get_tIME (perl_libpng_t * png)
 void
 perl_png_set_tIME (perl_libpng_t * png, SV * input_time)
 {
-    png_time mod_time = {0};
+    /* The PNG month and day fields shouldn't be equal to zero. 
+       See PNG specification "4.2.4.6. tIME Image last-modification time"
+    */
+    png_time mod_time = {0,1,1,0,0,0};
     SV * ref;
 
     ref = SvRV(input_time);
@@ -729,9 +732,6 @@ perl_png_set_tIME (perl_libpng_t * png, SV * input_time)
                 SV * field_sv = * field_sv_ptr;                         \
                 MESSAGE ("OK for %s\n", #field);                        \
                 mod_time.field = SvIV (field_sv);                       \
-            }                                                           \
-            else {                                                      \
-                mod_time.field = 0;                                     \
             }                                                           \
         }
         SET_TIME(year);

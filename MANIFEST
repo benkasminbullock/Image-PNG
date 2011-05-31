@@ -9,6 +9,7 @@ build/ImagePNGBuild.pm
 build/LibpngInfo.pm
 build/make-files.pl
 lib/Image/PNG.pm
+lib/Image/PNG/Const.pm
 lib/Image/PNG/Container.pm
 lib/Image/PNG/Libpng.pm
 lib/Image/PNG/Util.pm
@@ -27,6 +28,7 @@ t/test.png
 t/with-text.png
 t/with-time.png
 t/xlfn0g04.png
+tmpl/Const.pm.tmpl
 tmpl/Const.pm.tmpl
 tmpl/Const.t.tmpl
 tmpl/Container.pm.tmpl

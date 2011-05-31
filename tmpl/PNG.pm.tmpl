@@ -92,7 +92,7 @@ sub [% config.base %]::read
         print "I am going to try to read a file called '$file_name'.\n";
     }
     if (! defined $file_name) {
-        carp __PACKAGE__, ": You called 'read_file' without giving a file name";
+        carp __PACKAGE__, ": You called 'read' without giving a file name";
         return;
     }
     my $read = [% config.base %]::Container->new ({read_only => 1});

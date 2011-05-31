@@ -1,7 +1,15 @@
+0.06 
+
+A file was missing from the distribution, resulting in test failures.
+
+0.05
+
+Badly-formatted META.yml in 0.04.
+
 0.04
 
 Added all the templates into the distribution & cross fingers the
-"no_index" will stop it buggering up CPAN.
+"no_index" will stop it creating a problem on CPAN.
 
 0.03
 
