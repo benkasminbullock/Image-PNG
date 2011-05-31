@@ -512,7 +512,7 @@ perl_png_set_text_from_hash (perl_libpng_t * png, png_text * text_out, HV * chun
         SV ** field_sv_ptr = hv_fetch (chunk, #field,           \
                                        strlen (#field), 0);     \
         if (! field_sv_ptr) {                                   \
-            fprintf (stderr, "You don't have no %s sucker.\n",  \
+            fprintf (stderr, "Field %s is missing.\n",          \
                      #field);                                   \
             return 0;                                           \
         }                                                       \
@@ -544,7 +544,7 @@ perl_png_set_text_from_hash (perl_libpng_t * png, png_text * text_out, HV * chun
         SV ** field_sv_ptr = hv_fetch (chunk, #field,           \
                                        strlen (#field), 0);     \
         if (! field_sv_ptr) {                                   \
-            fprintf (stderr, "You don't have no %s sucker.\n",  \
+            fprintf (stderr, "Field %s is missing.\n",          \
                      #field);                                   \
             field = "";                                         \
         }                                                       \
@@ -895,7 +895,7 @@ perl_png_write_to_scalar (perl_libpng_t * png, int transforms)
 void
 perl_png_write_png (perl_libpng_t * png, int transforms)
 {
-    MESSAGE ("Trying to write your crap.");
+    MESSAGE ("Trying to write a PNG.");
     png_write_png (pngi, transforms, UNUSED_ZERO_ARG);
 }
 
