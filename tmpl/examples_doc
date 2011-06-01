@@ -1,20 +1,21 @@
 =head1 EXAMPLES
 
-There is a collection of example scripts online at L<http://www.lemoda.net/image-png/>. This currently contains
+There is a collection of demonstrations and example scripts online at
+L<http://www.lemoda.net/image-png/>. This currently contains
 
 =over
 
 =item PNG inspector L<http://www.lemoda.net/png/inspect/>
 
-This downloads a PNG file you specify from the internet and prints out
-its contents.
+This demonstration downloads a PNG file you specify from the internet
+and prints out its contents.
 
 =item PNG quantizer L<http://www.lemoda.net/png/quantize/>
 
-This downloads a PNG file you specify from the internet and quantizes
-it with as many colours as you want (from two to 256) in order to
-reduce its size. The quantized image is uploaded to imgur.com using
-L<WWW::Imgur>.
+This demonstration downloads a PNG file you specify from the internet
+and quantizes it with as many colours as you want (from two to 256) in
+order to reduce its size. The quantized image is uploaded to imgur.com
+using L<WWW::Imgur>.
 
 =back
 
