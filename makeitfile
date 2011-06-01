@@ -47,7 +47,8 @@ HTML2:	$(PNGPM)
 	perldoc -o html $(PNGPM) > $(HTML2)
 
 clean:
-	-rm -rf $(TOUT) Makefile.old perl-libpng.h
+	-make clean
+	-rm -rf $(TOUT) Makefile.old perl-libpng.h my-xs.h
 
 # Local Variables:
 # mode: makefile

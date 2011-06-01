@@ -700,6 +700,59 @@ filter types.
 [% cor(fn="set_filter") %] with the second (unused)
 argument omitted. [% unused %]
 
+=head2 get_bKGD
+
+Get the bKGD (background) chunk of the image.
+
+[% cor(fn="get_bKGD") %] with a hash function instead of a
+C<png_color> struct.
+
+=head2 set_bKGD
+
+Set the bKGD (background) chunk of the image.
+
+[% cor(fn="set_bKGD") %] with a hash function instead of a
+C<png_color> struct.
+
+=head2 get_cHRM
+
+Get the cHRM chunk as a hash.
+
+The keys of the hash are
+
+=over
+[% FOR key IN chunk_hash.cHRM.fields %]
+=item [% key %]
+[% END %]
+=back
+
+The values of the hash are floating point numbers between 0 and 1.
+
+See section "4.2.2.2. cHRM Primary chromaticities" of the PNG specification.
+
+[% cor(fn="get_cHRM") %] with a hash function instead of the C<double>
+arguments. The hash key names correspond to the names of the C<double>
+arguments in libpng.
+
+=head2 set_cHRM
+
+Set the cHRM chunk from a hash.
+
+The keys of the hash are
+
+=over
+[% FOR key IN chunk_hash.cHRM.fields %]
+=item [% key %]
+[% END %]
+=back
+
+The values of the hash are floating point numbers between 0 and 1.
+
+See section "4.2.2.2. cHRM Primary chromaticities" of the PNG specification.
+
+[% cor(fn="set_cHRM") %] with a hash function instead of the C<double>
+arguments.
+
 =head1 EXPORTS
 
 Nothing is exported by default, but all the functions in this module

@@ -1142,6 +1142,21 @@ static HV * perl_png_color_16_to_hv (png_color_16p colour)
     return perl_colour;
 }
 
+/* Turn a hash into the colour values of a pointer to a png_color_16
+   structure. */
+
+static void perl_png_hv_to_color_16 (HV * perl_colour, png_color_16p colour)
+{
+#define PERL_COLOUR(x) \
+    HASH_FETCH_IV_MEMBER (perl_colour, x, colour)
+    PERL_COLOUR(index);
+    PERL_COLOUR(red);
+    PERL_COLOUR(green);
+    PERL_COLOUR(blue);
+    PERL_COLOUR(gray);
+#undef PERL_COLOUR
+}
+
 /*   ___  _   _                      _                 _        
     / _ \| |_| |__   ___ _ __    ___| |__  _   _ _ __ | | _____ 
    | | | | __| '_ \ / _ \ '__|  / __| '_ \| | | | '_ \| |/ / __|
@@ -1163,22 +1178,15 @@ SV * perl_png_get_bKGD (perl_libpng_t * png)
     UNDEF;
 }
 
+/* Set the bKGD chunk of the image from values in a hash
+   "bKGD". Values not set in the hash are set to zero. */
+
 void perl_png_set_bKGD (perl_libpng_t * png, HV * bKGD)
 {
-}
-
-SV * perl_png_get_cHRM (perl_libpng_t * png)
-{
-    if (VALID (cHRM)) {
-        HV * ice;
-        ice = newHV ();
-        return newRV_inc ((SV *) ice);
-    }
-    UNDEF;
-}
-
-void perl_png_set_cHRM (perl_libpng_t * png, HV * cHRM)
-{
+    /* Default is all zeros. */
+    png_color_16 background = {0};
+    perl_png_hv_to_color_16 (bKGD, & background);
+    png_set_bKGD (pngi, & background);
 }
 
 SV * perl_png_get_pCAL (perl_libpng_t * png)
@@ -1270,11 +1278,17 @@ void perl_png_set_sCAL (perl_libpng_t * png, HV * sCAL)
 {
 }
 
+/* Should this be a hash value or an array? */
+
+/* "4.2.4.3. sBIT Significant bits" */
+
 SV * perl_png_get_sBIT (perl_libpng_t * png)
 {
     if (VALID (sBIT)) {
         HV * sig_bit;
+        png_color_8 colours;
         sig_bit = newHV ();
+        [% FOR colour IN colours %] HASH_STORE_IV_MEMBER (sig_bit, [% colour %], colours);[% END %]
         return newRV_inc ((SV *) sig_bit);
     }
     UNDEF;
@@ -1282,6 +1296,9 @@ SV * perl_png_get_sBIT (perl_libpng_t * png)
 
 void perl_png_set_sBIT (perl_libpng_t * png, HV * sBIT)
 {
+    png_color_8 colours;
+    [% FOR colour IN colours %] HASH_FETCH_IV_MEMBER (sBIT,[% colour %],(&colours));[% END %]
+    png_set_sBIT (pngi, & colours);
 }
 
 SV * perl_png_get_oFFs (perl_libpng_t * png)
@@ -1289,7 +1306,14 @@ SV * perl_png_get_oFFs (perl_libpng_t * png)
     if (VALID (oFFs)) {
         HV * offset;
         
+        png_uint_32 x_offset;
+        png_uint_32 y_offset;
+        int unit_type;
         offset = newHV ();
+        png_get_oFFs (pngi, & x_offset, & y_offset, & unit_type);
+        HASH_STORE_IV (offset, x_offset);
+        HASH_STORE_IV (offset, y_offset);
+        HASH_STORE_IV (offset, unit_type);
         return newRV_inc ((SV *) offset);
     }
     UNDEF;
@@ -1297,13 +1321,27 @@ SV * perl_png_get_oFFs (perl_libpng_t * png)
  
 void perl_png_set_oFFs (perl_libpng_t * png, HV * oFFs)
 {
+    png_uint_32 x_offset;
+    png_uint_32 y_offset;
+    int unit_type;
+    HASH_FETCH_IV (oFFs, x_offset);
+    HASH_FETCH_IV (oFFs, y_offset);
+    HASH_FETCH_IV (oFFs, unit_type);
+    png_set_oFFs (pngi, x_offset, y_offset, unit_type);
 }
 
 SV * perl_png_get_pHYs (perl_libpng_t * png)
 {
     if (VALID (pHYs)) {
+        png_uint_32 res_x;
+        png_uint_32 res_y;
+        int unit_type;
         HV * phys;
         phys = newHV ();
+        png_get_pHYs (pngi, & res_x, & res_y, & unit_type);
+        HASH_STORE_IV (phys, res_x);
+        HASH_STORE_IV (phys, res_y);
+        HASH_STORE_IV (phys, unit_type);
         return newRV_inc ((SV *) phys);
     }
     UNDEF;
@@ -1311,6 +1349,13 @@ SV * perl_png_get_pHYs (perl_libpng_t * png)
 
 void perl_png_set_pHYs (perl_libpng_t * png, HV * pHYs)
 {
+    png_uint_32 res_x;
+    png_uint_32 res_y;
+    int unit_type;
+    HASH_FETCH_IV (pHYs, res_x);
+    HASH_FETCH_IV (pHYs, res_y);
+    HASH_FETCH_IV (pHYs, unit_type);
+    png_set_pHYs (pngi, res_x, res_y, unit_type);
 }
 
 /* Get the transparency information for a paletted image. */
@@ -1628,6 +1673,8 @@ SV * perl_png_get_unknown_chunks (perl_libpng_t * png)
     }
 }
 
+/* Set private chunks in the PNG. */
+
 void perl_png_set_unknown_chunks (perl_libpng_t * png, AV * chunk_list)
 {
     /* n_chunks is the number of chunks the user proposes to add to
@@ -1804,6 +1851,41 @@ void
 perl_png_set_strip_16 (perl_libpng_t * png)
 {
     png_set_strip_16 (png->png);
+}
+
+SV * perl_png_get_cHRM (perl_libpng_t * png)
+{
+    if (VALID (cHRM)) {
+        HV * ice;
+[% FOR key IN chunk_hash.cHRM.fields -%]
+        double [% key %];
+[% END -%]
+        png_get_cHRM (pngi 
+[%- FOR key IN chunk_hash.cHRM.fields -%], & [% key %][% END -%]);
+        ice = newHV ();
+[% FOR key IN chunk_hash.cHRM.fields -%]
+        hv_store (ice, "[% key %]", strlen ("[% key %]"),
+                   newSVnv ([% key %]), 0);
+[% END -%]
+        return newRV_inc ((SV *) ice);
+    }
+    UNDEF;
+}
+
+void perl_png_set_cHRM (perl_libpng_t * png, HV * cHRM)
+{
+    SV ** key_sv_ptr;
+[% FOR key IN chunk_hash.cHRM.fields -%]
+    double [% key %] = 0.0;
+[% END -%]
+[% FOR key IN chunk_hash.cHRM.fields -%]
+    key_sv_ptr = hv_fetch (cHRM, "[% key %]", strlen ("[% key %]"), 0);
+    if (key_sv_ptr) {
+        [% key %] = SvNV (* key_sv_ptr);
+    }
+[% END -%]
+    png_set_cHRM (pngi
+[%- FOR key IN chunk_hash.cHRM.fields -%], [% key %][%- END -%]);
 }
 
 /*

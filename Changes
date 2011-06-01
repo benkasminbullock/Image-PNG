@@ -1,3 +1,8 @@
+0.07
+
+Can read/write bKGD (background), pHYs, oFFs, sBIT chunks.
+Time default for month/day is 1 not 0.
+
 0.06 
 
 A file was missing from the distribution, resulting in test failures.

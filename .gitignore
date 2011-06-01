@@ -1,6 +1,7 @@
-# Distribution file
+# Distribution files
 
 Image-PNG-*.tar.gz
+Image-PNG-*/
 
 # Test files not to be distributed
 

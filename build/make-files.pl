@@ -59,6 +59,9 @@ $vars{libpng_diagnostics} = \@libpng_diagnostics;
 # same directory as this script, used to build documentation etc.
 
 template_vars (\%vars);
+for my $x (@{$vars{chunk}{cHRM}{fields}}) {
+    print $x, "\n";
+}
 #for my $x (@{$vars{ihdr_fields}}) {
 #    print $x->{name}, "\n";
 #}
@@ -105,6 +108,9 @@ for my $file (@files) {
     chmod 0444, $output;
 }
 
+# These PNGs are used in the tests. Many of them are from
+# http://libpng.org/pub/png/pngsuite.html.
+
 my @test_pngs = qw!
 t/test.png
 t/with-text.png
@@ -112,7 +118,12 @@ t/with-time.png
 t/tantei-san.png
 t/bgyn6a16.png
 t/xlfn0g04.png
+t/ccwn2c08.png
+t/cdun2c08.png
 !;
+
+# Other files which aren't made from templates.
+
 my @extras = qw!
 my-xs.c
 tmpl/author
@@ -134,6 +145,9 @@ MANIFEST
 MANIFEST.SKIP
 my-xs.h
 perl-libpng.h
+t/bKGD.t
+t/cHRM.t
+t/pHYs.t
 !;
 my @mani;
 push @mani, map {"tmpl/$_.tmpl"} @files;

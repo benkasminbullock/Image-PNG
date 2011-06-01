@@ -361,6 +361,7 @@ our @chunks = (
     name => 'cHRM',
     in_valid => 1,
     auto_type => 'hv',
+    fields => [],
 },
 
 {
@@ -458,6 +459,22 @@ our @chunks = (
 
 @chunks = sort {(uc $a->{name}) cmp (uc $b->{name})} @chunks;
 
+my %chunks;
+
+for my $chunk (@chunks) {
+    $chunks{$chunk->{name}} = $chunk;
+}
+
+for my $colour (qw/white red green blue/) {
+    for my $coord (qw/x y/) {
+        push @{$chunks{cHRM}{fields}}, "${colour}_$coord"
+    }
+}
+
+# List of colours which are in png_color_8 or png_color_16.
+
+my @colours = qw/red green blue gray alpha/;
+
 sub template_vars
 {
     my ($vars_ref) = @_;
@@ -466,6 +483,11 @@ sub template_vars
     $vars_ref->{filters} = \@filters;
     $vars_ref->{transforms} = \@transforms;
     $vars_ref->{chunks} = \@chunks;
+    $vars_ref->{chunk_hash} = \%chunks;
+    $vars_ref->{colours} = \@colours;
+#    for my $name (keys %{$vars_ref->{chunk}}) {
+#        print "$name.\n";
+#    }
     $vars_ref->{unknown_chunk_fields} = \@unknown_chunk_fields;
 }
 

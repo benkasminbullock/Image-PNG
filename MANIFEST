@@ -22,7 +22,12 @@ t/Const.t
 t/Libpng.t
 t/PLTE.t
 t/PNG.t
+t/bKGD.t
 t/bgyn6a16.png
+t/cHRM.t
+t/ccwn2c08.png
+t/cdun2c08.png
+t/pHYs.t
 t/tantei-san.png
 t/test.png
 t/with-text.png
