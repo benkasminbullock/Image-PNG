@@ -1,3 +1,8 @@
+0.08
+
+Printout of libpng version during build to detect problematic versions.
+Added tRNS.t test and test PNG file to build.
+
 0.07
 
 Can read/write bKGD (background), pHYs, oFFs, sBIT chunks.

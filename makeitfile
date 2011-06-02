@@ -48,7 +48,8 @@ HTML2:	$(PNGPM)
 
 clean:
 	-make clean
-	-rm -rf $(TOUT) Makefile.old perl-libpng.h my-xs.h
+	-rm -rf $(TOUT) Makefile.old perl-libpng.h my-xs.h MANIFEST
+	-rm -rf Image-PNG-0.*/ Image-PNG-0.*.tar.gz
 
 # Local Variables:
 # mode: makefile
