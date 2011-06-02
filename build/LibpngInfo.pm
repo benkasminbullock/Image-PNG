@@ -348,7 +348,7 @@ our @chunks = (
 {
     name => 'gAMA',
     in_valid => 1,
-    auto_type => 'hv',
+    auto_type => 'double',
 },
 
 {

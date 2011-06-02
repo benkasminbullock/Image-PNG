@@ -1220,15 +1220,18 @@ void perl_png_set_sPLT (perl_libpng_t * png, HV * sPLT)
 SV * perl_png_get_gAMA (perl_libpng_t * png)
 {
     if (VALID (gAMA)) {
-        HV * ice;
-        ice = newHV ();
-        return newRV_inc ((SV *) ice);
+        SV * perl_gamma;
+        double gamma;
+        png_get_gAMA (pngi, & gamma);
+        perl_gamma = newSVnv (gamma);
+        return perl_gamma;
     }
     UNDEF;
 }
 
-void perl_png_set_gAMA (perl_libpng_t * png, HV * gAMA)
+void perl_png_set_gAMA (perl_libpng_t * png, double gamma)
 {
+    png_set_gAMA (pngi, gamma);
 }
 
 SV * perl_png_get_iCCP (perl_libpng_t * png)

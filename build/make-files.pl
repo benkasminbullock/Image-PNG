@@ -24,21 +24,21 @@ my $tt = Template->new (
 my @libpng_diagnostics = ImagePNGBuild::libpng_diagnostics (\%config);
 
 my @files = qw/
-                  Util.pm
-                  Libpng.pm
-                  Libpng.xs
-                  typemap
-                  perl-libpng.c
-                  PNG.pm
-                  Container.pm
                   Const.pm
-                  Makefile.PL
-                  PNG.t
-                  Libpng.t
-                  PLTE.t
                   Const.t
+                  Container.pm
+                  Libpng.pm
+                  Libpng.t
+                  Libpng.xs
                   META.json
                   META.yml
+                  Makefile.PL
+                  PLTE.t
+                  PNG.pm
+                  PNG.t
+                  Util.pm
+                  perl-libpng.c
+                  typemap
               /;
 
 my %vars;
@@ -120,6 +120,7 @@ t/bgyn6a16.png
 t/xlfn0g04.png
 t/ccwn2c08.png
 t/cdun2c08.png
+t/saru-fs8.png
 !;
 
 # Other files which aren't made from templates.
@@ -148,6 +149,7 @@ perl-libpng.h
 t/bKGD.t
 t/cHRM.t
 t/pHYs.t
+t/tRNS.t
 !;
 my @mani;
 push @mani, map {"tmpl/$_.tmpl"} @files;

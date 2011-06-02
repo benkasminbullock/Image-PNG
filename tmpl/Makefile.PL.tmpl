@@ -66,11 +66,13 @@ EOF
 
 # A minimal C program to test compilation and running.
 
-my $test_c = <<EOF;
+my $test_c = <<'EOF';
+#include <stdio.h>
 #include "png.h"
 int main ()
 {
    png_uint_32 libpng_vn = png_access_version_number();
+   printf ("IMAGE-PNG LIBPNG VERSION: <<%s>>\n", png_get_libpng_ver (0));
    return 0;
 }
 EOF
