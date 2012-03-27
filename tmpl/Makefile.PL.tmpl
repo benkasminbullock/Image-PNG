@@ -3,6 +3,7 @@ use warnings;
 use ExtUtils::MakeMaker;
 use ExtUtils::Constant;
 
+use 5.008001;
 
 # This Makefile.PL uses $Config{ldflags} and $Config{ccflags} when it
 # tries to compile a small program which links against libpng.
@@ -198,6 +199,7 @@ EOF
 WriteMakefile (
     NAME         => '[% config.base %]',
     VERSION      => '[% config.version %]',
+    ABSTRACT     => '[% config.abstract %]',
     OBJECT       => 'Libpng.o perl-libpng.o',
     LIBS         => $libs,
     INC          => $inc,
@@ -275,7 +277,7 @@ lib/[% config.out_dir %]/Const.pm:      tmpl/Const.pm.tmpl build/strip-constants
 	build/strip-constants.pl
 EOF
 
-}   
+    }   
     return $cfunctions_build;
 }
 

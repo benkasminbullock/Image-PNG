@@ -4,3 +4,4 @@ t/*
 oneoff/*
 .cleanok
 .git
+xt/*

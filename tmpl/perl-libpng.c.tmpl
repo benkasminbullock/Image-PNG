@@ -32,7 +32,7 @@ typedef struct perl_libpng {
     void * scalar_data;
     /* Contains what Perl says the length of the data in "image_data"
        is. */
-    int data_length;
+    unsigned int data_length;
     /* How much of the data in "image_data" we have read. */
     int read_position;
 
@@ -493,16 +493,17 @@ static int
 perl_png_set_text_from_hash (perl_libpng_t * png, png_text * text_out, HV * chunk)
 {
     int compression;
-    char * key;
-    int key_length;
+    unsigned char * key;
+    unsigned int key_length;
 #ifdef PNG_iTXt_SUPPORTED
-    char * language_tag;
-    int language_tag_length;
-    char * translated_key;
+    unsigned char * language_tag;
+    unsigned int language_tag_length;
+    unsigned char * translated_key;
+    unsigned int translated_key_length;
 #endif /* PNG_iTXt_SUPPORTED */
     int is_itxt = 0;
-    char * text;
-    int text_length;
+    unsigned char * text;
+    unsigned int text_length;
     int ok = 1;
 
     MESSAGE ("Putting it into something.");
@@ -546,11 +547,12 @@ perl_png_set_text_from_hash (perl_libpng_t * png, png_text * text_out, HV * chun
         if (! field_sv_ptr) {                                   \
             fprintf (stderr, "Field %s is missing.\n",          \
                      #field);                                   \
-            field = "";                                         \
+            field = (unsigned char *) "";                       \
         }                                                       \
         else {                                                  \
             field_sv = * field_sv_ptr;                          \
-            field = SvPV (field_sv, field ## _length);          \
+            field = (unsigned char *)                           \
+                SvPV (field_sv, field ## _length);              \
         }                                                       \
     }
 
@@ -568,14 +570,15 @@ perl_png_set_text_from_hash (perl_libpng_t * png, png_text * text_out, HV * chun
     if (ok) {
         MESSAGE ("Copying.");
         text_out->compression = compression;
-        text_out->key = key;
-        text_out->text = text;
+        text_out->key = (char *) key;
+        text_out->text = (char *) text;
         text_out->text_length = text_length;
 #ifdef PNG_iTXt_SUPPORTED
         if (is_itxt) {
             FETCH_PV (language_tag);
-            text_out->lang = language_tag;
-            text_out->lang_key = translated_key;
+            FETCH_PV (translated_key);
+            text_out->lang = (char *) language_tag;
+            text_out->lang_key = (char *) translated_key;
         }
 #endif
     }
@@ -720,29 +723,32 @@ perl_png_set_tIME (perl_libpng_t * png, SV * input_time)
     */
     png_time mod_time = {0,1,1,0,0,0};
     SV * ref;
-
-    ref = SvRV(input_time);
-    if (ref && SvTYPE (ref) == SVt_PVHV) {
-        HV * time_hash = (HV *) SvRV (input_time);
-        MESSAGE ("Setting time from a hash.");
+    int time_ok = 0;
+    if (input_time) {
+        ref = SvRV(input_time);
+        if (ref && SvTYPE (ref) == SVt_PVHV) {
+            HV * time_hash = (HV *) SvRV (input_time);
+            MESSAGE ("Setting time from a hash.");
 #define SET_TIME(field) {                                               \
-            SV ** field_sv_ptr = hv_fetch (time_hash, #field,           \
-                                           strlen (#field), 0);         \
-            if (field_sv_ptr) {                                         \
-                SV * field_sv = * field_sv_ptr;                         \
-                MESSAGE ("OK for %s\n", #field);                        \
-                mod_time.field = SvIV (field_sv);                       \
-            }                                                           \
-        }
-        SET_TIME(year);
-        SET_TIME(month);
-        SET_TIME(day);
-        SET_TIME(hour);
-        SET_TIME(minute);
-        SET_TIME(second);
+                SV ** field_sv_ptr = hv_fetch (time_hash, #field,       \
+                                               strlen (#field), 0);     \
+                if (field_sv_ptr) {                                     \
+                    SV * field_sv = * field_sv_ptr;                     \
+                    MESSAGE ("OK for %s\n", #field);                    \
+                    mod_time.field = SvIV (field_sv);                   \
+                }                                                       \
+            }
+            SET_TIME(year);
+            SET_TIME(month);
+            SET_TIME(day);
+            SET_TIME(hour);
+            SET_TIME(minute);
+            SET_TIME(second);
 #undef SET_TIME    
+            time_ok = 1;
+        }
     }
-    else {
+    if (! time_ok) {
         /* There is no valid time argument, so just set it to the time
            now, according to the system clock. */
         time_t now;
@@ -758,7 +764,7 @@ int
 perl_png_sig_cmp (SV * png_header, int start, int num_to_check)
 {
     unsigned char * header;
-    int length;
+    unsigned int length;
     int ret_val;
     header = (unsigned char *) SvPV (png_header, length);
     ret_val = png_sig_cmp (header, start, num_to_check);
@@ -1066,8 +1072,10 @@ perl_png_get_PLTE (perl_libpng_t * png)
 
         MESSAGE ("Palette entry %d\n", i);
         palette_entry = newHV ();
-#define PERL_PNG_STORE_COLOUR(x) hv_store (palette_entry, #x, strlen (#x), \
-                           newSViv (colours[i].x), 0)
+#define PERL_PNG_STORE_COLOUR(x)                        \
+        (void) hv_store (palette_entry,                 \
+                         #x, strlen (#x),               \
+                         newSViv (colours[i].x), 0)
         PERL_PNG_STORE_COLOUR (red);
         PERL_PNG_STORE_COLOUR (green);
         PERL_PNG_STORE_COLOUR (blue);
@@ -1132,7 +1140,7 @@ static HV * perl_png_color_16_to_hv (png_color_16p colour)
     HV * perl_colour;
     perl_colour = newHV ();
 #define PERL_COLOUR(x) \
-    hv_store (perl_colour, #x, strlen (#x), newSViv (colour->x), 0)
+    (void) hv_store (perl_colour, #x, strlen (#x), newSViv (colour->x), 0)
     PERL_COLOUR(index);
     PERL_COLOUR(red);
     PERL_COLOUR(green);
@@ -1289,7 +1297,7 @@ SV * perl_png_get_sBIT (perl_libpng_t * png)
 {
     if (VALID (sBIT)) {
         HV * sig_bit;
-        png_color_8 colours;
+        png_color_8 colours = {0};
         sig_bit = newHV ();
         [% FOR colour IN colours %] HASH_STORE_IV_MEMBER (sig_bit, [% colour %], colours);[% END %]
         return newRV_inc ((SV *) sig_bit);
@@ -1309,8 +1317,8 @@ SV * perl_png_get_oFFs (perl_libpng_t * png)
     if (VALID (oFFs)) {
         HV * offset;
         
-        png_uint_32 x_offset;
-        png_uint_32 y_offset;
+        png_int_32 x_offset;
+        png_int_32 y_offset;
         int unit_type;
         offset = newHV ();
         png_get_oFFs (pngi, & x_offset, & y_offset, & unit_type);
@@ -1369,7 +1377,6 @@ SV * perl_png_get_tRNS_palette (perl_libpng_t * png)
         AV * perl_trans;
         png_bytep png_trans;
         int num_trans;
-        SV ** perl_trans_sv;
         int i;
 
         png_get_tRNS (pngi, & png_trans, & num_trans, 0);
@@ -1417,7 +1424,7 @@ SV * perl_png_get_valid (perl_libpng_t * png)
     perl_valid = newHV ();
     valid = png_get_valid (pngi, 0xFFFFFFFF);
 #define V(x) \
-    hv_store (perl_valid, #x, strlen (#x), newSViv (valid & PNG_INFO_ ## x), 0)
+    (void) hv_store (perl_valid, #x, strlen (#x), newSViv (valid & PNG_INFO_ ## x), 0)
 
 [% FOR chunk IN chunks %][% IF chunk.in_valid %]V([% chunk.name %]);[% END %][% END %]
 
@@ -1479,7 +1486,7 @@ perl_png_get_rows (perl_libpng_t * png)
         row_svs[r] = newSVpvn ((char *) rows[r], rowbytes);
     }
     perl_rows = av_make (height, row_svs);
-    MESSAGE ("There are %u elements in the array.\n", av_len (perl_rows));
+    MESSAGE ("There are %d elements in the array.\n", av_len (perl_rows));
     PERL_PNG_FREE (row_svs);
     return newRV_inc ((SV *) perl_rows);
 }
@@ -1661,10 +1668,12 @@ SV * perl_png_get_unknown_chunks (perl_libpng_t * png)
                                 PERL_PNG_CHUNK_NAME_LENGTH);
                 /* PANIC */
             }
-            name = newSVpvn (png_chunk->name, PERL_PNG_CHUNK_NAME_LENGTH);
-            data = newSVpvn (png_chunk->name, png_chunk->size);
+            name = newSVpvn (((char *) png_chunk->name),
+                             PERL_PNG_CHUNK_NAME_LENGTH);
+            data = newSVpvn (((char *) png_chunk->name),
+                             png_chunk->size);
             location = newSViv (png_chunk->location);
-#define STORE(x) hv_store (perl_chunk, #x, strlen (#x), x, 0);
+#define STORE(x) (void) hv_store (perl_chunk, #x, strlen (#x), x, 0);
             STORE(name);
             STORE(data);
             STORE(location);
@@ -1699,12 +1708,12 @@ void perl_png_set_unknown_chunks (perl_libpng_t * png, AV * chunk_list)
     n_ok_chunks = 0;
     MESSAGE ("OK.");
     for (i = 0; i < n_chunks; i++) {
-        HV * perl_chunk;
-        png_unknown_chunk * png_chunk;
-        char * name;
-        int name_length;
-        char * data;
-        int data_length;
+        HV * perl_chunk = 0;
+        png_unknown_chunk * png_chunk = 0;
+        unsigned char * name;
+        unsigned int name_length;
+        unsigned char * data;
+        unsigned int data_length;
         int location;
 
         MESSAGE ("%d.\n", i);
@@ -1719,7 +1728,8 @@ void perl_png_set_unknown_chunks (perl_libpng_t * png, AV * chunk_list)
                            PERL_PNG_CHUNK_NAME_LENGTH);
             continue;
         }
-        strncpy (png_chunk->name, name, PERL_PNG_CHUNK_NAME_LENGTH);
+        strncpy ((char *) png_chunk->name, (char *) name,
+                 PERL_PNG_CHUNK_NAME_LENGTH);
 
         /* Get the data part of the unknown chunk. */
 
@@ -1771,7 +1781,7 @@ perl_png_set_keep_unknown_chunks (perl_libpng_t * png, int keep,
         SvROK (chunk_list) && 
         SvTYPE (SvRV (chunk_list)) == SVt_PVAV) {
         int num_chunks;
-        char * chunk_list_text;
+        unsigned char * chunk_list_text;
         AV * chunk_list_av;
         int i;
         const int len = (PERL_PNG_CHUNK_NAME_LENGTH + 1);
@@ -1786,7 +1796,7 @@ perl_png_set_keep_unknown_chunks (perl_libpng_t * png, int keep,
         png->memory_gets++;
         for (i = 0; i < num_chunks; i++) {
             const char * chunk_i_name;
-            int chunk_i_length;
+            unsigned int chunk_i_length;
             SV ** chunk_i_sv_ptr;
             int j;
             chunk_i_sv_ptr = av_fetch (chunk_list_av, i, 0);
@@ -1867,8 +1877,8 @@ SV * perl_png_get_cHRM (perl_libpng_t * png)
 [%- FOR key IN chunk_hash.cHRM.fields -%], & [% key %][% END -%]);
         ice = newHV ();
 [% FOR key IN chunk_hash.cHRM.fields -%]
-        hv_store (ice, "[% key %]", strlen ("[% key %]"),
-                   newSVnv ([% key %]), 0);
+        (void) hv_store (ice, "[% key %]", strlen ("[% key %]"),
+                         newSVnv ([% key %]), 0);
 [% END -%]
         return newRV_inc ((SV *) ice);
     }

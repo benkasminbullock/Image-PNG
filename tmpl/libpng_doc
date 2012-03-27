@@ -700,6 +700,8 @@ filter types.
 [% cor(fn="set_filter") %] with the second (unused)
 argument omitted. [% unused %]
 
+=head1 Other chunks
+
 =head2 get_bKGD
 
 Get the bKGD (background) chunk of the image.

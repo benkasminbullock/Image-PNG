@@ -39,9 +39,9 @@
 
 
 #define HASH_STORE_IV(hash,field)                                       \
-    hv_store (hash, #field, strlen (#field), newSViv (field), 0)
+    (void) hv_store (hash, #field, strlen (#field), newSViv (field), 0)
 
 #define HASH_STORE_IV_MEMBER(hash,field,str)                            \
-    hv_store (hash, #field, strlen (#field), newSViv (str.field), 0)
+    (void) hv_store (hash, #field, strlen (#field), newSViv (str.field), 0)
 
 #endif /* HEADER */

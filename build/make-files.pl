@@ -150,6 +150,8 @@ t/bKGD.t
 t/cHRM.t
 t/pHYs.t
 t/tRNS.t
+t/tIME.t
+README
 !;
 my @mani;
 push @mani, map {"tmpl/$_.tmpl"} @files;
@@ -160,7 +162,7 @@ push @mani, 'makeitfile';
 
 my $output = 'MANIFEST';
 if (-f $output) {
-chmod 0644, $output;
+    chmod 0644, $output;
 }
 open my $out, '>', $output;
 for my $file (sort @mani) {
