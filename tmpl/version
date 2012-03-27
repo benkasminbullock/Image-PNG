@@ -1,1 +1,1 @@
-our $VERSION = [% config.version %];
+our $VERSION = '[% config.version %]';
