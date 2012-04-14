@@ -10,6 +10,12 @@
         "directory": ["t", "inc", "tmpl", "build"]
     },
     "resources": {
-        "MailingList": "[% config.MailingList %]"
+        "MailingList": "[% config.MailingList %]",
+        "bugtracker": {
+            "web" : "[% config.rt %]"
+        }
+        "repository": {
+            "url": "[% config.repo %]"
+        }
     }
 }

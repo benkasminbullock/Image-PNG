@@ -7,4 +7,5 @@ year: 2012
 abstract: Read and write PNG files
 license: perl
 MailingList: http://groups.google.com/group/perlimagepng
-rt: https://rt.cpan.org/Public/Dist/Display.html?Name=Image-PNG
+rt: https://github.com/benkasminbullock/Image-PNG/issues
+repo: https://github.com/benkasminbullock/Image-PNG
