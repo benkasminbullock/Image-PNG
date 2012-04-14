@@ -4,7 +4,7 @@ author: Ben Bullock
 author_pause: BKB
 email: bkb@cpan.org
 year: 2012
-abstract: Read and write PNG (Portable Network Graphics) files
+abstract: Read and write PNG files
 license: perl
 MailingList: http://groups.google.com/group/perlimagepng
 rt: https://rt.cpan.org/Public/Dist/Display.html?Name=Image-PNG
