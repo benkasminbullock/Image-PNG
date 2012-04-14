@@ -700,11 +700,10 @@ perl_png_get_tIME (perl_libpng_t * png)
 {
     png_timep mod_time = 0;
     int status;
-    HV * time;
-
-    time = newHV ();
     status = png_get_tIME (pngi, & mod_time);
     if (status && mod_time) {
+        HV * time;
+        time = newHV ();
         perl_png_timep_to_hash (mod_time, time);
         return newRV_inc ((SV *) time);
     }

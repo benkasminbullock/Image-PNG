@@ -13,21 +13,53 @@
 
 =head1 General methods
 
+=head2 new
+
+    my $png = [% config.base %]->new ();
+
+Create a new PNG-file reading or writing object.
+
+Options are
+
+=over
+
+=item read
+
+    my $png = [% config.base %]->new ({read => 'some.png'});
+
+Set the file to read. The file is then read at the time of object
+creation.
+
+=item verbosity
+
+    my $png = [% config.base %]->new ({verbosity => 1});
+
+If C<verbosity> is set to a true value, print verbose messages about
+what the module is doing.
+
+=back
+
 =head2 read_file
 
     $png->read_file ("crazy.png")
         or die "Can't read it: " . $png->error ();
+
+Read the PNG from the file name specified as the argument. This dies
+if there is an error.
 
 =head2 write_file
 
     $png->write_file ("crazy.png")
         or die "Can't write it: " . $png->error ();
 
+Write the PNG to the file name specified as the argument. This dies
+if there is an error.
+
 =head2 data
 
      my $data = $png->data ();
 
-Get the PNG binary data.
+Get the PNG image data as a Perl scalar.
 
 =head2 error
 
@@ -121,7 +153,7 @@ the values of those fields.
     print "The PNG was last modified in $time_ref->{year}.\n";
 
 Get the last modified time of the image. The return value is a hash
-reference containing six fields,
+reference containing the following six fields,
 
 =over
 
@@ -143,8 +175,8 @@ These represent the last modification time of the image. The
 modification time of a PNG file is meant to be in the GMT (UCT) time
 zone so there is no time zone information in this.
 
-If there is no last modification time, a hash reference is returned
-but it doesn't contain any fields.
+If there is no last modification time, the undefined value is returned
+instead of a hash reference.
 
 =head1 FUNCTIONS
 
@@ -191,6 +223,11 @@ L<http://www.libpng.org/pub/png/libpng.html>. See also L</Alien::PNG>.
 [% INCLUDE "other_modules" %]
 
 =head2 About the PNG format
+
+=head3 Wikipedia article
+
+There is L<http://en.wikipedia.org/wiki/Portable_Network_Graphics|a
+good article on the format on Wikipedia>.
 
 =head3 The PNG specification
 

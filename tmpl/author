@@ -29,7 +29,7 @@ they can easily access records of previous discussions.
 
 =head2 CPAN stuff
 
-There is a bug tracker at [% config.rt %].
+There is a bug tracker at L<[% config.rt %]|rt.cpan.org>.
 
 =head1 FOR PROGRAMMERS
 
