@@ -15,8 +15,6 @@ TIN=    tmpl/Libpng.pm.tmpl \
 	tmpl/PLTE.t.tmpl \
 	tmpl/PNG.t.tmpl \
 	tmpl/PNG.pm.tmpl \
-	tmpl/META.json.tmpl \
-	tmpl/META.yml.tmpl \
 	tmpl/Container.pm.tmpl \
 	tmpl/typemap.tmpl \
 	tmpl/Util.pm.tmpl \

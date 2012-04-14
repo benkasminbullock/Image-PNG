@@ -30,8 +30,6 @@ my @files = qw/
                   Libpng.pm
                   Libpng.t
                   Libpng.xs
-                  META.json
-                  META.yml
                   Makefile.PL
                   PLTE.t
                   PNG.pm
