@@ -129,7 +129,6 @@ my @extras = qw!
 my-xs.c
 tmpl/author
 tmpl/config
-tmpl/Const.pm.tmpl
 tmpl/examples_doc
 tmpl/generated
 tmpl/libpng_doc

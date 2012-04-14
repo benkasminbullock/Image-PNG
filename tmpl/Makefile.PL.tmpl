@@ -228,7 +228,13 @@ WriteMakefile (
     INC          => $inc,
     AUTHOR => '[% config.author %] <[% config.email %]>',
     LICENSE => 'perl',
-    NO_META => 1,
+    META_MERGE => {
+        resources => {
+            "MailingList" => "[% config.MailingList %]",
+            "bugtracker" => "[% config.rt %]",
+            "repository" => "[% config.repo %]",
+        },
+    },
 );
 
 my @names = (qw());
