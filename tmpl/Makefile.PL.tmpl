@@ -234,6 +234,9 @@ WriteMakefile (
             "bugtracker" => "[% config.rt %]",
             "repository" => "[% config.repo %]",
         },
+        no_index => {
+            directory => ['tmpl', 'build'],
+        },
     },
 );
 
