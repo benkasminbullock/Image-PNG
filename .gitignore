@@ -28,6 +28,7 @@ lib/Image/PNG.pm
 lib/Image/PNG/Libpng.pm
 lib/Image/PNG/Const.pm
 lib/Image/PNG/Container.pm
+lib/Image/PNG/Util.pm
 
 t/Const.t
 t/Libpng.t
