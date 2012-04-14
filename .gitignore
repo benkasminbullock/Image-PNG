@@ -30,6 +30,10 @@ lib/Image/PNG/Const.pm
 lib/Image/PNG/Container.pm
 lib/Image/PNG/Util.pm
 
+# Distribution files
+
+dists
+
 t/Const.t
 t/Libpng.t
 t/PLTE.t
