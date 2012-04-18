@@ -278,12 +278,9 @@ perl_png_destroy_read_struct (perl_libpng_t * png)
 void
 perl_png_destroy (perl_libpng_t * png)
 {
-    //    printf ("Destroying png %p\n", png);
     if (! png) {
-        //        printf ("Destroy called with a null pointer.\n");
         return;
     }
-    //#    printf ("Destroying %p.\n", png);
     if (png->type == perl_png_write_obj) {
         perl_png_destroy_write_struct (png);
     }
@@ -487,10 +484,12 @@ perl_png_get_text (perl_libpng_t * png)
     }
 }
 
-/* True value if successful. */
+/* Set a PNG text from "chunk". The return value is true if
+   successful. */
 
 static int
-perl_png_set_text_from_hash (perl_libpng_t * png, png_text * text_out, HV * chunk)
+perl_png_set_text_from_hash (perl_libpng_t * png,
+                             png_text * text_out, HV * chunk)
 {
     int compression;
     unsigned char * key;
@@ -504,10 +503,13 @@ perl_png_set_text_from_hash (perl_libpng_t * png, png_text * text_out, HV * chun
     int is_itxt = 0;
     unsigned char * text;
     unsigned int text_length;
+    /* The return value of this function. */
     int ok = 1;
 
     MESSAGE ("Putting it into something.");
+
     /* Check the compression field of the chunk */
+
 #define FETCH_IV(field) {                                       \
         SV * field_sv;                                          \
         SV ** field_sv_ptr = hv_fetch (chunk, #field,           \
@@ -790,7 +792,11 @@ typedef struct {
 }
 scalar_as_image_t;
 
-/* Read some bytes from a Perl scalar into a png->png as requested. */
+/* Read a number of bytes given by "byte_count_to_read" from a Perl
+   scalar into a png->png as requested. This is a callback set by
+   "png_set_read_fn" and used by "png_read_png" to read data from a
+   Perl scalar. The Perl scalar is passed to this function as part of
+   "pngstruct" and retrieved by "png_get_io_ptr". */
 
 static void
 perl_png_scalar_read (png_structp pngstruct,
@@ -812,10 +818,6 @@ perl_png_scalar_read (png_structp pngstruct,
              "Length to read is %d. ",
              png->data_length, png->read_position,
              byte_count_to_read);
-    /*
-    fprintf (stderr, "Reading %d bytes from image length %d at position %d\n",
-             byte_count_to_read, png->data_length, png->read_position);
-    */
     if (png->read_position + byte_count_to_read > png->data_length) {
         /* There was an attempt to read some data from a Perl scalar
            which went beyond the expected end of the scalar in
@@ -863,6 +865,10 @@ perl_png_read_from_scalar (perl_libpng_t * png,
     png_read_png (png->png, png->info, transforms, UNUSED_ZERO_ARG);
 }
 
+/* Write "bytes_to_write" bytes of PNG information into a Perl
+   scalar. The Perl scalar is passed in as part of "png" and retrieved
+   using "png_get_io_ptr". */
+
 static void
 perl_png_scalar_write (png_structp png, png_bytep bytes_to_write,
                        png_size_t byte_count_to_write)
@@ -897,6 +903,8 @@ perl_png_write_to_scalar (perl_libpng_t * png, int transforms)
     return image_data;
 }
 
+/* Write a PNG. */
+
 void
 perl_png_write_png (perl_libpng_t * png, int transforms)
 {
@@ -911,6 +919,8 @@ perl_png_write_png (perl_libpng_t * png, int transforms)
    |_| |_|\___|\__,_|\__,_|\___|_|    */
                                   
 
+
+/* Get the IHDR from a PNG image. */
 
 SV *
 perl_png_get_IHDR (perl_libpng_t * png)
@@ -947,6 +957,9 @@ perl_png_get_IHDR (perl_libpng_t * png)
 
     return newRV_inc ((SV *) IHDR);
 }
+
+/* Set the IHDR of a PNG image from the values specified in a Perl
+   hash, "IHDR". */
 
 void 
 perl_png_set_IHDR (perl_libpng_t * png, HV * IHDR)
@@ -1084,6 +1097,9 @@ perl_png_get_PLTE (perl_libpng_t * png)
     return newRV_inc ((SV *) perl_colours);
 }
 
+/* Set the palette chunk of a PNG image to the palette described in
+   "perl_colors". */
+
 void
 perl_png_set_PLTE (perl_libpng_t * png, AV * perl_colors)
 {
@@ -1174,6 +1190,9 @@ static void perl_png_hv_to_color_16 (HV * perl_colour, png_color_16p colour)
 
 #define VALID(x) png_get_valid (pngi, PNG_INFO_ ## x)
 
+/* Get the background chunk of a PNG image and return it as a hash
+   reference. */
+
 SV * perl_png_get_bKGD (perl_libpng_t * png)
 {
     if (VALID(bKGD)) {
@@ -1196,6 +1215,9 @@ void perl_png_set_bKGD (perl_libpng_t * png, HV * bKGD)
     png_set_bKGD (pngi, & background);
 }
 
+/* Get the pCAL (calibration of pixel values) chunk from a PNG
+   image. This currently does nothing. */
+
 SV * perl_png_get_pCAL (perl_libpng_t * png)
 {
     if (VALID (pCAL)) {
@@ -1206,9 +1228,14 @@ SV * perl_png_get_pCAL (perl_libpng_t * png)
     UNDEF;
 }
 
+/* Set the pCAL (calibration of pixel values) chunk of a PNG
+   image. This currently does nothing. */
+
 void perl_png_set_pCAL (perl_libpng_t * png, HV * pCAL)
 {
 }
+
+/* Get the sPLT chunk of a PNG image. This currently does nothing. */
 
 SV * perl_png_get_sPLT (perl_libpng_t * png)
 {
@@ -1220,9 +1247,13 @@ SV * perl_png_get_sPLT (perl_libpng_t * png)
     UNDEF;
 }
 
+/* Set the sPLT chunk of a PNG image. This currently does nothing. */
+
 void perl_png_set_sPLT (perl_libpng_t * png, HV * sPLT)
 {
 }
+
+/* Get the gAMA of a PNG image. */
 
 SV * perl_png_get_gAMA (perl_libpng_t * png)
 {
@@ -1236,10 +1267,14 @@ SV * perl_png_get_gAMA (perl_libpng_t * png)
     UNDEF;
 }
 
+/* Set the gAMA of a PNG image. */
+
 void perl_png_set_gAMA (perl_libpng_t * png, double gamma)
 {
     png_set_gAMA (pngi, gamma);
 }
+
+/* iCCP does nothign. */
 
 SV * perl_png_get_iCCP (perl_libpng_t * png)
 {
@@ -1250,6 +1285,8 @@ SV * perl_png_get_iCCP (perl_libpng_t * png)
     }
     UNDEF;
 }
+
+/* iCCP does nothign. */
 
 void perl_png_set_iCCP (perl_libpng_t * png, HV * iCCP)
 {
@@ -1328,6 +1365,8 @@ SV * perl_png_get_oFFs (perl_libpng_t * png)
     }
     UNDEF;
 }
+
+/* set oFFs of PNG image. */
  
 void perl_png_set_oFFs (perl_libpng_t * png, HV * oFFs)
 {
@@ -1399,6 +1438,8 @@ SV * perl_png_get_tRNS_palette (perl_libpng_t * png)
     UNDEF;
 }
 
+/* Get the sRGB */
+
 int perl_png_get_sRGB (perl_libpng_t * png)
 {
     /* I'm not sure what to return if there is no valid sRGB value. */
@@ -1410,6 +1451,8 @@ int perl_png_get_sRGB (perl_libpng_t * png)
     }
     return intent;
 }
+
+/* Set the sRGB. */
 
 void perl_png_set_sRGB (perl_libpng_t * png, int sRGB)
 {

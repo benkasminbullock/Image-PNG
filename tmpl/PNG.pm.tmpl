@@ -285,11 +285,13 @@ sub data
     my ($png, $data) = @_;
     if (! $data) {
         # Return the existing data
-    } else {
+    }
+    else {
         # Put $data into the PNG
         if ($png->{data}) {
             carp __PACKAGE__, ": you have asked me to put a scalar value as the PNG data, but I already have PNG data inside me. Please use a fresh object.";
-        } elsif ($png->{read_file_name}) {
+        }
+        elsif ($png->{read_file_name}) {
             carp __PACKAGE__, ": you have asked me to put a scalar value as the PNG data, but I already contain PNG data from a file called '$png->{read_file_name}. Please use a fresh object.";
         }
     }

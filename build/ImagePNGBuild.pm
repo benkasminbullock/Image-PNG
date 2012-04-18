@@ -41,6 +41,9 @@ sub read_config
     return %config;
 }
 
+# Make a list of the functions in the module by reading the XS file
+# and return them as a list reference.
+
 sub get_functions
 {
     my ($config_ref) = @_;
@@ -55,7 +58,6 @@ sub get_functions
         }
     }
     close $input;
-#    print "@functions";
     return \@functions;
 }
 
