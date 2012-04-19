@@ -138,7 +138,6 @@ tmpl/warning
 build/ImagePNGBuild.pm
 build/LibpngInfo.pm
 build/make-files.pl
-Changes
 MANIFEST
 MANIFEST.SKIP
 my-xs.h
