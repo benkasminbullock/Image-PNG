@@ -6,7 +6,7 @@
 L</[% noinfo %]>
 [%- END -%]
 [%-  noinfoxref = BLOCK -%]
-It does not take a second "info" argument. [% noinfo -%]
+It does not take a second "info" argument. See [% xnoinfo -%].
 [%- END -%]
 [% transform_list = BLOCK %]
 =over
