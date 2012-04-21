@@ -755,6 +755,28 @@ See section "4.2.2.2. cHRM Primary chromaticities" of the PNG specification.
 [% cor(fn="set_cHRM") %] with a hash function instead of the C<double>
 arguments.
 
+=head1 META FUNCTIONS
+
+=head2 supports
+
+    if (supports ('iTXt')) {
+        print "Your libpng supports international text.\n";
+    }
+
+This function returns true or false depending on whether the version
+of libpng which this was compiled with supports or does not support a
+particular facility.
+
+The possible arguments to C<supports> are
+
+=over
+
+=item iTXt
+
+Does the libpng support international text?
+
+=back
+
 =head1 EXPORTS
 
 Nothing is exported by default, but all the functions in this module
