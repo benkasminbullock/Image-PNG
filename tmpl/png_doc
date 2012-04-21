@@ -110,7 +110,7 @@ Get the bit depth of the current PNG image.
 
 =head2 interlacing_method
 
-    my $interlacing_method = $png->interlacing_method
+    my $interlacing_method = $png->interlacing_method ();
 
 Get the name of the method of interlacing of the current PNG image.
 
