@@ -226,8 +226,7 @@ L<http://www.libpng.org/pub/png/libpng.html>. See also L</Alien::PNG>.
 
 =head3 Wikipedia article
 
-There is L<http://en.wikipedia.org/wiki/Portable_Network_Graphics|an
-article on the format on Wikipedia>.
+There is L<an article on the format on Wikipedia|http://en.wikipedia.org/wiki/Portable_Network_Graphics>.
 
 =head3 The PNG specification
 
