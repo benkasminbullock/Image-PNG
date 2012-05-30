@@ -26,9 +26,7 @@ HTML=/usr/local/www/data/image-png-libpng.html
 HTML2=/usr/local/www/data/image-png.html
 
 
-all:	start
-	make
-	make test
+all:	$(TOUT)
 
 start:	$(TOUT) Makefile
 
