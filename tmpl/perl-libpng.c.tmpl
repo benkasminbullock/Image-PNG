@@ -50,10 +50,12 @@ typedef struct perl_libpng {
     int raise_undefined : 1;
     /* Print a message on STDERR if something is undefined. */
     int print_undefined : 1;
+    /* Has input/output been initiated? */
+    int init_io_done : 1;
 }
 perl_libpng_t;
 
-typedef perl_libpng_t [% config.base_underscore %]__Libpng__t;
+//typedef perl_libpng_t [% config.base_underscore %]__Libpng__t;
 
 typedef perl_libpng_t * [% config.base_underscore %]__Libpng;
 
@@ -909,6 +911,9 @@ void
 perl_png_write_png (perl_libpng_t * png, int transforms)
 {
     MESSAGE ("Trying to write a PNG.");
+    if (! png->init_io_done) {
+        perl_png_error (png, "Attempt to write PNG without calling init_io");
+    }
     png_write_png (pngi, transforms, UNUSED_ZERO_ARG);
 }
 

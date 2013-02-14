@@ -18,4 +18,3 @@ Image-PNG-[\d\.]+\.tar\.gz
 MYMETA\..*
 makeitfile$
 doc/.*
-

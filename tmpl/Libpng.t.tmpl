@@ -1,7 +1,7 @@
 #line 2 "Libpng.t.tmpl"
 use warnings;
 use strict;
-use Test::More tests => 21;
+use Test::More tests => 22;
 use FindBin;
 use File::Compare;
 BEGIN { use_ok('[% config.base %]::Libpng') };
@@ -137,7 +137,19 @@ eval {
 };
 like ($@, qr/requires 200 rows/, "Produces error for empty \@rows");
 
-
+eval {
+    my $png_no_io_init = [% config.base %]::Libpng::create_write_struct ();
+    [% config.base %]::Libpng::set_IHDR ($png_no_io_init, {
+        width => 1,
+        height => 1,
+        bit_depth => 1,
+        color_type => PNG_COLOR_TYPE_GRAY,
+    });
+    [% config.base %]::Libpng::set_rows ($png_no_io_init, [0]);
+    [% config.base %]::Libpng::write_png ($png_no_io_init);
+};
+like ($@, qr/Attempt to write PNG without calling init_io/,
+      "Produces error on write if no output file has been set");
 
 #done_testing ();
 
