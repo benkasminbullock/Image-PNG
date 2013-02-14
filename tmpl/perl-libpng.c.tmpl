@@ -1595,14 +1595,34 @@ void perl_png_set_rows (perl_libpng_t * png, AV * rows)
     unsigned char ** row_pointers;
     int i;
     int n_rows;
+    png_uint_32 height;
+    png_uint_32 width;
+    int bit_depth;
+
+    /* All of the following are ignored. */
+    int color_type;
+    int interlace_method;
+    int compression_method;
+    int filter_method;
+    /* libpng return value */
+    int status;
+
+    status = png_get_IHDR (pngi, & width, & height,
+                           & bit_depth, & color_type, & interlace_method,
+                           & compression_method, & filter_method);
 
     if (png->row_pointers) {
         /* There was an attempt to set the rows of an image after they
            had already been set. */
         perl_png_error (png, "Row pointers already allocated");
     }
-    /* Need to check that this is the same as the height of the image. */
+    /* Check that this is the same as the height of the image. */
     n_rows = av_len (rows) + 1;
+    if (n_rows != height) {
+        perl_png_error (png,
+                        "array has %d rows but PNG image requires %d rows",
+                        n_rows, height);
+    }
     MESSAGE ("%d rows.\n", n_rows);
     GET_MEMORY (row_pointers, n_rows);
     for (i = 0; i < n_rows; i++) {

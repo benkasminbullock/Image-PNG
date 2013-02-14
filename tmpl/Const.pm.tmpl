@@ -12,6 +12,11 @@ use warnings;
 use strict;
 
 use constant {
+    SUPPORTED => 1,
+    PNG_GAMMA_THRESHOLD_FIXED => 1,
+};
+
+use constant {
 [% FOR macro IN macros -%]
     [% macro.macro %] => [% macro.value %],
 [% END -%]
