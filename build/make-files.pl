@@ -57,9 +57,9 @@ $vars{libpng_diagnostics} = \@libpng_diagnostics;
 # same directory as this script, used to build documentation etc.
 
 template_vars (\%vars);
-for my $x (@{$vars{chunk}{cHRM}{fields}}) {
-    print $x, "\n";
-}
+#for my $x (@{$vars{chunk}{cHRM}{fields}}) {
+#    print $x, "\n";
+#}
 #for my $x (@{$vars{ihdr_fields}}) {
 #    print $x->{name}, "\n";
 #}
@@ -94,7 +94,7 @@ for my $file (@files) {
     }
     push @outputs, $output;
 
-    print "$output\n";
+#    print "$output\n";
 #    print "Processing $template into $output.\n";
     $vars{input} = $template;
     $vars{output} = $output;
@@ -156,15 +156,15 @@ push @mani, @test_pngs;
 push @mani, @extras;
 push @mani, 'makeitfile';
 
-my $output = 'MANIFEST';
-if (-f $output) {
-    chmod 0644, $output;
-}
-open my $out, '>', $output;
-for my $file (sort @mani) {
-    print $out "$file\n";
-}
-close $out;
-chmod 0444, $output;
+# my $output = 'MANIFEST';
+# if (-f $output) {
+#     chmod 0644, $output;
+# }
+# open my $out, '>', $output;
+# for my $file (sort @mani) {
+#     print $out "$file\n";
+# }
+# close $out;
+# chmod 0444, $output;
 exit;
 

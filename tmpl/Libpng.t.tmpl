@@ -1,12 +1,13 @@
 #line 2 "Libpng.t.tmpl"
 use warnings;
 use strict;
-use Test::More tests => 20;
+use Test::More tests => 21;
 use FindBin;
 use File::Compare;
 BEGIN { use_ok('[% config.base %]::Libpng') };
 use [% config.base %]::Libpng;
 use utf8;
+use [% config.base %]::Const ':all';
 
 my $builder = Test::More->builder;
 
@@ -122,6 +123,21 @@ eval {
 };
 ok ($@, "Error reading bad PNG causes croak (not core dump)");
 ok ($@ =~ /libpng error/, "Found string 'libpng error' in error message.");
+
+eval {
+    my $png_no_rows = [% config.base %]::Libpng::create_write_struct ();
+    [% config.base %]::Libpng::set_IHDR ($png_no_rows, {
+        width => 200,
+        height => 200,
+        bit_depth => 1,
+        color_type => PNG_COLOR_TYPE_GRAY,
+    });
+    my @rows;
+    [% config.base %]::Libpng::set_rows ($png_no_rows, \@rows);
+};
+like ($@, qr/requires 200 rows/, "Produces error for empty \@rows");
+
+
 
 #done_testing ();
 
