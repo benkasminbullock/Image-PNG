@@ -12,3 +12,10 @@ build/.*
 .*\.bak$
 ^build\.pl$
 ^.*\.bs$
+tmpl/.*
+Image-PNG-[\d\.]+
+Image-PNG-[\d\.]+\.tar\.gz
+MYMETA\..*
+makeitfile$
+doc/.*
+
