@@ -26,6 +26,7 @@ Makefile.PL
 perl-libpng.c
 lib/Image/PNG.pm
 lib/Image/PNG/Libpng.pm
+lib/Image/PNG/Libpng.pod
 lib/Image/PNG/Const.pm
 lib/Image/PNG/Container.pm
 lib/Image/PNG/Util.pm
@@ -55,3 +56,4 @@ typemap
 
 MANIFEST
 
+const-c.inc
