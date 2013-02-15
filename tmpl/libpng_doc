@@ -51,10 +51,10 @@ This function corresponds to C<png_[% fn %]>
      use [% config.base %]::Libpng;
      my $png = [% config.base %]::Libpng::create_read_struct ();
      open my $file, '<:raw', 'nice.png';
-     [% config.base %]::Libpng::init_io ($png, $file);
-     [% config.base %]::Libpng::read_png ($png);
+     $png->init_io ($file);
+     $png->read_png ();
      close $file;
-     [% config.base %]::Libpng::destroy_read_struct ($png);
+     $png->destroy_read_struct ();
 
 [% config.base %]::Libpng enables Perl to use the "libpng" library for
 reading and writing files in the PNG (Portable Network Graphics)
@@ -96,7 +96,7 @@ Perl's error reporting.
 
 =head2 destroy_read_struct
 
-     destroy_read_struct ($png);
+     $png->destroy_read_struct ();
 
 This frees the memory associated with C<$png>. 
 
@@ -105,7 +105,7 @@ info and end_info arguments. See [% xnoinfo %].
 
 =head2 destroy_write_struct
 
-     destroy_write_struct ($png);
+     $png->destroy_write_struct ();
 
 This frees the memory associated with C<$png>.
 
@@ -116,7 +116,7 @@ This frees the memory associated with C<$png>.
 =head2 init_io
 
      open my $file, "<", 'nice.png';
-     init_io ($png, $file);
+     $png->init_io ($file);
 
 Set the file which C<$png> reads or writes to C<$file>. C<$file> must
 be an already-opened Perl file handle. If C<$png> was created with
@@ -124,9 +124,9 @@ L<create_write_struct>, C<$file> must be opened for writing. If
 C<$png> was created with L<create_read_struct>, C<$file> must be open
 for reading.
 
-Since PNG files are binary files, it's safest to specify the "raw"
-pragma or use "binmode" with the file in order to override any default
-text file encoding which Perl might be using:
+Since PNG files are binary files, it is safest to specify the "raw"
+pragma or use "binmode" with the file to override any default text
+file encoding which Perl might be using:
 
      open my $file, ">:raw", 'output.png';
 
@@ -141,7 +141,7 @@ file handle substituting for the C C<FILE *>.
 =head2 read_from_scalar
 
      my $png = create_read_struct ();
-     read_from_scalar ($png, $string);
+     $png->read_from_scalar ($string);
 
 This subroutine sets the image data of C<$png> to be the contents of a
 Perl scalar variable C<$string>. [% rfirstpng %] It reads in all the
@@ -153,7 +153,7 @@ This is useful when image data is stored in a Perl scalar. For example
      my $image_data = get 'http://www.example.com/example.png';
      # Now $image_data contains the PNG file
      my $png = create_read_struct ();
-     read_from_scalar ($png, $image_data);
+     $png->read_from_scalar ($image_data);
      # Now $png contains the PNG information from the image.
 
 [% libpng %]
@@ -169,12 +169,12 @@ See also L</Input/output manipulation functions>.
 
 =head2 write_to_scalar
 
-    my $image_data = write_to_scalar ($png);
+    my $image_data = $png->write_to_scalar ();
 
 This writes the PNG image data in C<$png> into a Perl scalar. So, for
 example,
 
-    my $img = write_to_scalar ($png);
+    my $img = $png->write_to_scalar ();
     open my $output, ">:raw", "test-write-scalar.png";
     print $output $img;
     close $output;
@@ -198,13 +198,13 @@ See also L</Input/output manipulation functions>.
 
 =head2 read_png
 
-     read_png ($png);
+     $png->read_png ();
 
-Read the entire PNG file. You can provide a second argument containing
-transformations to apply to the image:
+Read the entire PNG file into memory. You can provide an argument
+containing transformations to apply to the image:
 
      use [% config.base %]::Const qw/PNG_TRANSFORM_STRIP_ALPHA/;
-     read_png ($png, PNG_TRANSFORM_STRIP_ALPHA);
+     $png->read_png (PNG_TRANSFORM_STRIP_ALPHA);
 
 In the absence of any third argument, the default value of
 C<PNG_TRANSFORM_IDENTITY> is applied. The possible transformations
@@ -220,21 +220,21 @@ need to be supplied. [% unused %]
 
 =head2 write_png
 
-    write_png ($png);
+    $png->write_png ();
 
-This writes the PNG to the file stream. Before using this, open a file
-for writing and set it up with L</init_io>. For example,
+This writes the PNG to the file stream which was associated with it
+using L</init_io>. For example,
 
     open my $output, ">:raw", 'out.png';
-    init_io ($png, $output);
-    write_png ($png);
+    $png->init_io ($output);
+    $png->write_png ();
     close $output;
 
-There is an optional second argument consisting of transformations to
-apply to the PNG image before writing it:
+An optional argument consists of transformations to apply to the PNG
+image before writing it:
 
     use [% config.base %]::Const qw/PNG_TRANSFORM_STRIP_ALPHA/;
-    write_png ($png, PNG_TRANSFORM_STRIP_ALPHA);
+    $png->write_png (PNG_TRANSFORM_STRIP_ALPHA);
 
 The transformations which can be applied are as follows:
 
@@ -250,7 +250,6 @@ read and write png functions.)
 
 See [% spec("11IHDR") %] for information on the PNG standards for
 the image header.
-
 
 =head2 sig_cmp
 
@@ -274,7 +273,7 @@ to be zero, and the number of bytes to check is assumed to be eight.
 
 =head2 get_valid
 
-    my $valid = get_valid ($png);
+    my $valid = $png->get_valid ();
     if ($valid->{oFFs}) {
         print "The PNG has valid screen offsets.\n";
     }
@@ -295,7 +294,7 @@ return value is a hash containing a key for each possible chunk.
 
 =head2 get_IHDR
 
-    my $IHDR = get_IHDR ($png);
+    my $IHDR = $png->get_IHDR ();
 
 Read the IHDR information from the PNG file. The return value is a
 reference to a hash.
@@ -322,7 +321,7 @@ This can take the values [% field.retvalues.join (", ") %].
 
 So, for example, to get the width and height of an image,
 
-    my $ihdr = get_IHDR ($png);
+    my $ihdr = $png->get_IHDR ();
     printf "Your image is %d x %d\n", $ihdr->{width}, $ihdr->{height};
 
 [% cor(fn="get_IHDR") %], with a single Perl hash reference
@@ -332,7 +331,7 @@ used instead of the several pointers to integers used in libpng.
 
     my $ihdr = { width => 10, height => 10, bit_depth => 8,
                  color_type => PNG_COLOR_TYPE_RGB };
-    set_IHDR ($png, $ihdr);
+    $png->set_IHDR ($ihdr);
 
 Set the IHDR chunk (the image header) of the PNG image. 
 
@@ -370,7 +369,7 @@ ignores them. [% unused %]
 =head2 get_color_type
 
     my $color_type;
-    [% config.base %]::Libpng::get_color_type ($png, \$color_type);
+    $png->get_color_type (\$color_type);
 
 This returns an integer value. If you want to get a name for the
 colour type, use L</color_type_name>.
@@ -384,7 +383,7 @@ time stamp information.
 
 =head2 get_tIME
 
-    my $time = [% config.base %]::Libpng::get_tIME ($png);
+    my $time = $png->get_tIME ();
     if ($time && $time->{year} < 2005) {
         warn "Your PNG is now getting old. Don't forget to oil it to prevent rust.";
     }
@@ -392,7 +391,10 @@ time stamp information.
 This subroutine gets the modification time value of the PNG image and
 puts it into fields labelled "year", "month", "day", "hour", "minute"
 and "second" of the hash reference given as the third argument. If
-there is no modification time it returns an undefined value.
+there is no modification time it returns an undefined value. Note that
+PNG images are not required to contain a modification time, and that
+this modification time is not the same thing as the modification time
+of the PNG file itself.
 
 [% cor(fn="get_tIME") %], with a Perl hash reference
 substituted for the C struct C<png_timep> used in libpng.
@@ -400,14 +402,14 @@ substituted for the C struct C<png_timep> used in libpng.
 =head2 set_tIME
 
     # Set the time to "now"
-    set_tIME ($png);
+    $png->set_tIME ();
     # Set the time
-    set_tIME ($png, {year => 1999, month => 12});
+    $png->set_tIME ({year => 1999, month => 12});
 
 Set the modification time of the PNG to the hash value given by the
-second argument. If the second argument is omitted, the time is set to
-the current time. If any of year, month, day, hour, minute or second
-is omitted, these are set to zero.
+argument. If the argument is omitted, the time is set to the current
+time. If any of year, month, day, hour, minute or second is omitted,
+these are set to zero.
 
 [% cor(fn="set_tIME") %], with a Perl hash reference
 substituted for the C struct C<png_timep> used in libpng.
@@ -419,7 +421,7 @@ text information.
 
 =head2 get_text
 
-    my $text_chunks = [% config.base %]::Libpng::get_text ($png);
+    my $text_chunks = $png->get_text ();
 
 This subroutine gets all the text chunks in the PNG image and returns
 them as an array reference. Each element of the array represents one
@@ -441,13 +443,14 @@ references substituted for the C array of structs used in libpng.
 
 =head2 set_text
 
-    set_text ($png, $text_chunks);
+    $png->set_text ($text_chunks);
 
 This sets the text chunks in an array reference C<$text_chunks>. [%
-wfirstarg %]. If you call it more than once, the chunks are appended
-to the existing ones rather than replacing them.
+wfirstarg %]. If it is called more than once, the chunks are not
+overwritten but appended to the existing ones. (This behaviour is
+copied from libpng itself.)
 
-    set_text ($png, [{compression => PNG_TEXT_COMPRESSION_NONE,
+    $png->set_text ([{compression => PNG_TEXT_COMPRESSION_NONE,
                       keyword => "Copyright",
                       text => "Copyright (C) 1997 The Dukes of Hazzard",
               }]);
@@ -459,26 +462,25 @@ to the existing ones rather than replacing them.
 =head2 set_keep_unknown_chunks
 
     use Image::PNG::Const 'PNG_HANDLE_CHUNK_ALWAYS';
-    set_keep_unknown_chunks ($png, PNG_HANDLE_CHUNK_ALWAYS);
+    $png->set_keep_unknown_chunks (PNG_HANDLE_CHUNK_ALWAYS);
 
 Tell libpng not to discard unknown chunks when reading the file.
 
 =head2 get_unknown_chunks
 
-    my $private_chunks = get_unknown_chunks ($png);
+    my $private_chunks = $png->get_unknown_chunks ();
     # Get some data from a private chunk
     my $chunk_three_data = $private_chunks->[3]->{data};
     # Get the size of the data
     print length $chunk_three_data;
 
-This gets all of the private chunks from the image. You need to call
+This gets all of the private chunks from the image. The return value
+is an array reference containing hash references. If there are no
+private chunks, this returns an undefined value. There is one element
+of the array for each chunk member. It is necessary to call
 L</set_keep_unknown_chunks> with an appropriate value before reading
 the file, otherwise libpng discards unknown chunks when reading the
 file.
-
-The return value is an array reference containing hash references. If
-there are no private chunks, this returns an undefined value. There is
-one element of the array for each chunk member.
 
 Each member hash reference has the following keys:
 
@@ -497,7 +499,7 @@ The "size" field of the PNG structure is not stored, because the
 
 =head2 set_unknown_chunks
 
-    set_unknown_chunks ($png, $private_chunks);
+    $png->set_unknown_chunks ($private_chunks);
 
 [% cor(fn="set_unknown_chunks") %]
 
@@ -545,9 +547,8 @@ if the compression method is unknown.
 
 =back
 
-For some reason the compression field is also used to store the
-information about whether the text is "international text" in UTF-8 or
-not.
+The compression field is also used to store the information about
+whether the text is "international text" in UTF-8 or not.
 
 [% libpng %]
 
@@ -586,7 +587,7 @@ the palette chunk.
 
 =head2 get_PLTE
 
-     my $colours = [% config.base %]::Libpng::get_PLTE ($png);
+     my $colours = $png->get_PLTE ();
      # Get the green value of the twentieth entry in the palette.
      my $green = $colours->[20]->{green};
 
@@ -600,7 +601,7 @@ A PNG image may or may not contain a palette. To check whether the
 image contains a palette, use something of the following form:
 
      use [% config.base %]::Const ':all';
-     my $color_type = [% config.base %]::Libpng::get_color_type ($png);
+     my $color_type = $png->get_color_type ();
      if ($color_type == PNG_COLOR_TYPE_PALETTE) {
          # The PNG uses a palette.
      }
@@ -612,16 +613,15 @@ not indicate that. To check for that case, use L</get_valid>.
 
 =head2 set_PLTE
 
-    set_PLTE ($png, $palette);
+    $png->set_PLTE ($palette);
 
-Set the palette of C<$png>. [% wfirstpng %] The second argument is an
-array reference containing hash references. There is one hash
-reference for each palette entry. The hash references contain three
-fields, red, green, and blue, corresponding to the pixel value for
-that palette entry. Other values in the hash references are
-ignored. For example,
+Set the palette of C<$png>. The argument is an array reference
+containing hash references. There is one hash reference for each
+palette entry. The hash references contain three fields, red, green,
+and blue, corresponding to the pixel value for that palette
+entry. Other values in the hash references are ignored. For example,
 
-    set_PLTE ($png, [{red => 1, green => 99, blue => 0x10},
+    $png->set_PLTE ([{red => 1, green => 99, blue => 0x10},
                      {red => 0xFF, green => 0xFF, blue => 0xFF}]);
 
 creates a palette with two entries in C<$png>.
@@ -632,7 +632,7 @@ creates a palette with two entries in C<$png>.
 
 =head2 get_rows
 
-    my $rows = [% config.base %]::Libpng::get_rows ($png);
+    my $rows = $png->get_rows ();
     my $pixel = substr ($rows->[10], 20, 1);
 
 This returns the rows of the PNG image, after uncompressing and
@@ -652,7 +652,7 @@ extra zero byte at the end.
 
 =head2 set_rows
 
-     set_rows ($png, \@rows);
+    $png->set_rows (\@rows);
 
 Set the rows of data to be written in to the PNG to C<@rows>. C<@rows>
 needs to contain at least the same number of rows of data as the
@@ -669,7 +669,7 @@ in order to prevent problems occuring.
 
 =head2 get_rowbytes
 
-    my $bytes_in_a_row = get_rowbytes ($png);
+    my $bytes_in_a_row = $png->get_rowbytes ();
 
 [% cor(fn="get_rowbytes") %].
 
@@ -678,7 +678,7 @@ in order to prevent problems occuring.
 =head2 set_filter
 
     use Image::PNG::Const 'PNG_FILTER_NONE';
-    set_filter ($png, PNG_FILTER_NONE);
+    $png->set_filter (PNG_FILTER_NONE);
 
 This sets the filters which are allowed to be used for writing a PNG
 image. The possible values are
