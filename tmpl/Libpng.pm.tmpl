@@ -10,6 +10,7 @@ use Carp;
 [% FOR function IN functions -%]
 	[% function %]
 [% END -%]
+read_file
 /;
 
 %EXPORT_TAGS = (
@@ -22,11 +23,13 @@ XSLoader::load('[% config.base %]', $VERSION);
 
 sub read_file
 {
-    my ($png, $file_name) = @_;
+    my ($file_name) = @_;
+    my $png = create_read_struct ();
     open my $in, "<:raw", $file_name or croak $!;
     $png->init_io ($in);
     $png->read_png ();
     close $in or croak $!;
+    return $png;
 }
 
 sub write_file
