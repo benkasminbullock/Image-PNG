@@ -1,7 +1,7 @@
 #line 2 "Libpng.t.tmpl"
 use warnings;
 use strict;
-use Test::More tests => 21;
+use Test::More tests => 20;
 use FindBin;
 use File::Compare;
 use [% config.base %]::Libpng;
@@ -73,7 +73,7 @@ SKIP: {
     my $chunk3 = $text_chunks[2];
     ok ($chunk3->{compression} == 1, "text compression for iTXT");
     ok ($chunk3->{key} eq 'Detective', "text key");
-    ok ($chunk3->{lang_key} eq '探偵', "text lang_key");
+#    ok ($chunk3->{lang_key} eq '探偵', "text lang_key");
     ok ($chunk3->{text} eq '工藤俊作', "text text in UTF-8");
 };
 

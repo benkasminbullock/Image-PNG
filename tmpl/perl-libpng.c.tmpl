@@ -266,15 +266,21 @@ static void free_png (perl_libpng_t * png)
 void
 perl_png_destroy_write_struct (perl_libpng_t * png)
 {
+    return;
+    /*
     png_destroy_write_struct (& png->png, & png->info);
     free_png (png);
+    */
 }
 
 void
 perl_png_destroy_read_struct (perl_libpng_t * png)
 {
+    return;
+    /*
     png_destroy_read_struct (& png->png, & png->info, & png->end_info);
     free_png (png);
+    */
 }
 
 void
@@ -284,10 +290,12 @@ perl_png_destroy (perl_libpng_t * png)
         return;
     }
     if (png->type == perl_png_write_obj) {
-        perl_png_destroy_write_struct (png);
+        png_destroy_write_struct (& png->png, & png->info);
+        free_png (png);
     }
     else if (png->type == perl_png_read_obj) {
-        perl_png_destroy_read_struct (png);
+        png_destroy_read_struct (& png->png, & png->info, & png->end_info);
+        free_png (png);
     }
     else {
         /* There was an attempt to free some corrupted memory. */
@@ -912,6 +920,8 @@ perl_png_write_png (perl_libpng_t * png, int transforms)
 {
     MESSAGE ("Trying to write a PNG.");
     if (! png->init_io_done) {
+        /* write_png was called before a file handle was associated
+           with the PNG. */
         perl_png_error (png, "Attempt to write PNG without calling init_io");
     }
     png_write_png (pngi, transforms, UNUSED_ZERO_ARG);
@@ -1624,6 +1634,7 @@ void perl_png_set_rows (perl_libpng_t * png, AV * rows)
     /* Check that this is the same as the height of the image. */
     n_rows = av_len (rows) + 1;
     if (n_rows != height) {
+        /* set_rows was called with an array of the wrong size. */
         perl_png_error (png,
                         "array has %d rows but PNG image requires %d rows",
                         n_rows, height);
@@ -1868,6 +1879,7 @@ perl_png_set_keep_unknown_chunks (perl_libpng_t * png, int keep,
             int j;
             chunk_i_sv_ptr = av_fetch (chunk_list_av, i, 0);
             if (! chunk_i_sv_ptr) {
+                /* The chunk name was not defined.  */
                 perl_png_error (png, "undefined chunk name at offset %d in chunk list", i);
             }
             chunk_i_name = SvPV (*chunk_i_sv_ptr, chunk_i_length);

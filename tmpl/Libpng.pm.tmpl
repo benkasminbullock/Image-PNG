@@ -4,6 +4,7 @@
 package [% config.base %]::Libpng;
 require Exporter;
 require DynaLoader;
+use Carp;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw/
 [% FOR function IN functions -%]
@@ -19,10 +20,25 @@ require XSLoader;
 [% INCLUDE version %]
 XSLoader::load('[% config.base %]', $VERSION);
 
+sub read_file
+{
+    my ($png, $file_name) = @_;
+    open my $in, "<:raw", $file_name or croak $!;
+    $png->init_io ($in);
+    $png->read_png ();
+    close $in or croak $!;
+}
+
+sub write_file
+{
+    my ($png, $file_name) = @_;
+    open my $in, ">:raw", $file_name or croak $!;
+    $png->init_io ($in);
+    $png->write_png ();
+    close $in or croak $!;
+}
+
 1;
-
-[% INCLUDE libpng_doc %]
-
 
 # Local Variables:
 # mode: perl

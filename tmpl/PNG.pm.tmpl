@@ -77,8 +77,6 @@ sub new
     my ($package, $options) = @_;
     my $png = {};
     bless $png;
-    # Set the read data to empty.
-    $png->{read} = undef;
     # The marker "error_string" contains the most recent error.
     $png->{error_string} = '';
     if ($options && ref $options eq 'HASH') {
@@ -254,8 +252,8 @@ sub write_set
     $png->{write}->{$key} = $value;
 }
 
-# Initialize the object $png for writing (get the stupid libpng things
-# we need to write an image, set a flag "write_ok" in the image.).
+# Initialize the object $png for writing (get the libpng things we
+# need to write an image, set a flag "write_ok" in the image.).
 
 sub init_write
 {
@@ -450,17 +448,6 @@ sub time
         return undef;
     }
     return [% config.base %]::Libpng::get_tIME ($png->{read}->{png});
-}
-
-# We need to free the memory associated with the C structs allocated
-# inside libpng, so this class has a DESTROY method.
-
-sub DESTROY
-{
-    my ($png) = @_;
-    if ($png->{verbose}) {
-        print "Freeing the memory of a PNG object.\n";
-    }
 }
 
 # The text segment of the PNG should probably be an object in its own

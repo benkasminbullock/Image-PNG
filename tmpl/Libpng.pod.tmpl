@@ -54,7 +54,6 @@ This function corresponds to C<png_[% fn %]>
      $png->init_io ($file);
      $png->read_png ();
      close $file;
-     $png->destroy_read_struct ();
 
 [% config.base %]::Libpng enables Perl to use the "libpng" library for
 reading and writing files in the PNG (Portable Network Graphics)
@@ -93,23 +92,6 @@ Create a structure for writing a PNG.
 [% cor(fn="create_write_struct") %] plus C<create_info_struct> (see [%
 xnoinfo %])  with the error and warning handler variables set up to use
 Perl's error reporting.
-
-=head2 destroy_read_struct
-
-     $png->destroy_read_struct ();
-
-This frees the memory associated with C<$png>. 
-
-[% cor(fn="destroy_read_struct") %], without the
-info and end_info arguments. See [% xnoinfo %].
-
-=head2 destroy_write_struct
-
-     $png->destroy_write_struct ();
-
-This frees the memory associated with C<$png>.
-
-[% cor(fn="destroy_write_struct") %].
 
 =head1 Input and output
 
@@ -718,6 +700,8 @@ C<png_color> struct.
 
 =head2 get_cHRM
 
+    my %cHRM = $png->get_cHRM ();
+
 Get the cHRM chunk as a hash.
 
 The keys of the hash are
@@ -737,6 +721,8 @@ arguments. The hash key names correspond to the names of the C<double>
 arguments in libpng.
 
 =head2 set_cHRM
+
+    $png->set_cHRM (\%cHRM);
 
 Set the cHRM chunk from a hash.
 
@@ -832,6 +818,17 @@ some of the functions don't indicate errors but fail silently. Some of
 the functions which use the return value to indicate an error use a
 non-zero value to indicate an error, and some of them use a zero value
 to indicate an error.
+
+=head2 No destructors
+
+Freeing the memory allocated by L</create_read_struct> and
+L</create_write_struct> is automatically handled by Perl.
+
+Older versions of this module (pre-0.18) had functions called
+C<destroy_read_struct> and C<destroy_write_struct> corresponding to
+the functions with similar names in libpng. From version 0.18, these
+functions still exist, but they no longer do anything. The memory
+freeing is now handled by Perl automatically.
 
 =head2 Other unimplemented parts of libpng
 

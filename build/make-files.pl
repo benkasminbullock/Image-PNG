@@ -28,6 +28,7 @@ my @files = qw/
                   Const.t
                   Container.pm
                   Libpng.pm
+                  Libpng.pod
                   Libpng.t
                   Libpng.xs
                   Makefile.PL

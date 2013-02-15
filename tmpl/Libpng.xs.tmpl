@@ -318,6 +318,14 @@ void perl_png_set_strip_16 (Png)
         perl_png_set_strip_16 (Png);
         OUTPUT: 
 
+void perl_png_DESTROY (Png)
+        [% config.base %]::Libpng Png
+	CODE:
+        if (Png) {
+        	perl_png_destroy (Png);
+	}
+	OUTPUT:
+
 [%- FOR chunk IN chunks %]
 [%- IF chunk.auto_type %]
 SV * perl_png_get_[% chunk.name %] (Png)

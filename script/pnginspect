@@ -1,0 +1,38 @@
+#!/home/ben/software/install/bin/perl
+use warnings;
+use strict;
+use Image::PNG::Libpng ':all';
+binmode STDOUT, ":utf8";
+
+for my $file (@ARGV) {
+    if (! -f $file) {
+        warn "Cannot find a file called '$file', skipping.\n";
+        next;
+    }
+    my $png = create_read_struct ();
+    open my $in, "<:raw", $file or die $!;
+    $png->init_io ($in);
+    $png->read_png ();
+    my $ihdr = $png->get_IHDR ();
+    for my $k (keys %$ihdr) {
+        print "$k: $ihdr->{$k}\n";
+    }
+    my $text = $png->get_text ();
+    if ($text) {
+        for my $t (@$text) {
+            print "TEXT:\n";
+            for my $k (keys %$t) {
+                my $v = $t->{$k};
+                if (! defined $v) {
+                    $v = 'undefined';
+                }
+                print "$k: $v\n";
+            }
+            print "\n";
+        }
+    }
+}
+
+# Local variables:
+# mode: perl
+# End:

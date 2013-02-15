@@ -90,19 +90,6 @@ sub png
     return $object->{png};
 }
 
-# Free the memory associated with the object which this contains.
-
-sub DESTROY
-{
-    my ($object) = @_;
-    if ($object->{read_only}) {
-        [% config.base %]::Libpng::destroy_read_struct ($object->{png});
-    }
-    else {
-        [% config.base %]::Libpng::destroy_write_struct ($object->{png});
-    }
-}
-
 1;
 
 # Local Variables:

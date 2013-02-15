@@ -2,10 +2,10 @@ LIBPNGPM=lib/Image/PNG/Libpng.pm
 PNGPM=lib/Image/PNG.pm
 
 TOUT=lib/Image/PNG.pm lib/Image/PNG/Container.pm \
-	$(LIBPNGPM) perl-libpng.c Libpng.xs \
+	$(LIBPNGPM) perl-libpng.c Libpng.xs lib/Image/PNG/Libpng.pod \
 	Makefile.PL META.json META.yml typemap t/PLTE.t
 TIN=    tmpl/Libpng.pm.tmpl \
-	tmpl/libpng_doc \
+	tmpl/Libpng.pod.tmpl \
 	build/LibpngInfo.pm \
 	tmpl/author tmpl/config \
 	tmpl/perl-libpng.c.tmpl \
