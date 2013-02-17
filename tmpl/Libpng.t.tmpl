@@ -68,12 +68,11 @@ ok ($chunk1->{key} eq 'Title', "text key");
 ok ($chunk1->{text} eq 'Mona Lisa', "text text");
 
 SKIP: {
-    skip "Your libpng does not support iTXt", 4
+    skip "Your libpng does not support iTXt", 3
         unless ([% config.base %]::Libpng::supports ('iTXt'));
     my $chunk3 = $text_chunks[2];
     ok ($chunk3->{compression} == 1, "text compression for iTXT");
     ok ($chunk3->{key} eq 'Detective', "text key");
-#    ok ($chunk3->{lang_key} eq '探偵', "text lang_key");
     ok ($chunk3->{text} eq '工藤俊作', "text text in UTF-8");
 };
 
