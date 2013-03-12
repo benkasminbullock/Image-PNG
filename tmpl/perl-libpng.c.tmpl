@@ -179,11 +179,11 @@ perl_png_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
 
 /* Get memory using the following in order to keep count of the number
    of objects in use at the end of execution, to ensure that there are
-   no memory leaks. All allocation is done via "calloc" rather than
-   "malloc". */
+   no memory leaks. All allocation is done via Newxz ("calloc") rather
+   than "malloc". */
 
-#define GET_MEMORY(thing, number) {                                     \
-        thing = calloc (number, sizeof (*thing));                       \
+#define GET_MEMORY(thing, number, type) {				\
+        Newxz (thing, number, type);					\
         if (! thing) {                                                  \
             /* A request for more memory was refused. The first two
                parameters are the file name and line number of where
@@ -200,14 +200,14 @@ perl_png_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
 
 #define PERL_PNG_FREE(thing) {                  \
         png->memory_gets--;                     \
-        free (thing);                           \
+        Safefree (thing);			\
     }
 
 static perl_libpng_t *
 perl_png_allocate ()
 {
     perl_libpng_t * png;
-    GET_MEMORY (png, 1);
+    GET_MEMORY (png, 1, perl_libpng_t);
     return png;
 }
 
@@ -260,7 +260,7 @@ static void free_png (perl_libpng_t * png)
                        "allocated pieces of memory which have not "
                        "been freed.\n", png->memory_gets - 1);
     }
-    free (png);
+    Safefree (png);
 }
 
 void
@@ -620,7 +620,7 @@ perl_png_set_text (perl_libpng_t * png, AV * text_chunks)
         /* Complain to the user */
         return;
     }
-    GET_MEMORY (png_texts, num_text);
+    GET_MEMORY (png_texts, num_text, png_text);
     for (i = 0; i < num_text; i++) {
         int ok = 0;
         SV ** chunk_pointer;
@@ -902,7 +902,7 @@ perl_png_write_to_scalar (perl_libpng_t * png, int transforms)
     scalar_as_image_t * si;
     SV * image_data;
 
-    GET_MEMORY (si, 1);
+    GET_MEMORY (si, 1, scalar_as_image_t);
     MESSAGE ("Setting up the image.");
     /* Set the writer for png->png to our function. */
     png_set_write_fn (png->png, si, perl_png_scalar_write,
@@ -1129,7 +1129,7 @@ perl_png_set_PLTE (perl_libpng_t * png, AV * perl_colors)
     }
     MESSAGE ("There are %d colours in the palette.\n", n_colors);
 
-    GET_MEMORY (colors, n_colors);
+    GET_MEMORY (colors, n_colors, png_color);
 
     /* Put the colours from Perl into the libpng structure. */
 
@@ -1537,7 +1537,7 @@ perl_png_get_rows (perl_libpng_t * png)
 
     /* Create Perl stuff to put the row info into. */
 
-    GET_MEMORY (row_svs, height);
+    GET_MEMORY (row_svs, height, SV *);
     MESSAGE ("Making %d scalars.\n", height);
     for (r = 0; r < height; r++) {
         row_svs[r] = newSVpvn ((char *) rows[r], rowbytes);
@@ -1563,8 +1563,8 @@ perl_png_read_image (perl_libpng_t * png)
         /* The image we are trying to read has zero height. */
         perl_png_error (png, "Image has zero height");
     }
-    GET_MEMORY (png->row_pointers, n_rows);
-    png->image_data = malloc (rowbytes * n_rows);
+    GET_MEMORY (png->row_pointers, n_rows, png_bytep);
+    Newx (png->image_data, rowbytes * n_rows, png_byte);
     if (! png->image_data) {
         /* We were refused the memory we want to read the image into. */
         perl_png_error (png, "Out of memory allocating %d bytes for image",
@@ -1640,7 +1640,7 @@ void perl_png_set_rows (perl_libpng_t * png, AV * rows)
                         n_rows, height);
     }
     MESSAGE ("%d rows.\n", n_rows);
-    GET_MEMORY (row_pointers, n_rows);
+    GET_MEMORY (row_pointers, n_rows, unsigned char *);
     for (i = 0; i < n_rows; i++) {
         /* Need to check that this is the same as the width of the image. */
         unsigned int length;
@@ -1782,7 +1782,7 @@ void perl_png_set_unknown_chunks (perl_libpng_t * png, AV * chunk_list)
         /* The user tried to set an empty list of unknown chunks. */
         perl_png_error (png, "Number of unknown chunks is zero");
     }
-    GET_MEMORY (unknown_chunks, n_chunks);
+    GET_MEMORY (unknown_chunks, n_chunks, png_unknown_chunk);
     n_ok_chunks = 0;
     MESSAGE ("OK.");
     for (i = 0; i < n_chunks; i++) {
@@ -1870,7 +1870,7 @@ perl_png_set_keep_unknown_chunks (perl_libpng_t * png, int keep,
         if (num_chunks == 0) {
             goto empty_chunk_list;
         }
-        chunk_list_text = calloc (len * num_chunks, sizeof (char));
+	Newxz (chunk_list_text, len * num_chunks, char);
         png->memory_gets++;
         for (i = 0; i < num_chunks; i++) {
             const char * chunk_i_name;
@@ -1907,7 +1907,7 @@ perl_png_set_keep_unknown_chunks (perl_libpng_t * png, int keep,
         }
         printf ("\n");
 #endif
-        free (chunk_list_text);
+        Safefree (chunk_list_text);
         png->memory_gets--;
     }
     else {
