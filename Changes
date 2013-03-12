@@ -1,0 +1,6 @@
+0.20
+
+* Use Devel::CheckLib to check for png library.
+* Fix up for bug on Windows multithreaded.
+
+
