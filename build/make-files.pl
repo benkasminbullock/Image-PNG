@@ -18,62 +18,30 @@ my %config = ImagePNGBuild::read_config ();
 my $tt = Template->new (
     ABSOLUTE => 1,
     INCLUDE_PATH => $config{tmpl_dir},
-#    STRICT => 1,
 );
 
-my @libpng_diagnostics = ImagePNGBuild::libpng_diagnostics (\%config);
-
 my @files = qw/
-                  Const.pm
-                  Const.t
                   Container.pm
-                  Libpng.pm
-                  Libpng.pod
-                  Libpng.t
-                  Libpng.xs
                   Makefile.PL
-                  PLTE.t
                   PNG.pm
                   PNG.t
                   Util.pm
-                  perl-libpng.c
-                  typemap
               /;
 
 my %vars;
 $vars{config} = \%config;
-my $functions = ImagePNGBuild::get_functions (\%config);
-for my $chunk (@chunks) {
-    if ($chunk->{auto_type}) {
-        my $name = $chunk->{name};
-        push @$functions, ("get_$name", "set_$name");
-    }
-}
-$vars{functions} = $functions;
 $vars{self} = $0;
 $vars{date} = scalar gmtime ();
-$vars{libpng_diagnostics} = \@libpng_diagnostics;
 
 # Get lots of stuff about libpng from the module LibpngInfo in the
 # same directory as this script, used to build documentation etc.
 
 template_vars (\%vars);
-#for my $x (@{$vars{chunk}{cHRM}{fields}}) {
-#    print $x, "\n";
-#}
-#for my $x (@{$vars{ihdr_fields}}) {
-#    print $x->{name}, "\n";
-#}
 
 # These files go in the top directory
 
 my %top_dir = (
     'Makefile.PL' => 1,
-    'Libpng.xs' => 1,
-    'typemap' => 1,
-    'perl-libpng.c' => 1,
-    'META.json' => 1,
-    'META.yml' => 1,
 );
 
 my @outputs;
@@ -125,7 +93,6 @@ t/saru-fs8.png
 # Other files which aren't made from templates.
 
 my @extras = qw!
-my-xs.c
 tmpl/author
 tmpl/config
 tmpl/examples_doc
@@ -141,13 +108,7 @@ build/LibpngInfo.pm
 build/make-files.pl
 MANIFEST
 MANIFEST.SKIP
-my-xs.h
 perl-libpng.h
-t/bKGD.t
-t/cHRM.t
-t/pHYs.t
-t/tRNS.t
-t/tIME.t
 README
 !;
 my @mani;
@@ -157,15 +118,5 @@ push @mani, @test_pngs;
 push @mani, @extras;
 push @mani, 'makeitfile';
 
-# my $output = 'MANIFEST';
-# if (-f $output) {
-#     chmod 0644, $output;
-# }
-# open my $out, '>', $output;
-# for my $file (sort @mani) {
-#     print $out "$file\n";
-# }
-# close $out;
-# chmod 0444, $output;
 exit;
 

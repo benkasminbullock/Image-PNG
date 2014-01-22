@@ -15,6 +15,8 @@ build/.*
 tmpl/.*
 Image-PNG-[\d\.]+
 Image-PNG-[\d\.]+\.tar\.gz
+lib/Image/PNG/Const\.pm
 MYMETA\..*
 makeitfile$
 doc/.*
+^pm_to_blib$
