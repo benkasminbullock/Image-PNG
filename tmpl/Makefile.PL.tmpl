@@ -12,11 +12,10 @@ WriteMakefile (
     AUTHOR => '[% config.author %] <[% config.email %]>',
     LICENSE => 'perl',
     PREREQ_PM => {
-	'Image::PNG::Libpng' => '0.27',
+	'Image::PNG::Libpng' => '0.39',
     },
     META_MERGE => {
         resources => {
-            "MailingList" => "[% config.MailingList %]",
             "bugtracker" => "[% config.rt %]",
             "repository" => "[% config.repo %]",
         },
