@@ -20,7 +20,7 @@ use [% config.base %];
 # "Supports" is imported to test whether the underlying library
 # supports iTXt chunks and skip some of the tests if not.
 
-use [% config.base %]::Libpng qw/supports/;
+use Image::PNG::Libpng qw/libpng_supports/;
 
 my $png = [% config.base %]->new ({verbosity => undef});
 my $file = "$FindBin::Bin/test.png";
@@ -53,23 +53,6 @@ my $time2 = $png2->time ();
 ok (! defined $time2, "Time () is not defined for empty PNG");
 my $time = $png->time ();
 ok (! defined $time, "Time () is not defined for PNG with no time");
-
-# Get some text from a PNG file.
-
-SKIP: {
-    skip "Your libpng does not have iTXt support", 2
-        unless 0;#([% config.base %]::Libpng::supports ("iTXt"));
-    my $text_png = [% config.base %]->new ();
-    $text_png->read ("$FindBin::Bin/with-text.png");
-    my @text = $text_png->text ();
-    # my %h = %{$text[1]};
-    # binmode STDOUT, ":utf8";
-    # for my $k (keys %h) {
-    #     print "$k $h{$k}\n";
-    # }
-    ok ($text[1]->{text} eq 'Leonardo DaVinci', "read ASCII text from PNG");
-    ok ($text[2]->{text} eq '工藤俊作', "read Unicode text from PNG");
-};
 
 done_testing ();
 

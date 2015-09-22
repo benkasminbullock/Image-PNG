@@ -10,6 +10,17 @@
     $png->read_file ("crazy.png");
     printf "Your PNG is %d x %d\n", $png->width, $png->height;
 
+=head1 DESCRIPTION
+
+Image::PNG is a layer on top of L<Image::PNG::Libpng>. Whereas
+L<Image::PNG::Libpng> copies the interface of the C library C<libpng>,
+Image::PNG is intended to be a more intuitive way to handle PNG
+images. 
+
+Please note that this module is not completed yet and is still under
+development, so the interface may change. It's also open to
+suggestions for improvements.
+
 =head1 General methods
 
 =head2 new
@@ -195,13 +206,6 @@ Display the text chunk given as an argument on C<STDOUT>.
 This is a convenience function for debugging rather than a
 general-purpose routine.
 
-=head1 SUPPORT
-
-There is L<a mailing list for this Perl module at Google
-Groups|https://groups.google.com/forum/#!forum/perlimagepng>. If you
-have an enquiry, post to the mailing list. You don't have to join the
-mailing list to post a message.
-
 =head1 SEE ALSO
 
 =head2 In this distribution
@@ -238,8 +242,6 @@ There is L<an article on the format on Wikipedia|http://en.wikipedia.org/wiki/Po
 The book "PNG - The Definitive Guide" by Greg Roelofs, published in
 1999 by O'Reilly is available online at
 L<http://www.faqs.org/docs/png/>. 
-
-[% INCLUDE "examples_doc" %]
 
 [% INCLUDE "author" %]
 

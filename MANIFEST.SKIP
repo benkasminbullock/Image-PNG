@@ -20,3 +20,4 @@ MYMETA\..*
 makeitfile$
 doc/.*
 ^pm_to_blib$
+junk/.*
