@@ -1,3 +1,6 @@
+# This file generates the Perl modules and Makefile.PL from the files
+# in ./tmpl/.
+
 PNGPM=lib/Image/PNG.pm
 
 TOUT=lib/Image/PNG.pm lib/Image/PNG/Container.pm Makefile.PL
@@ -22,7 +25,7 @@ $(TOUT): $(TIN)
 	build/make-files.pl
 
 clean:
-	-make clean
+	if [ -f Makefile ]; then make clean; fi
 	-rm -rf Image-PNG-0.*/ Image-PNG-0.*.tar.gz
 
 # Local Variables:
