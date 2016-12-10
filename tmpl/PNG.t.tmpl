@@ -54,6 +54,14 @@ ok (! defined $time2, "Time () is not defined for empty PNG");
 my $time = $png->time ();
 ok (! defined $time, "Time () is not defined for PNG with no time");
 
+# Test for non-existent file
+
+my $pngr = Image::PNG->new();
+eval {
+    $pngr->read("abcdef");
+};
+ok ($@, "Error trying to read non-existent file");
+
 done_testing ();
 
 # Local Variables:

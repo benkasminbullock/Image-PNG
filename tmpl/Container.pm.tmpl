@@ -61,10 +61,12 @@ sub [% config.base %]::Container::open
     }
     my $file;
     if ($object->{read_only}) {
-        open $file, "<:raw", $object->{file_name};
+        open $file, "<:raw", $object->{file_name}
+            or croak "open $object->{file_name} failed: $!";
     }
     else {
-        open $file, ">:raw", $object->{file_name};
+        open $file, ">:raw", $object->{file_name}
+            or croak "open $object->{file_name} failed: $!";
     }
     init_io ($object->{png}, $file);
     $object->{file} = $file;
@@ -75,6 +77,9 @@ sub read
     my ($object) = @_;
     if (! $object->{read_only}) {
         croak "Read on a write file";
+    }
+    if (! $object->{file}) {
+	croak "No file in Image::PNG::Container object";
     }
     [% config.base %]::Libpng::read_png ($object->{png});
     $object->{read_ok} = 1;
