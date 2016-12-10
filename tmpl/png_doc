@@ -10,6 +10,13 @@
     $png->read_file ("crazy.png");
     printf "Your PNG is %d x %d\n", $png->width, $png->height;
 
+=head1 VERSION
+
+This documents version [% config.version %] of Image::PNG corresponding
+to git commit L<[% commit.commit %]|[% config.repo %]/commit/[%
+commit.commit %]> made on [% commit.date %].
+
+
 =head1 DESCRIPTION
 
 Image::PNG is a layer on top of L<Image::PNG::Libpng>. Whereas

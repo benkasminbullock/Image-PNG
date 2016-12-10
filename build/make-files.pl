@@ -6,18 +6,19 @@ use warnings;
 use strict;
 use Template;
 BEGIN {
-    use FindBin;
-    use lib "$FindBin::Bin";
+    use FindBin '$Bin';
+    use lib "$Bin";
     use ImagePNGBuild;
     use LibpngInfo 'template_vars', '@chunks';
 };
 use autodie;
-
+use Perl::Build qw/get_info get_commit/;
 my %config = ImagePNGBuild::read_config ();
 
 my $tt = Template->new (
     ABSOLUTE => 1,
     INCLUDE_PATH => $config{tmpl_dir},
+#    STRICT => 1,
 );
 
 my @files = qw/
@@ -32,6 +33,8 @@ my %vars;
 $vars{config} = \%config;
 $vars{self} = $0;
 $vars{date} = scalar gmtime ();
+my %pbv = (base => "$Bin/..");
+$vars{commit} = get_commit (%pbv);
 
 # Get lots of stuff about libpng from the module LibpngInfo in the
 # same directory as this script, used to build documentation etc.
