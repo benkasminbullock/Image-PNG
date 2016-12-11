@@ -21,3 +21,5 @@ makeitfile$
 doc/.*
 ^pm_to_blib$
 junk/.*
+# Author tests
+xt/.*
