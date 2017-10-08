@@ -6,9 +6,9 @@ use warnings;
 use strict;
 use autodie;
 use Carp;
-use FindBin;
+use FindBin '$Bin';
 
-my $base = "$FindBin::Bin/..";
+my $base = "$Bin/..";
 my $tmpl_dir = "$base/tmpl";
 
 sub read_config

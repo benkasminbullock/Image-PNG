@@ -5,10 +5,10 @@ use lib '../blib/arch';
 use lib '../blib/lib';
 use Image::PNG qw/display_text/;
 use Image::PNG::Const qw/:all/;
-use FindBin;
+use FindBin '$Bin';
 
 print "\n";
-my $png = Image::PNG->new ({file => "$FindBin::Bin/guffin-downloaded.png"});
+my $png = Image::PNG->new ({file => "$Bin/guffin-downloaded.png"});
 printf "%d x %d %s %d\n", $png->width, $png->height, $png->color_type, $png->bit_depth;
 my @text = $png->text;
 for my $chunk (@text) {

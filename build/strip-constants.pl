@@ -6,11 +6,11 @@
 use warnings;
 use strict;
 use autodie;
-use FindBin;
+use FindBin '$Bin';
 use Template;
 BEGIN {
-    use FindBin;
-    use lib "$FindBin::Bin";
+    use FindBin '$Bin';
+    use lib "$Bin";
     use ImagePNGBuild;
 };
 use autodie;

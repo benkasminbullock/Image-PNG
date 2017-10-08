@@ -12,6 +12,11 @@ TIN=    build/LibpngInfo.pm \
 	tmpl/Container.pm.tmpl \
 	tmpl/Util.pm.tmpl \
 	tmpl/Makefile.PL.tmpl \
+	tmpl/png_doc \
+	tmpl/pngspec \
+	tmpl/config \
+	tmpl/version \
+	tmpl/other_modules \
 	build/make-files.pl
 
 all:	$(TOUT)
@@ -26,7 +31,6 @@ $(TOUT): $(TIN)
 
 clean:
 	if [ -f Makefile ]; then make clean; fi
-	-rm -rf Image-PNG-0.*/ Image-PNG-0.*.tar.gz
 
 # Local Variables:
 # mode: makefile

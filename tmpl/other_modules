@@ -1,12 +1,10 @@
-=head2 Other Perl modules on CPAN
-
-=head3 Image::ExifTool
+=item Image::ExifTool
 
 L<Image::ExifTool> is a pure Perl (doesn't require a C compiler)
 solution for accessing the text segments of images. It has extensive
 support for PNG text segments.
 
-=head3 Alien::PNG
+=item Alien::PNG
 
 L<Alien::PNG> claims to be a way of "building, finding and using PNG
 binaries". It may help in installing libpng. I didn't use it as a
@@ -14,7 +12,7 @@ dependency for this module because it seems not to work in batch mode,
 but stop and prompt the user. I'm interested in hearing feedback from
 users whether this works or not on various platforms.
 
-=head3 Image::PNG::Rewriter
+=item Image::PNG::Rewriter
 
 L<Image::PNG::Rewriter> is a utility for unpacking and recompressing
 the IDAT (image data) part of a PNG image. The main purpose seems to
@@ -22,13 +20,13 @@ be to recompress the image data with the module author's other module
 L<Compress::Deflate7>. Unfortunately that only works with Perl
 versions 5.12.
 
-=head3 Image::Pngslimmer
+=item Image::Pngslimmer
 
 L<Image::Pngslimmer> reduces the size of dynamically created PNG
 images. It's very, very slow at reading PNG data, but seems to work
 OK.
 
-=head3 Image::Info
+=item Image::Info
 
 L<Image::Info> is a module for getting information out of various
 types of images. It has good support for PNG and is written in pure
@@ -38,17 +36,21 @@ palette, gamma (gAMA chunk), resolution (pHYs chunk), and significant
 bits (sBIT chunk). At the time of writing (version 1.31) it doesn't
 support other chunks.
 
-=head3 Image::Size
+=item Image::Size
 
 If you only need to find the size of an image, L<Image::Size> can give
-you the size of PNG and various other image formats. This module is
-highly recommended on CPAN ratings.
+you the size of PNG and various other image formats.
 
-=head3 Image::PNGwriter
+=item Image::PNGwriter
 
 L<Image::PNGwriter> is an interface to a project called
 "PNGwriter". At the time of writing (2013-12-01), only one version has
 been released, in 2005. The most recent version of PNGwriter itself is
 from 2009.
+
+=item Image::PNG::Write::BW
+
+L<Image::PNG::Write::BW> is a pure-Perl module to write minimal black
+and white PNG images.
 
 

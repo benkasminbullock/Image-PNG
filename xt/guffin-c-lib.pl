@@ -1,14 +1,14 @@
 #!/home/ben/software/install/bin/perl
 use warnings;
 use strict;
-use FindBin;
+use FindBin '$Bin';
 use autodie;
 use lib '../blib/arch';
 use lib '../blib/lib';
 use File::PNG;
 
-#my $file_name = "$FindBin::Bin/guffin-downloaded.png";
-my $file_name = "$FindBin::Bin/tantei-san.png";
+#my $file_name = "$Bin/guffin-downloaded.png";
+my $file_name = "$Bin/tantei-san.png";
 my $png = File::PNG::create_read_struct ();
 open my $file, "<:raw", $file_name;
 File::PNG::init_io ($png, $file);
