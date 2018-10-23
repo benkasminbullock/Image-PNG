@@ -41,7 +41,6 @@ my %IHDR_fields = (
 
 sub write_info_error
 {
-    my ($png) = @_;
     my @unset;
     for my $field (sort keys %IHDR_fields) {
         if (!$IHDR_fields{$field}{default}) {
@@ -424,7 +423,7 @@ sub rowbytes
 
 sub text
 {
-    my ($png, $text) = @_;
+    my ($png) = @_;
     if (! $png->{text}) {
         my $text_ref =
             [% config.base %]::Libpng::get_text ($png->{read}->png ());

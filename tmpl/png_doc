@@ -243,6 +243,13 @@ L<http://www.faqs.org/docs/png/>.
 
 =back
 
+=head1 DEPENDENCIES
+
+=over
+
+=item L<Image::PNG::Libpng>
+
+=back
 
 =head2 Other CPAN modules
 
