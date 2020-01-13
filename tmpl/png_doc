@@ -1,13 +1,13 @@
 =head1 NAME
 
-[% config.base %] - [% config.abstract %]
+Image::PNG - [% config.abstract %]
 
 [% INCLUDE "warning" %]
 
 =head1 SYNOPSIS
 
-    my $png = [% config.base %]->new ();
-    $png->read_file ("crazy.png");
+    my $png = Image::PNG->new ();
+    $png->read ("example.png");
     printf "Your PNG is %d x %d\n", $png->width, $png->height;
 
 =head1 VERSION
@@ -34,7 +34,7 @@ change. It's also open to suggestions for improvements.
 
 =head2 new
 
-    my $png = [% config.base %]->new ();
+    my $png = Image::PNG->new ();
 
 Create a new PNG-file reading or writing object.
 
@@ -44,14 +44,14 @@ Options are
 
 =item read
 
-    my $png = [% config.base %]->new ({read => 'some.png'});
+    my $png = Image::PNG->new ({read => 'some.png'});
 
 Set the file to read. The file is then read at the time of object
 creation.
 
 =item verbosity
 
-    my $png = [% config.base %]->new ({verbosity => 1});
+    my $png = Image::PNG->new ({verbosity => 1});
 
 If C<verbosity> is set to a true value, print verbose messages about
 what the module is doing.
@@ -132,7 +132,8 @@ Get the bit depth of the current PNG image.
 
     my $interlacing_method = $png->interlacing_method ();
 
-Get the name of the method of interlacing of the current PNG image.
+Get the name of the method of interlacing of the current PNG
+image. This may be either C<none> or C<adam7>.
 
 There is no method for dealing with the compression method
 field of the header, since this only has one possible value.
@@ -206,7 +207,7 @@ There are some convenience functions in this module, exported on request.
 
 =head2 display_text
 
-     use [% config.base %] qw/display_text/;
+     use Image::PNG qw/display_text/;
      my @text = $png->text;
      display_text ($text[3]);
 

@@ -1,9 +1,9 @@
-version: 0.23
+version: 0.24
 base: Image::PNG
 author: Ben Bullock
 author_pause: BKB
 email: bkb@cpan.org
-year: 2016
+year: 2020
 abstract: Read and write PNG files
 license: perl
 rt: https://github.com/benkasminbullock/Image-PNG/issues

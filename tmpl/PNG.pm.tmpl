@@ -1,10 +1,10 @@
-package [% config.base %];
+package Image::PNG;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw/display_text/;
-use [% config.base %]::Const ':all';
-use [% config.base %]::Libpng;
-use [% config.base %]::Container;
+use Image::PNG::Const ':all';
+use Image::PNG::Libpng;
+use Image::PNG::Container;
 use warnings;
 use strict;
 use Carp;
@@ -91,7 +91,7 @@ sub new
 
 # Read a file
 
-sub [% config.base %]::read
+sub Image::PNG::read
 {
     my ($png, $file_name) = @_;
     if ($png->verbose) {
@@ -101,15 +101,14 @@ sub [% config.base %]::read
         carp __PACKAGE__, ": You called 'read' without giving a file name";
         return;
     }
-    my $read = [% config.base %]::Container->new ({read_only => 1});
+    my $read = Image::PNG::Container->new ({read_only => 1});
     $read->set_file_name ($file_name);
     $read->open ();
     $read->read ();
     if ($png->verbose) {
-        my $ihdr = [% config.base %]::Libpng::get_IHDR ($read->png ());
-        printf ("The size of the image is %d X %d; its colour type is %s; its bit depth is %d\n", $ihdr->{width}, $ihdr->{height}, [% config.base %]::Libpng::color_type_name ($ihdr->{color_type}), $ihdr->{bit_depth});
+        my $ihdr = Image::PNG::Libpng::get_IHDR ($read->png ());
+        printf ("The size of the image is %d X %d; its colour type is %s; its bit depth is %d\n", $ihdr->{width}, $ihdr->{height}, Image::PNG::Libpng::color_type_name ($ihdr->{color_type}), $ihdr->{bit_depth});
     }
-
     $png->{read} = $read;
     return 1;
 }
@@ -120,7 +119,7 @@ sub handle_error
     croak $message;
 }
 
-sub [% config.base %]::write
+sub Image::PNG::write
 {
     my ($png, $file_name) = @_;
     if ($png->verbose) {
@@ -143,11 +142,11 @@ sub [% config.base %]::write
             if ($png->verbose) {
                 print "I am copying the header from the image which I read in.\n";
             }
-            my $ihdr = [% config.base %]::Libpng::get_IHDR ($png->{read}->png ());
+            my $ihdr = Image::PNG::Libpng::get_IHDR ($png->{read}->png ());
             if ($png->verbose) {
                 print "I've got a header and now I'm going to try to put it into the output.\n";
             }
-            [% config.base %]::Libpng::set_IHDR ($write->{png}, $ihdr);
+            Image::PNG::Libpng::set_IHDR ($write->{png}, $ihdr);
             $write->{ihdr} = $ihdr;
         }
         else {
@@ -170,11 +169,11 @@ sub [% config.base %]::write
             if ($png->verbose) {
                 print "I am setting the image data for the image to write to data which I read in from another image.";
             }
-            my $rows = [% config.base %]::Libpng::get_rows ($png->{read}->png ());
+            my $rows = Image::PNG::Libpng::get_rows ($png->{read}->png ());
             if ($png->verbose) {
                 print "I've got the data from the read image and now I'm going to set up the writing to write that data.\n";
             }
-            [% config.base %]::Libpng::set_rows ($write->{png}, $rows);
+            Image::PNG::Libpng::set_rows ($write->{png}, $rows);
         }
         else {
             # There is no row data for the image.
@@ -183,7 +182,7 @@ sub [% config.base %]::write
         }
     }
     if ($png->verbose) {
-        printf ("Its colour type is %s.\n", [% config.base %]::Libpng::color_type_name ($write->{ihdr}->{color_type}));
+        printf ("Its colour type is %s.\n", Image::PNG::Libpng::color_type_name ($write->{ihdr}->{color_type}));
     }
     if ($write->{ihdr}->{color_type} == PNG_COLOR_TYPE_PALETTE) {
         if ($png->verbose) {
@@ -193,14 +192,14 @@ sub [% config.base %]::write
             print "The image doesn't have a palette set.\n";
             if ($png->{read}) {
                 print "I am going to try to get one from the image I read in.\n";
-                my $palette = [% config.base %]::Libpng::get_PLTE ($png->{read}->png ());
+                my $palette = Image::PNG::Libpng::get_PLTE ($png->{read}->png ());
                 for my $color (@$palette) {
                     for my $hue (qw/red green blue/) {
                         printf "%s: %d ", $hue, $color->{$hue};
                     }
                     print "\n";
                 }
-                [% config.base %]::Libpng::set_PLTE ($write->{png}, $palette);
+                Image::PNG::Libpng::set_PLTE ($write->{png}, $palette);
             }
             else {
                 $png->handle_error ("You asked me to write an image with a palette, but I don't have any information about the palette for the image.");
@@ -214,8 +213,8 @@ sub [% config.base %]::write
     # Now the rows are set.
     open my $output, ">:raw", $write->{file_name}
         or $png->handle_error ("opening file '$write->{file_name}' failed: $!'");
-    [% config.base %]::Libpng::init_io ($write->{png}, $output);
-    [% config.base %]::Libpng::write_png ($write->{png});
+    Image::PNG::Libpng::init_io ($write->{png}, $output);
+    Image::PNG::Libpng::write_png ($write->{png});
 }
 
 # Private
@@ -228,7 +227,7 @@ sub do_not_write
 
 # Public
 
-sub [% config.base %]::delete
+sub Image::PNG::delete
 {
     my ($png, @chunks) = @_;
     if (! $png->{write_ok}) {
@@ -263,7 +262,7 @@ sub init_write
     }
     $png->{write} = {};
     $png->{write}->{png} =
-        [% config.base %]::Libpng::create_write_struct ();
+        Image::PNG::Libpng::create_write_struct ();
     $png->{write_ok} = 1;
 }
 
@@ -301,12 +300,12 @@ sub IHDR
 {
     my ($png, $ihdr) = @_;
     if ($ihdr) {
-        [% config.base %]::Libpng::set_IHDR ($png->{write}->{png},
+        Image::PNG::Libpng::set_IHDR ($png->{write}->{png},
                                              $ihdr);
         $png->{write}->{ihdr_set} = 1;
     }
     else {
-        $ihdr = [% config.base %]::Libpng::get_IHDR ($png->{read}->png ());
+        $ihdr = Image::PNG::Libpng::get_IHDR ($png->{read}->png ());
     }
     return $ihdr;
 }
@@ -320,7 +319,7 @@ sub get_IHDR
         carp __PACKAGE__, ": I was requested to read the IHDR of the PNG data, but I have already read it.";
         return;
     }
-    $png->{IHDR} = [% config.base %]::Libpng::get_IHDR ($png->{read}->png ());
+    $png->{IHDR} = Image::PNG::Libpng::get_IHDR ($png->{read}->png ());
 }
 
 # Get $key from the PNG.
@@ -368,7 +367,7 @@ sub color_type
     }
     else {
         return 
-            [% config.base %]::Libpng::color_type_name (
+            Image::PNG::Libpng::color_type_name (
                 get ($png, 'color_type')
             );
     }
@@ -395,10 +394,10 @@ sub rows
         }
         if (! $png->{write}->{set_IHDR}) {
             $png->{write}->{set_IHDR} = 1;
-            [% config.base %]::Libpng::set_IHDR ($png->{write}->{png},
+            Image::PNG::Libpng::set_IHDR ($png->{write}->{png},
                                                  $png->{write}->{IHDR});
         }
-        [% config.base %]::Libpng::set_rows ($png->{write_png}, $rows);
+        Image::PNG::Libpng::set_rows ($png->{write_png}, $rows);
         $png->{write}->{rows_set} = 1;
     }
     else {
@@ -407,7 +406,7 @@ sub rows
             #        $png->handle_error ("");
             return;
         }
-        return [% config.base %]::Libpng::get_rows ($png->{read}->png ());
+        return Image::PNG::Libpng::get_rows ($png->{read}->png ());
     }
 }
 
@@ -418,7 +417,7 @@ sub rowbytes
 #        $png->handle_error ("");
         return;
     }
-    return [% config.base %]::Libpng::get_rowbytes ($png->{read}->png ());
+    return Image::PNG::Libpng::get_rowbytes ($png->{read}->png ());
 }
 
 sub text
@@ -426,12 +425,12 @@ sub text
     my ($png) = @_;
     if (! $png->{text}) {
         my $text_ref =
-            [% config.base %]::Libpng::get_text ($png->{read}->png ());
+            Image::PNG::Libpng::get_text ($png->{read}->png ());
         $png->{text} = $text_ref;
         # Change the text compression field to words rather than numbers.
         for my $text (@{$png->{text}}) {
             $text->{compression} =
-                [% config.base %]::Libpng::text_compression_name ($text->{compression});
+                Image::PNG::Libpng::text_compression_name ($text->{compression});
         }
     }
     if (! wantarray) {
@@ -446,7 +445,7 @@ sub time
     if (! $png->{read}) {
         return undef;
     }
-    return [% config.base %]::Libpng::get_tIME ($png->{read}->{png});
+    return Image::PNG::Libpng::get_tIME ($png->{read}->{png});
 }
 
 # The text segment of the PNG should probably be an object in its own
@@ -480,6 +479,19 @@ sub display_text
     else {
         print "Text is empty.\n";
     }
+}
+
+sub interlacing_method
+{
+    my ($png) = @_;
+    my $ihdr = Image::PNG::Libpng::get_IHDR ($png->{read}->png);
+    if ($png->{interlace_type} == PNG_INTERLACE_NONE) {
+	return 'none';
+    }
+    if ($png->{interlace_type} == PNG_INTERLACE_ADAM7) {
+	return 'adam7';
+    }
+    return undef;
 }
 
 1;
