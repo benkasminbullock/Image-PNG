@@ -14,4 +14,8 @@ my $png = Image::PNG->new ();
 $png->read ("$Bin/with-text.png");
 my $im = $png->interlacing_method ();
 is ($im, 'none', "Got 'none' for interlacing method");
+my $pngi = Image::PNG->new ();
+$pngi->read ("$Bin/gray-gradient.interlaced.png");
+my $imi = $pngi->interlacing_method ();
+is ($imi, 'adam7', "Got 'adam7' for interlacing method");
 done_testing ();

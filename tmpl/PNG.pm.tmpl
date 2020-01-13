@@ -485,10 +485,10 @@ sub interlacing_method
 {
     my ($png) = @_;
     my $ihdr = Image::PNG::Libpng::get_IHDR ($png->{read}->png);
-    if ($png->{interlace_type} == PNG_INTERLACE_NONE) {
+    if ($ihdr->{interlace_method} == PNG_INTERLACE_NONE) {
 	return 'none';
     }
-    if ($png->{interlace_type} == PNG_INTERLACE_ADAM7) {
+    if ($ihdr->{interlace_method} == PNG_INTERLACE_ADAM7) {
 	return 'adam7';
     }
     return undef;
