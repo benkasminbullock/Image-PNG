@@ -10,8 +10,7 @@ binmode $builder->todo_output,    ":utf8";
 binmode STDOUT, ":encoding(utf8)";
 binmode STDERR, ":encoding(utf8)";
 use Perl::Build::Pod ':all';
-for my $filepath ("$Bin/../lib/Image/PNG.pm",
-	      ){
+for my $filepath ("$Bin/../lib/Image/PNG.pod"){
     my $errors = pod_checker ($filepath);
     ok (@$errors == 0, "No errors");
 #    my $linkerrors = pod_link_checker ($filepath);

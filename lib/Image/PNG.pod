@@ -13,7 +13,7 @@ Image::PNG - Read and write PNG files
 =head1 VERSION
 
 This documents version 0.25 of Image::PNG corresponding
-to git commit L<ddd4a5ff61dc35830859846754cd091ba4491fc1|https://github.com/benkasminbullock/Image-PNG/commit/ddd4a5ff61dc35830859846754cd091ba4491fc1> made on Tue Jan 14 08:49:00 2020 +0900.
+to git commit L<33bd09704e977a7a2c48a728024c3e2c48c3defe|https://github.com/benkasminbullock/Image-PNG/commit/33bd09704e977a7a2c48a728024c3e2c48c3defe> made on Sat Mar 20 15:39:43 2021 +0900.
 
 =head1 DESCRIPTION
 
