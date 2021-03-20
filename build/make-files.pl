@@ -4,15 +4,14 @@
 
 use warnings;
 use strict;
-use Template;
-BEGIN {
-    use FindBin '$Bin';
-    use lib "$Bin";
-    use ImagePNGBuild;
-    use LibpngInfo 'template_vars', '@chunks';
-};
 use autodie;
+use Template;
 use Perl::Build qw/get_info get_commit/;
+use FindBin '$Bin';
+use lib "$Bin";
+use ImagePNGBuild;
+use LibpngInfo 'template_vars', '@chunks';
+
 my %config = ImagePNGBuild::read_config ();
 
 my $tt = Template->new (
@@ -22,12 +21,13 @@ my $tt = Template->new (
 );
 
 my @files = qw/
-                  Container.pm
-                  Makefile.PL
-                  PNG.pm
-                  PNG.t
-                  Util.pm
-              /;
+    Container.pm
+    Makefile.PL
+    PNG.pm
+    PNG.pod
+    PNG.t
+    Util.pm
+/;
 
 my %vars;
 $vars{config} = \%config;
@@ -58,6 +58,9 @@ for my $file (@files) {
     elsif ($file eq 'PNG.pm') {
         $output = $config{main_module_out};
     }
+    elsif ($file eq 'PNG.pod') {
+        $output = $config{pod_out};
+    }
     elsif ($file =~ /.t$/) {
         $output = "t/$file";
     }
@@ -82,38 +85,39 @@ for my $file (@files) {
 # http://libpng.org/pub/png/pngsuite.html.
 
 my @test_pngs = qw!
-t/test.png
-t/with-text.png
-t/with-time.png
-t/tantei-san.png
-t/bgyn6a16.png
-t/xlfn0g04.png
-t/ccwn2c08.png
-t/cdun2c08.png
-t/saru-fs8.png
+    t/test.png
+    t/with-text.png
+    t/with-time.png
+    t/tantei-san.png
+    t/bgyn6a16.png
+    t/xlfn0g04.png
+    t/ccwn2c08.png
+    t/cdun2c08.png
+    t/saru-fs8.png
 !;
 
 # Other files which aren't made from templates.
 
 my @extras = qw!
-tmpl/author
-tmpl/config
-tmpl/examples_doc
-tmpl/generated
-tmpl/libpng_doc
-tmpl/other_modules
-tmpl/png_doc
-tmpl/pngspec
-tmpl/version
-tmpl/warning
-build/ImagePNGBuild.pm
-build/LibpngInfo.pm
-build/make-files.pl
-MANIFEST
-MANIFEST.SKIP
-perl-libpng.h
-README
+    tmpl/author
+    tmpl/config
+    tmpl/examples_doc
+    tmpl/generated
+    tmpl/libpng_doc
+    tmpl/other_modules
+    tmpl/png_doc
+    tmpl/pngspec
+    tmpl/version
+    tmpl/warning
+    build/ImagePNGBuild.pm
+    build/LibpngInfo.pm
+    build/make-files.pl
+    MANIFEST
+    MANIFEST.SKIP
+    perl-libpng.h
+    README
 !;
+
 my @mani;
 push @mani, map {"tmpl/$_.tmpl"} @files;
 push @mani, @outputs;

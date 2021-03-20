@@ -1,23 +1,29 @@
 # This file generates the Perl modules and Makefile.PL from the files
 # in ./tmpl/.
 
-PNGPM=lib/Image/PNG.pm
+TOUT=   \
+	Makefile.PL \
+	lib/Image/PNG.pm \
+	lib/Image/PNG.pod \
+	lib/Image/PNG/Container.pm \
 
-TOUT=lib/Image/PNG.pm lib/Image/PNG/Container.pm Makefile.PL
-TIN=    build/LibpngInfo.pm \
+
+TIN=    \
+	build/LibpngInfo.pm \
+	build/make-files.pl \
+	tmpl/Container.pm.tmpl \
+	tmpl/Makefile.PL.tmpl \
+	tmpl/PNG.pm.tmpl \
+	tmpl/PNG.t.tmpl \
+	tmpl/Util.pm.tmpl \
 	tmpl/author \
 	tmpl/config \
-	tmpl/PNG.t.tmpl \
-	tmpl/PNG.pm.tmpl \
-	tmpl/Container.pm.tmpl \
-	tmpl/Util.pm.tmpl \
-	tmpl/Makefile.PL.tmpl \
+	tmpl/config \
+	tmpl/other_modules \
 	tmpl/png_doc \
 	tmpl/pngspec \
-	tmpl/config \
 	tmpl/version \
-	tmpl/other_modules \
-	build/make-files.pl
+
 
 all:	$(TOUT)
 

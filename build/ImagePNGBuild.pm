@@ -33,6 +33,7 @@ sub read_config
 #    print "Output directory is $config{out_dir}.\n";
     $config{submodule_dir} = "lib/$config{out_dir}";
     $config{main_module_out} = "lib/$config{out_dir}.pm";
+    $config{pod_out} = "lib/$config{out_dir}.pod";
     $config{base_slash} = "$config{out_dir}.pm";
     $config{main_module} = $config{base_slash};
     $config{main_module} =~ s!.*/!!;
